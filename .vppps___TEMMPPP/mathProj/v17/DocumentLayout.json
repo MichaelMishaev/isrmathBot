@@ -1,0 +1,278 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\34528\\source\\repos\\mathProj\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{2DACA9FE-56A8-4126-847F-EBCB10DD007C}|BLL\\BLL.csproj|c:\\users\\34528\\source\\repos\\mathproj\\bll\\services\\indexservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{2DACA9FE-56A8-4126-847F-EBCB10DD007C}|BLL\\BLL.csproj|solutionrelative:bll\\services\\indexservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{48054A65-9FBF-45EE-AB10-9C1DF23352AD}|mathProj\\mathProj.csproj|c:\\users\\34528\\source\\repos\\mathproj\\mathproj\\.gitignore||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{48054A65-9FBF-45EE-AB10-9C1DF23352AD}|mathProj\\mathProj.csproj|solutionrelative:mathproj\\.gitignore||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2DACA9FE-56A8-4126-847F-EBCB10DD007C}|BLL\\BLL.csproj|c:\\users\\34528\\source\\repos\\mathproj\\bll\\dal\\exerciserepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{2DACA9FE-56A8-4126-847F-EBCB10DD007C}|BLL\\BLL.csproj|solutionrelative:bll\\dal\\exerciserepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{48054A65-9FBF-45EE-AB10-9C1DF23352AD}|mathProj\\mathProj.csproj|c:\\users\\34528\\source\\repos\\mathproj\\mathproj\\controllers\\whatsappcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{48054A65-9FBF-45EE-AB10-9C1DF23352AD}|mathProj\\mathProj.csproj|solutionrelative:mathproj\\controllers\\whatsappcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{48054A65-9FBF-45EE-AB10-9C1DF23352AD}|mathProj\\mathProj.csproj|c:\\users\\34528\\source\\repos\\mathproj\\mathproj\\controllers\\index.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{48054A65-9FBF-45EE-AB10-9C1DF23352AD}|mathProj\\mathProj.csproj|solutionrelative:mathproj\\controllers\\index.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{48054A65-9FBF-45EE-AB10-9C1DF23352AD}|mathProj\\mathProj.csproj|c:\\users\\34528\\source\\repos\\mathproj\\mathproj\\controllers\\chatcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{48054A65-9FBF-45EE-AB10-9C1DF23352AD}|mathProj\\mathProj.csproj|solutionrelative:mathproj\\controllers\\chatcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2DACA9FE-56A8-4126-847F-EBCB10DD007C}|BLL\\BLL.csproj|c:\\users\\34528\\source\\repos\\mathproj\\bll\\services\\whatsappservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{2DACA9FE-56A8-4126-847F-EBCB10DD007C}|BLL\\BLL.csproj|solutionrelative:bll\\services\\whatsappservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2DACA9FE-56A8-4126-847F-EBCB10DD007C}|BLL\\BLL.csproj|c:\\users\\34528\\source\\repos\\mathproj\\bll\\services\\chatgptservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{2DACA9FE-56A8-4126-847F-EBCB10DD007C}|BLL\\BLL.csproj|solutionrelative:bll\\services\\chatgptservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2DACA9FE-56A8-4126-847F-EBCB10DD007C}|BLL\\BLL.csproj|c:\\users\\34528\\source\\repos\\mathproj\\bll\\functions\\asciifunction.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{2DACA9FE-56A8-4126-847F-EBCB10DD007C}|BLL\\BLL.csproj|solutionrelative:bll\\functions\\asciifunction.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2DACA9FE-56A8-4126-847F-EBCB10DD007C}|BLL\\BLL.csproj|c:\\users\\34528\\source\\repos\\mathproj\\bll\\functions\\textgeneratorfunctions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{2DACA9FE-56A8-4126-847F-EBCB10DD007C}|BLL\\BLL.csproj|solutionrelative:bll\\functions\\textgeneratorfunctions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2DACA9FE-56A8-4126-847F-EBCB10DD007C}|BLL\\BLL.csproj|c:\\users\\34528\\source\\repos\\mathproj\\bll\\functions\\mathfunctions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{2DACA9FE-56A8-4126-847F-EBCB10DD007C}|BLL\\BLL.csproj|solutionrelative:bll\\functions\\mathfunctions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2DACA9FE-56A8-4126-847F-EBCB10DD007C}|BLL\\BLL.csproj|c:\\users\\34528\\source\\repos\\mathproj\\bll\\objects\\exercisemodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{2DACA9FE-56A8-4126-847F-EBCB10DD007C}|BLL\\BLL.csproj|solutionrelative:bll\\objects\\exercisemodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2DACA9FE-56A8-4126-847F-EBCB10DD007C}|BLL\\BLL.csproj|c:\\users\\34528\\source\\repos\\mathproj\\bll\\functions\\imgfunctions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{2DACA9FE-56A8-4126-847F-EBCB10DD007C}|BLL\\BLL.csproj|solutionrelative:bll\\functions\\imgfunctions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2DACA9FE-56A8-4126-847F-EBCB10DD007C}|BLL\\BLL.csproj|c:\\users\\34528\\source\\repos\\mathproj\\bll\\services\\testwhatsappservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{2DACA9FE-56A8-4126-847F-EBCB10DD007C}|BLL\\BLL.csproj|solutionrelative:bll\\services\\testwhatsappservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{2DACA9FE-56A8-4126-847F-EBCB10DD007C}|BLL\\BLL.csproj|c:\\users\\34528\\source\\repos\\mathproj\\bll\\dal\\databaseservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{2DACA9FE-56A8-4126-847F-EBCB10DD007C}|BLL\\BLL.csproj|solutionrelative:bll\\dal\\databaseservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{48054A65-9FBF-45EE-AB10-9C1DF23352AD}|mathProj\\mathProj.csproj|c:\\users\\34528\\source\\repos\\mathproj\\mathproj\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{48054A65-9FBF-45EE-AB10-9C1DF23352AD}|mathProj\\mathProj.csproj|solutionrelative:mathproj\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 3,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": ".gitignore",
+              "DocumentMoniker": "C:\\Users\\34528\\source\\repos\\mathProj\\mathProj\\.gitignore",
+              "RelativeDocumentMoniker": "mathProj\\.gitignore",
+              "ToolTip": "C:\\Users\\34528\\source\\repos\\mathProj\\mathProj\\.gitignore",
+              "RelativeToolTip": "mathProj\\.gitignore",
+              "ViewState": "AgIAABUAAAAAAAAAAADwvzcAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2024-11-19T11:36:37.745Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "ExerciseRepository.cs",
+              "DocumentMoniker": "C:\\Users\\34528\\source\\repos\\mathProj\\BLL\\DAL\\ExerciseRepository.cs",
+              "RelativeDocumentMoniker": "BLL\\DAL\\ExerciseRepository.cs",
+              "ToolTip": "C:\\Users\\34528\\source\\repos\\mathProj\\BLL\\DAL\\ExerciseRepository.cs",
+              "RelativeToolTip": "BLL\\DAL\\ExerciseRepository.cs",
+              "ViewState": "AgIAAIIBAAAAAAAAAAAAwKIBAAAQAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-10T19:06:07.637Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "Index.cs",
+              "DocumentMoniker": "C:\\Users\\34528\\source\\repos\\mathProj\\mathProj\\Controllers\\Index.cs",
+              "RelativeDocumentMoniker": "mathProj\\Controllers\\Index.cs",
+              "ToolTip": "C:\\Users\\34528\\source\\repos\\mathProj\\mathProj\\Controllers\\Index.cs",
+              "RelativeToolTip": "mathProj\\Controllers\\Index.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACwAAAAPAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-10T16:20:10.472Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "IndexService.cs",
+              "DocumentMoniker": "C:\\Users\\34528\\source\\repos\\mathProj\\BLL\\Services\\IndexService.cs",
+              "RelativeDocumentMoniker": "BLL\\Services\\IndexService.cs",
+              "ToolTip": "C:\\Users\\34528\\source\\repos\\mathProj\\BLL\\Services\\IndexService.cs",
+              "RelativeToolTip": "BLL\\Services\\IndexService.cs",
+              "ViewState": "AgIAACoAAAAAAAAAAAAowDkAAABOAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-10T16:20:10.527Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "ImgFunctions.cs",
+              "DocumentMoniker": "C:\\Users\\34528\\source\\repos\\mathProj\\BLL\\Functions\\ImgFunctions.cs",
+              "RelativeDocumentMoniker": "BLL\\Functions\\ImgFunctions.cs",
+              "ToolTip": "C:\\Users\\34528\\source\\repos\\mathProj\\BLL\\Functions\\ImgFunctions.cs",
+              "RelativeToolTip": "BLL\\Functions\\ImgFunctions.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-10T16:20:10.562Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "TestWhatsAppService.cs",
+              "DocumentMoniker": "C:\\Users\\34528\\source\\repos\\mathProj\\BLL\\Services\\TestWhatsAppService.cs",
+              "RelativeDocumentMoniker": "BLL\\Services\\TestWhatsAppService.cs",
+              "ToolTip": "C:\\Users\\34528\\source\\repos\\mathProj\\BLL\\Services\\TestWhatsAppService.cs",
+              "RelativeToolTip": "BLL\\Services\\TestWhatsAppService.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-12T12:53:57.672Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "TextGeneratorFunctions.cs",
+              "DocumentMoniker": "C:\\Users\\34528\\source\\repos\\mathProj\\BLL\\Functions\\TextGeneratorFunctions.cs",
+              "RelativeDocumentMoniker": "BLL\\Functions\\TextGeneratorFunctions.cs",
+              "ToolTip": "C:\\Users\\34528\\source\\repos\\mathProj\\BLL\\Functions\\TextGeneratorFunctions.cs",
+              "RelativeToolTip": "BLL\\Functions\\TextGeneratorFunctions.cs",
+              "ViewState": "AgIAACgAAAAAAAAAAAAgwBkAAAAgAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-12T07:16:51.293Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "asciiFunction.cs",
+              "DocumentMoniker": "C:\\Users\\34528\\source\\repos\\mathProj\\BLL\\Functions\\asciiFunction.cs",
+              "RelativeDocumentMoniker": "BLL\\Functions\\asciiFunction.cs",
+              "ToolTip": "C:\\Users\\34528\\source\\repos\\mathProj\\BLL\\Functions\\asciiFunction.cs",
+              "RelativeToolTip": "BLL\\Functions\\asciiFunction.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAJ4AAAAMAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-10T20:27:36.93Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "ChatGPTService.cs",
+              "DocumentMoniker": "C:\\Users\\34528\\source\\repos\\mathProj\\BLL\\Services\\ChatGPTService.cs",
+              "RelativeDocumentMoniker": "BLL\\Services\\ChatGPTService.cs",
+              "ToolTip": "C:\\Users\\34528\\source\\repos\\mathProj\\BLL\\Services\\ChatGPTService.cs",
+              "RelativeToolTip": "BLL\\Services\\ChatGPTService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAAIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-11T06:56:45.105Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "ChatController.cs",
+              "DocumentMoniker": "C:\\Users\\34528\\source\\repos\\mathProj\\mathProj\\Controllers\\ChatController.cs",
+              "RelativeDocumentMoniker": "mathProj\\Controllers\\ChatController.cs",
+              "ToolTip": "C:\\Users\\34528\\source\\repos\\mathProj\\mathProj\\Controllers\\ChatController.cs",
+              "RelativeToolTip": "mathProj\\Controllers\\ChatController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-10T16:20:10.446Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "WhatsAppController.cs",
+              "DocumentMoniker": "C:\\Users\\34528\\source\\repos\\mathProj\\mathProj\\Controllers\\WhatsAppController.cs",
+              "RelativeDocumentMoniker": "mathProj\\Controllers\\WhatsAppController.cs",
+              "ToolTip": "C:\\Users\\34528\\source\\repos\\mathProj\\mathProj\\Controllers\\WhatsAppController.cs",
+              "RelativeToolTip": "mathProj\\Controllers\\WhatsAppController.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAmwEIAAAA0AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-10T15:24:05.838Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "WhatsAppService.cs",
+              "DocumentMoniker": "C:\\Users\\34528\\source\\repos\\mathProj\\BLL\\Services\\WhatsAppService.cs",
+              "RelativeDocumentMoniker": "BLL\\Services\\WhatsAppService.cs",
+              "ToolTip": "C:\\Users\\34528\\source\\repos\\mathProj\\BLL\\Services\\WhatsAppService.cs",
+              "RelativeToolTip": "BLL\\Services\\WhatsAppService.cs",
+              "ViewState": "AgIAABYAAAAAAAAAAIAzwCAAAABhAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-10T16:20:10.498Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "MathFunctions.cs",
+              "DocumentMoniker": "C:\\Users\\34528\\source\\repos\\mathProj\\BLL\\Functions\\MathFunctions.cs",
+              "RelativeDocumentMoniker": "BLL\\Functions\\MathFunctions.cs",
+              "ToolTip": "C:\\Users\\34528\\source\\repos\\mathProj\\BLL\\Functions\\MathFunctions.cs",
+              "RelativeToolTip": "BLL\\Functions\\MathFunctions.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAqwBIAAABcAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-17T21:07:35.08Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "ExerciseModel.cs",
+              "DocumentMoniker": "C:\\Users\\34528\\source\\repos\\mathProj\\BLL\\Objects\\ExerciseModel.cs",
+              "RelativeDocumentMoniker": "BLL\\Objects\\ExerciseModel.cs",
+              "ToolTip": "C:\\Users\\34528\\source\\repos\\mathProj\\BLL\\Objects\\ExerciseModel.cs",
+              "RelativeToolTip": "BLL\\Objects\\ExerciseModel.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAqwAwAAAAdAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-17T16:15:35.944Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\34528\\source\\repos\\mathProj\\mathProj\\Program.cs",
+              "RelativeDocumentMoniker": "mathProj\\Program.cs",
+              "ToolTip": "C:\\Users\\34528\\source\\repos\\mathProj\\mathProj\\Program.cs",
+              "RelativeToolTip": "mathProj\\Program.cs",
+              "ViewState": "AgIAAAoAAAAAAAAAAAAgwCwAAAAMAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-10T19:22:12.855Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "DatabaseService.cs",
+              "DocumentMoniker": "C:\\Users\\34528\\source\\repos\\mathProj\\BLL\\DAL\\DatabaseService.cs",
+              "RelativeDocumentMoniker": "BLL\\DAL\\DatabaseService.cs",
+              "ToolTip": "C:\\Users\\34528\\source\\repos\\mathProj\\BLL\\DAL\\DatabaseService.cs",
+              "RelativeToolTip": "BLL\\DAL\\DatabaseService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABUAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-13T12:32:27.916Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
