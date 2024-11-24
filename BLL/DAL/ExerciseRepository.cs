@@ -27,8 +27,8 @@ public class ExerciseRepository : DatabaseService
                 foreach (var exercise in exercises)
                 {
                     string insertQuery = @"INSERT INTO exercises 
-                    (CreatedByUserId, CreatedByRole, exercise, correctAnswer, HelpContent, CreatedAt, classId) 
-                    VALUES (@CreatedByUserId, @CreatedByRole, @Exercise, @CorrectAnswer, @HelpContent, @CreatedAt, @ClassId)";
+                    (CreatedByUserId, CreatedByRole, exercise, correctAnswer, HelpContent, CreatedAt, classId,DifficultyLevel) 
+                    VALUES (@CreatedByUserId, @CreatedByRole, @Exercise, @CorrectAnswer, @HelpContent, @CreatedAt, @ClassId,@DifficultyLevel)";
 
                     using (MySqlCommand command = new MySqlCommand(insertQuery, connection))
                     {
@@ -39,6 +39,8 @@ public class ExerciseRepository : DatabaseService
                         command.Parameters.AddWithValue("@HelpContent", exercise.Hint);
                         command.Parameters.AddWithValue("@CreatedAt", DateTime.UtcNow);
                         command.Parameters.AddWithValue("@ClassId", classId);
+                        command.Parameters.AddWithValue("@DifficultyLevel", exercise.DifficultyLevel??"Easy");
+
 
                         await command.ExecuteNonQueryAsync();
                     }
@@ -367,6 +369,7 @@ public class ExerciseRepository : DatabaseService
             WHERE sp.StudentId = @StudentId 
             AND ((sp.StudentAnswer IS NULL OR sp.StudentAnswer = '') OR IsCorrect = 0)
             AND IsSkipped = 0
+            AND status = 1
             ORDER BY sp.ProgressId ASC
             LIMIT 1";
 
@@ -401,15 +404,17 @@ public class ExerciseRepository : DatabaseService
 
             // Updated query to calculate remaining exercises
             string remainingExercisesQuery = @"
-        SELECT COUNT(e.id) AS RemainingExercises
-        FROM exercises e
-        INNER JOIN students s ON e.classId = s.ClassId
-        LEFT JOIN studentprogress sp ON sp.ExerciseId = e.id AND sp.StudentId = s.StudentId
-        WHERE s.StudentId = @StudentId
-          AND e.status = 1               -- Active exercises
-          AND (sp.IsCorrect IS NULL      -- Exclude completed or skipped exercises
-               OR sp.IsCorrect = 0)
-          AND (sp.IsSkipped IS NULL OR sp.IsSkipped = 0)";
+SELECT COUNT(e.id) AS RemainingExercises
+FROM exercises e
+INNER JOIN students s ON e.classId = s.ClassId
+LEFT JOIN studentprogress sp ON sp.ExerciseId = e.id AND sp.StudentId = s.StudentId
+WHERE s.StudentId = @StudentId
+  AND e.status = 1                  -- Active exercises
+  AND e.DifficultyLevel = s.PreferredDifficultyLevel -- Match the preferred difficulty level
+  AND (sp.IsCorrect IS NULL         -- Exclude completed or skipped exercises
+       OR sp.IsCorrect = 0)
+  AND (sp.IsSkipped IS NULL OR sp.IsSkipped = 0);";
+
 
             using (MySqlCommand command = new MySqlCommand(remainingExercisesQuery, connection))
             {
@@ -462,57 +467,257 @@ public class ExerciseRepository : DatabaseService
         }
     }
 
-    public async Task<ExerciseModel> GetNextUnassignedExercise(int studentId)
+
+    public async Task<(ExerciseModel? exercise, string? difficultyUpdate, string? changeType)> GetNextUnassignedExercise(int studentId, int? lastDays = null)
+    {
+        try
+        {
+            string? difficultyUpdate = null;
+            string? changeType = null;
+
+            using (MySqlConnection connection = GetConnection())
+            {
+                await connection.OpenAsync();
+
+                // Approximately call difficulty update logic 1 in 3 times
+                if (new Random().Next(5) == 0)
+                {
+                    //(difficultyUpdate, changeType) = await UpdateStudentDifficulty(connection, studentId);
+                }
+
+                // Query to fetch the next unassigned exercise
+                string query = @"
+            SELECT e.id, e.exercise, e.correctAnswer, e.DifficultyLevel, e.*
+            FROM exercises e
+            INNER JOIN students s ON e.classId = s.ClassId
+            WHERE s.StudentId = @StudentId
+              AND e.id NOT IN (
+                  SELECT sp.ExerciseId
+                  FROM studentprogress sp
+                  WHERE sp.StudentId = @StudentId
+                    AND (sp.IsCorrect = 1 OR sp.IsSkipped = 1)
+              )
+              AND e.status = 1
+              AND e.DifficultyLevel = (
+                  SELECT PreferredDifficultyLevel
+                  FROM students
+                  WHERE StudentId = @StudentId
+              )
+              {0}
+            ORDER BY RAND()
+            LIMIT 1;";
+
+                // Add condition for lastDays if provided
+                string createdAtCondition = lastDays.HasValue ? "AND e.CreatedAt >= NOW() - INTERVAL @LastDays DAY" : "";
+                query = string.Format(query, createdAtCondition);
+
+                using (MySqlCommand command = new MySqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@StudentId", studentId);
+
+                    if (lastDays.HasValue)
+                    {
+                        command.Parameters.AddWithValue("@LastDays", lastDays.Value);
+                    }
+
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            var exercise = new ExerciseModel
+                            {
+                                ExerciseId = Convert.ToInt32(reader["id"]),
+                                Exercise = reader["exercise"].ToString(),
+                                CorrectAnswer = reader["correctAnswer"].ToString(),
+                                DifficultyLevel = reader["DifficultyLevel"].ToString()
+                            };
+
+                            // Return both the exercise and any difficulty update info
+                            return (exercise, difficultyUpdate, changeType);
+                        }
+                    }
+                }
+            }
+
+            // If no exercise is found, return null along with any difficulty update info
+            return (null, difficultyUpdate, changeType);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in GetNextUnassignedExercise: {ex.Message}");
+            return (null, null, null);
+        }
+    }
+
+
+
+
+
+    private async Task<(string? updatedDifficulty, string? changeType)> UpdateStudentDifficulty(MySqlConnection connection, int studentId)
+    {
+        try
+        {
+            // Fetch the current difficulty level
+            string currentDifficultyQuery = "SELECT PreferredDifficultyLevel FROM students WHERE StudentId = @StudentId;";
+            string? currentDifficulty = null;
+
+            using (MySqlCommand currentCommand = new MySqlCommand(currentDifficultyQuery, connection))
+            {
+                currentCommand.Parameters.AddWithValue("@StudentId", studentId);
+                var result = await currentCommand.ExecuteScalarAsync();
+                currentDifficulty = result?.ToString();
+            }
+
+            if (currentDifficulty == null)
+            {
+                // If no difficulty level is found, return null
+                return (null, null);
+            }
+
+            // Downgrade logic: Check last 6 exercises for at least 2 incorrect answers
+            string downgradeQuery = @"
+        UPDATE students
+        SET PreferredDifficultyLevel = CASE
+            WHEN PreferredDifficultyLevel = 'Hard' THEN 'Medium'
+            WHEN PreferredDifficultyLevel = 'Medium' THEN 'Easy'
+            ELSE PreferredDifficultyLevel
+        END,
+        LastEvaluatedAt = NOW()
+        WHERE StudentId = @StudentId
+          AND (
+              SELECT COUNT(*)
+              FROM (
+                  SELECT sp.IsCorrect
+                  FROM studentprogress sp
+                  WHERE sp.StudentId = @StudentId
+                  ORDER BY sp.UpdatedAt DESC
+                  LIMIT 6
+              ) subquery
+              WHERE subquery.IsCorrect = 0
+          ) >= 2;";
+
+            // Execute downgrade query
+            int rowsAffectedByDowngrade;
+            using (MySqlCommand downgradeCommand = new MySqlCommand(downgradeQuery, connection))
+            {
+                downgradeCommand.Parameters.AddWithValue("@StudentId", studentId);
+                rowsAffectedByDowngrade = await downgradeCommand.ExecuteNonQueryAsync();
+            }
+
+            if (rowsAffectedByDowngrade > 0)
+            {
+                // Fetch the updated difficulty level after downgrade
+                string updatedDifficultyQuery = "SELECT PreferredDifficultyLevel FROM students WHERE StudentId = @StudentId;";
+                using (MySqlCommand updatedCommand = new MySqlCommand(updatedDifficultyQuery, connection))
+                {
+                    updatedCommand.Parameters.AddWithValue("@StudentId", studentId);
+                    var updatedResult = await updatedCommand.ExecuteScalarAsync();
+                    var updatedDifficulty = updatedResult?.ToString();
+                    return (updatedDifficulty, "Downgraded");
+                }
+            }
+
+            // Upgrade logic: Check last 15 exercises for at least 13 correct answers (no incorrect attempts)
+            string upgradeQuery = @"
+                   UPDATE students
+            SET PreferredDifficultyLevel = CASE
+                WHEN PreferredDifficultyLevel = 'Easy' THEN 'Medium'
+                WHEN PreferredDifficultyLevel = 'Medium' THEN 'Hard'
+                ELSE PreferredDifficultyLevel
+            END,
+            LastEvaluatedAt = NOW()
+            WHERE StudentId = @StudentId
+              AND (
+                  SELECT COUNT(*)
+                  FROM (
+                      SELECT sp.IsCorrect, sp.IncorrectAttempts
+                      FROM studentprogress sp
+                      WHERE sp.StudentId = @StudentId
+                      ORDER BY sp.UpdatedAt DESC
+                      LIMIT 10
+                  ) subquery
+                  WHERE subquery.IsCorrect = 1
+                     AND IncorrectAttempts = 0
+              ) >= 8
+              AND PreferredDifficultyLevel != 'Hard';";
+
+            // Execute upgrade query
+            int rowsAffectedByUpgrade;
+            using (MySqlCommand upgradeCommand = new MySqlCommand(upgradeQuery, connection))
+            {
+                upgradeCommand.Parameters.AddWithValue("@StudentId", studentId);
+                rowsAffectedByUpgrade = await upgradeCommand.ExecuteNonQueryAsync();
+            }
+
+            if (rowsAffectedByUpgrade > 0)
+            {
+                // Fetch the updated difficulty level after upgrade
+                string updatedDifficultyQuery = "SELECT PreferredDifficultyLevel FROM students WHERE StudentId = @StudentId;";
+                using (MySqlCommand updatedCommand = new MySqlCommand(updatedDifficultyQuery, connection))
+                {
+                    updatedCommand.Parameters.AddWithValue("@StudentId", studentId);
+                    var updatedResult = await updatedCommand.ExecuteScalarAsync();
+                    var updatedDifficulty = updatedResult?.ToString();
+                    return (updatedDifficulty, "Upgraded");
+                }
+            }
+
+            return (currentDifficulty, null); // No change in difficulty level
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in UpdateStudentDifficulty: {ex.Message}");
+            return (null, null);
+        }
+    }
+
+
+    public async Task<int> GetLastCorrectAnswers(int studentId)
     {
         try
         {
 
+            using (MySqlConnection connection = GetConnection())
+            {
+                await connection.OpenAsync();
 
-        using (MySqlConnection connection = GetConnection())
-        {
-            await connection.OpenAsync();
-
+                // Combine initialization and query execution
                 string query = @"
-        SELECT e.id, e.exercise, e.correctAnswer,e.*
-FROM exercises e
-INNER JOIN students s ON e.classId = s.ClassId
-WHERE s.StudentId = @StudentId
-AND e.id NOT IN (
-    SELECT sp.ExerciseId
+           SELECT COUNT(*) AS ConsecutiveCorrectAnswers
+FROM (
+    SELECT
+        sp.IncorrectAttempts,
+        SUM(CASE WHEN sp.IncorrectAttempts > 0 THEN 1 ELSE 0 END) 
+        OVER (ORDER BY sp.UpdatedAt DESC) AS streakBreak
     FROM studentprogress sp
-    WHERE sp.StudentId = @StudentId AND sp.IsCorrect = 1
-          OR isSkipped = 1
-)
-
-AND e.status = 1
-ORDER BY RAND()
-LIMIT 1;";
+    WHERE sp.StudentId = @StudentId
+    ORDER BY sp.UpdatedAt DESC
+) AS sub
+WHERE streakBreak = 0;
+        ";
 
                 using (MySqlCommand command = new MySqlCommand(query, connection))
-            {
-                command.Parameters.AddWithValue("@StudentId", studentId);
-                using (var reader = await command.ExecuteReaderAsync())
                 {
-                    if (await reader.ReadAsync())
+                    command.Parameters.AddWithValue("@StudentId", studentId);
+                    var result = await command.ExecuteScalarAsync();
+
+                    if (result != null && result != DBNull.Value)
                     {
-                        return new ExerciseModel
-                        {
-                            ExerciseId = Convert.ToInt32(reader["id"]),
-                            Exercise = reader["exercise"].ToString(),
-                            CorrectAnswer = reader["correctAnswer"].ToString()
-                        };
+                        return Convert.ToInt32(result);
                     }
+                    return 0;
                 }
             }
-        }
-        return null;
         }
         catch (Exception e)
         {
 
-            return null;
+            throw e;
         }
     }
+
+
+
 
     public async Task<string> GetHelpForExercise(int exerciseId, int studentId)
     {

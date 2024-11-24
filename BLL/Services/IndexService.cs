@@ -67,7 +67,7 @@ namespace BL.Serives
                     {
                         case Constants.Teacher:
                            result = await HandleTeacherMessage(numericPhoneNumber, body);
-                        //   result = await HandleStudentMessage(numericPhoneNumber, body); //FOR TEST IF NEED AS STUDENT
+                         //result = await HandleStudentMessage(numericPhoneNumber, body); //FOR TEST IF NEED AS STUDENT
                             break;
                         case Constants.Parent:
                             result = await HandleParentMessage(numericPhoneNumber, body);
@@ -116,21 +116,11 @@ namespace BL.Serives
 
             if (normalizedMessage == "test")
             {
+                await SendImageToSender(phoneNumber, "10InRow_", "");
+                var num = await _exerciseRepository.GetLastCorrectAnswers(13);
+                await _whatsAppService.GetHelpForStudent("2 * 43");
+                //await SendImageToSender(phoneNumber, "5_", "");
 
-                await SendGifToSender(phoneNumber, "dog.gif");
-                //var animation = asciiFunction.GetMovingCat();
-
-                //// Create an "animation" by adding different frames
-                //foreach (var item in animation)
-
-                //{
-                //    Thread.Sleep(400);
-                //    await SendResponseToSender(phoneNumber, item);
-                //}
-                //Thread.Sleep(800);
-                //string congratString = "כל הכבוד על העבודה המדהימה בפתרון התרגילים! 🌟🎉✏️👏 ממש מרשים! המשיכו כך 🚀😊";
-
-                //await SendResponseToSender(phoneNumber, congratString);
                 return "";
 
 
@@ -162,6 +152,12 @@ namespace BL.Serives
                     return TextGeneratorFunctions.GetCcompletionMessages();
                 }
             }
+            if (normalizedMessage == "לא")
+            {
+                // Start the exercise sequence
+                await SendImageToSender(phoneNumber, "getback_", "");
+                return "";
+            }
 
             else
             {
@@ -183,16 +179,26 @@ namespace BL.Serives
                 return $"You already have an exercise in progress:\n{inProgressExercise.Exercise}\nPlease answer it.";
             }
             //When say "כן"
+
             var nextExercise = await _exerciseRepository.GetNextUnassignedExercise(studentId);
-            if (nextExercise != null)
+            if (nextExercise.changeType != null)
             {
-                await _exerciseRepository.AddExerciseToStudentProgress(studentId, nextExercise.ExerciseId, false);
+                string sendingText = TextGeneratorFunctions.GetLevelUpdateMessage(nextExercise.difficultyUpdate, nextExercise.changeType);
+                string picType = nextExercise.changeType == "Upgraded" ? "levelupHard_" : "levelup_";
+                await SendImageToSender(phoneNumber, picType, "");
+                await SendResponseToSender(phoneNumber, sendingText);
+            }
+
+            if (nextExercise.exercise != null)
+            {
+                await _exerciseRepository.AddExerciseToStudentProgress(studentId, nextExercise.exercise.ExerciseId, false);
                 
-                return TextGeneratorFunctions.GetRandomExerciseMessage(MathFunctions.FormatExerciseString(nextExercise.Exercise));
+                return TextGeneratorFunctions.GetRandomExerciseMessage(MathFunctions.FormatExerciseString(nextExercise.exercise.Exercise));
             }
             else
             {
-                return "🎉 וואו! אתם אלופים! 👑 סיימתם הכל! 💪✨ כל הכבוד! 🏆😄\n✨ בקרוב יהיו עוד תרגילים כיפיים! 📚🤩";
+                await SendImageToSender(phoneNumber, "noExerciseLeft_", "");
+                return TextGeneratorFunctions.GetFinishedExercisesMessage();
 
             }
         }
@@ -213,14 +219,15 @@ namespace BL.Serives
                 string[] hintParts = Regex.Split(helpContent, @"(?<=[.!?])");
 
                 string userFriendlyMessage = string.Join("\n", hintParts.Select(part => part.Trim()).Where(part => !string.IsNullOrWhiteSpace(part)));
-                string formattedMessage = $"\u202Bהנה טיפ קטן: 😏\n*{MathFunctions.FormatExerciseString(inProgressExercise.Exercise)}*\nאותו הדבר כמו:\n⬇\n*{userFriendlyMessage}*";
+                string formattedMessage = $"\u202B טעות קטנה ❌ 😏\n*{MathFunctions.FormatExerciseString(inProgressExercise.Exercise)}*\nטיפ:\n⬇\n*{userFriendlyMessage}*";
 
                 return formattedMessage;
 
             }
             else
             {
-                return "🎉 וואו! אתם אלופים! 👑 סיימתם הכל! 💪✨ כל הכבוד! 🏆😄\n✨ בקרוב יהיו עוד תרגילים כיפיים! 📚🤩";
+                await SendImageToSender(phoneNumber, "noExerciseLeft_", "");
+                return TextGeneratorFunctions.GetFinishedExercisesMessage();
 
             }
         }
@@ -299,13 +306,21 @@ namespace BL.Serives
 
             if (!hasStarted)
             {
+
                 // This is the first time the student is sending a message
                 var firstExercise = await _exerciseRepository.GetNextUnassignedExercise(studentId);
-                if (firstExercise != null)
+                if (firstExercise.changeType != null)
+                {
+                    string sendingText = TextGeneratorFunctions.GetLevelUpdateMessage(firstExercise.difficultyUpdate, firstExercise.changeType);
+                    string picType = firstExercise.changeType == "Upgraded" ? "levelupHard_" : "levelup_";
+                    await SendImageToSender(phoneNumber, picType, "");
+                    await SendResponseToSender(phoneNumber, sendingText);
+                }
+                if (firstExercise.exercise != null)
                 {
                     try
                     {
-                        await _exerciseRepository.AddExerciseToStudentProgress(studentId, firstExercise.ExerciseId, true);
+                        await _exerciseRepository.AddExerciseToStudentProgress(studentId, firstExercise.exercise.ExerciseId, true);
                     }
                     catch (Exception e)
                     {
@@ -314,9 +329,9 @@ namespace BL.Serives
                     }
 
                     //      _ = _whatsAppService.SendExerciseToStudent(phoneNumber, firstExercise.Exercise);
-                    string exerciseText = (firstExercise.Exercise.Contains("?") || firstExercise.Exercise.Contains("_"))
-                        ? firstExercise.Exercise
-                        : $"? = {firstExercise.Exercise}";
+                    string exerciseText = (firstExercise.exercise.Exercise.Contains("?") || firstExercise.exercise.Exercise.Contains("_"))
+                        ? firstExercise.exercise.Exercise
+                        : $"? = {firstExercise.exercise.Exercise}";
 
                     // Add the LTR character
                     exerciseText = "‪" + exerciseText;
@@ -353,40 +368,22 @@ namespace BL.Serives
                     await _exerciseRepository.UpdateStudentProgress(studentId, inProgressExercise.ExerciseId, studentAnswer, isCorrect);
                     int exercisesSolvedToday = await _exerciseRepository.GetExercisesSolvedToday(studentId);
 
-                    if (exercisesSolvedToday % 5 == 0 && exercisesSolvedToday % 10 != 0)
+                    var lastCurrectAnswersInRow = await _exerciseRepository.GetLastCorrectAnswers(studentId);
 
-
+                    if (exercisesSolvedToday % 5 == 0 && exercisesSolvedToday % 10 != 0 && (lastCurrectAnswersInRow > 0 &&  lastCurrectAnswersInRow % 5 != 0))
                     {
-                        var animation = asciiFunction.GetMovingCat();
-
-                        // Create an "animation" by adding different frames
-                        foreach (var item in animation)
-
-                        {
-                            Thread.Sleep(100);
-                            await SendResponseToSender(phoneNumber, item);
-                        }
-                        Thread.Sleep(1200);
+                        await SendImageToSender(phoneNumber, "5_", "");
+                        //await SendResponseToSender(phoneNumber, TextGeneratorFunctions.Get5ExerciseSolvedMessage());
+                        Thread.Sleep(1000);
                         // Send a congratulatory message to the student
                         string congratulatoryMessage = TextGeneratorFunctions.GetRandomCongratulatoryMessage(exercisesSolvedToday);
 
                         await SendResponseToSender(phoneNumber, congratulatoryMessage);
-                        Thread.Sleep(1000);
-                        //await SendResponseToSender(phoneNumber, congratulatoryMessage);
                     }
 
-                    if (exercisesSolvedToday % 10 == 0)
+                    else if (exercisesSolvedToday % 10 == 0 && (lastCurrectAnswersInRow > 0 && lastCurrectAnswersInRow % 10 != 0))
                     {
-                        var animation = asciiFunction.GetMovingObjectFrame();
-
-                        // Create an "animation" by adding different frames
-                        foreach (var item in animation)
-
-                        {
-                            Thread.Sleep(300);
-                            await SendResponseToSender(phoneNumber, item);
-                        }
-                        Thread.Sleep(800);
+                        await SendImageToSender(phoneNumber, "final_", "");
                         string congratulatoryMessage = $"כל הכבוד על פתרון {exercisesSolvedToday} תרגילים היום! 💪✨ האם תרצה להמשיך?";
 
 
@@ -394,18 +391,37 @@ namespace BL.Serives
                         return "";
                     }
 
+                    else if (lastCurrectAnswersInRow > 0 && lastCurrectAnswersInRow % 5 == 0 && lastCurrectAnswersInRow % 10 != 0)
+                    {
+                        await SendImageToSender(phoneNumber, "5InRow_", "");
+                        Thread.Sleep(1000);
+                    }
+                    else if (lastCurrectAnswersInRow > 0 && lastCurrectAnswersInRow % 10 == 0)
+                    {
+                        await SendImageToSender(phoneNumber, "10InRow_", "");
+                        Thread.Sleep(1000);
+                    }
+
                     // Fetch the next unassigned exercise
                     var nextExercise = await _exerciseRepository.GetNextUnassignedExercise(studentId);
+                    if (nextExercise.changeType != null)
+                    {
+                        string sendingText = TextGeneratorFunctions.GetLevelUpdateMessage(nextExercise.difficultyUpdate, nextExercise.changeType);
+                        string picType = nextExercise.changeType == "Upgraded" ? "levelupHard_" : "levelup_";
+                        await SendImageToSender(phoneNumber, picType, "");
+
+                        await SendResponseToSender(phoneNumber, sendingText);
+                    }
                     var exrcisesLeft = await _exerciseRepository.GetExercisesLeftForStudent(studentId);
-                    if (nextExercise != null)
+                    if (nextExercise.exercise != null)
                     {
                         // Assign the exercise to the student
-                        await _exerciseRepository.AddExerciseToStudentProgress(studentId, nextExercise.ExerciseId, false);
+                        await _exerciseRepository.AddExerciseToStudentProgress(studentId, nextExercise.exercise.ExerciseId, false);
 
                         // Return message with next exercise
                         string exerciseText;
 
-                        exerciseText = MathFunctions.FormatExerciseString(nextExercise.Exercise);
+                        exerciseText = MathFunctions.FormatExerciseString(nextExercise.exercise.Exercise);
 
                         // Remove any asterisks if they were added accidentally or for formatting
 
@@ -418,24 +434,26 @@ namespace BL.Serives
 
                         string exercisesLeftText = exrcisesLeft < 10 ? $"🔥 נותרו לך עוד {exrcisesLeft} תרגילים לסיום. 💪✨\n" : "";
 
-                        string response = $"{randomCorrectAnswer}\n{exercisesLeftText}להלן התרגיל הבא:\n{exerciseText}";
+                        string response = $"{randomCorrectAnswer}\n{exercisesLeftText}\n{exerciseText}";
 
 
-                        if (includeAscii)
-                        {
-                            response += "\n" + asciiFunction.randomDraw();
-                        }
-                        else
-                        {
-                            response += "\n" + asciiFunction.emojisDraw();
-                        }
+                        //if (includeAscii)
+                        //{
+                        //    response += "\n" + asciiFunction.randomDraw();
+                        //}
+                        //else
+                        //{
+                        //    response += "\n" + asciiFunction.emojisDraw();
+                        //}
 
                         return response;
 
                     }
                     else
                     {
-                        return TextGeneratorFunctions.GetCorrectAnswerText();
+                        //
+                        await SendImageToSender(phoneNumber, "noExerciseLeft_", "");
+                        return TextGeneratorFunctions.GetFinishedExercisesMessage();
                     }
                 }
                 else
@@ -443,7 +461,7 @@ namespace BL.Serives
                     await _exerciseRepository.UpdateStudentProgress(studentId, inProgressExercise.ExerciseId, studentAnswer, isCorrect);
                     int incorrectAttempts = inProgressExercise.IncorrectAttempts; //await _exerciseRepository.GetIncorrectAttempts(studentId, inProgressExercise.ExerciseId);
                     //incorrect attemp +1 that added to db
-                    if (incorrectAttempts + 1 > 3)
+                    if (incorrectAttempts== 2)
                     {
                         await _exerciseRepository.SkipCurrentExercise(inProgressExercise.ProgressId);
                         string skipNext = "😊 *היי! קשה קצת? אין בעיה, דילגנו לתרגיל הבא ✨✏️. בהצלחה!* 🚀";
@@ -451,7 +469,7 @@ namespace BL.Serives
                         return await StartExercisesForStudent(studentId, phoneNumber);
                     }
 
-                    if (incorrectAttempts >= 2)
+                    if (incorrectAttempts == 1)
                     {
 
                         string helpMessage = @"
@@ -461,7 +479,9 @@ namespace BL.Serives
               💡✨💬
 
         ";
-                        await SendResponseToSender(phoneNumber, helpMessage);
+                       // await SendResponseToSender(phoneNumber, helpMessage);
+                       // await Task.Delay(1500);
+                        await SendImageToSender(phoneNumber, "helpOnTheWay_", "");
 
                         string chatGptResponse = await _whatsAppService.GetHelpForStudent(inProgressExercise.Exercise);
 
@@ -487,8 +507,8 @@ namespace BL.Serives
                     
 
                     var randomPhrase = TextGeneratorFunctions.GetMotivated();
-
-                    if (incorrectAttempts ==1) return await ProvideHelpForStudent(studentId, phoneNumber);
+                    //at the first rount, give hint (its 0 on the first inccorect answer)
+                    if (incorrectAttempts ==0) return await ProvideHelpForStudent(studentId, phoneNumber);
 
                     return $"תשובה *לא* נכונה 🙁.\n{randomPhrase} 😎.\nתרגיל:\n {exerciseText}\n\nלעזרה, יש לכתוב help  🆘\n ";
 
@@ -555,19 +575,42 @@ namespace BL.Serives
             {
                 string instructionText = string.Empty;
                 string exampleText = string.Empty;
+                string difficultyLevel = string.Empty;
+
                 var messageParts = normalizedMessage.Split("***", StringSplitOptions.RemoveEmptyEntries);
                 if (messageParts.Length > 0)
                 {
                     var instructionAndExample = messageParts[0].Split("//", StringSplitOptions.RemoveEmptyEntries);
-                     instructionText = instructionAndExample.ElementAtOrDefault(0)?.Trim() ?? string.Empty;
-                     exampleText = instructionAndExample.ElementAtOrDefault(1)?.Trim() ?? string.Empty;
+                    instructionText = instructionAndExample.ElementAtOrDefault(0)?.Trim() ?? string.Empty;
+                    exampleText = instructionAndExample.ElementAtOrDefault(1)?.Trim() ?? string.Empty;
+
+                    // Check if instructionText contains "###"
+                    if (instructionText.Contains("###"))
+                    {
+                        var splitInstruction = instructionText.Split("###", StringSplitOptions.RemoveEmptyEntries);
+                        instructionText = splitInstruction.ElementAtOrDefault(0)?.Trim() ?? string.Empty;
+                        difficultyLevel = splitInstruction.ElementAtOrDefault(1)?.Trim() ?? string.Empty;
+                    }
+
+                    // Check if exampleText contains "###"
+                    if (exampleText.Contains("###"))
+                    {
+                        var splitExample = exampleText.Split("###", StringSplitOptions.RemoveEmptyEntries);
+                        exampleText = splitExample.ElementAtOrDefault(0)?.Trim() ?? string.Empty;
+                        difficultyLevel = splitExample.ElementAtOrDefault(1)?.Trim() ?? string.Empty;
+                    }
+                    else if (string.IsNullOrEmpty(difficultyLevel) && messageParts.Length > 1) // Handle difficultyLevel from messageParts[1]
+                    {
+                        difficultyLevel = messageParts[1].Trim();
+                    }
                 }
 
                 string midMessage = "\u200F מחולל 💡, יש למתין...⌛✨";
 
                 await SendResponseToSender(phoneNumber, midMessage);
-  //              await _whatsAppService.SendMessageToUser(phoneNumber, midMessage);
-                return await _whatsAppService.GetExercisesFromGPT(exampleText, teacherId, Constants.Teacher, classId, instructionText); //TODO: change the 1, now its for test cos same user is teacher and student
+                //              await _whatsAppService.SendMessageToUser(phoneNumber, midMessage);
+                difficultyLevel = "Easy";
+                return await _whatsAppService.GetExercisesFromGPT(exampleText, teacherId, Constants.Teacher, classId, instructionText, difficultyLevel); //TODO: change the 1, now its for test cos same user is teacher and student
             }
 
             //remind students
@@ -663,16 +706,16 @@ namespace BL.Serives
             }
         }
 
-        private async Task SendGifToSender(string number, string gifFileName)
+        private async Task SendImageToSender(string number, string imageFileName, string type)
         {
             // Prepare the data to send to Node.js server
             var client = _httpClientFactory.CreateClient();
-            var requestUri = "http://localhost:3000/send-gif"; // Assuming Node.js server runs locally on port 3000
+            var requestUri = "http://localhost:3000/send-image"; // Assuming Node.js server runs locally on port 3000
 
             var payload = new
             {
-                number = number.Replace("@c.us", "").Trim().Replace("+", ""),
-                gifFileName = gifFileName
+                number = number.Replace("@c.us", "").Trim().Replace("+", ""), // Normalize the number
+                imageFileName = imageFileName // Match the Node.js expected property
             };
 
             var jsonContent = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
@@ -682,13 +725,14 @@ namespace BL.Serives
 
             if (response.IsSuccessStatusCode)
             {
-                Console.WriteLine($"GIF successfully sent to {number}");
+                Console.WriteLine($"Image successfully sent to {number}");
             }
             else
             {
-                Console.WriteLine($"Failed to send GIF to {number}: {response.StatusCode}");
+                Console.WriteLine($"Failed to send image to {number}: {response.StatusCode}");
             }
         }
+
 
 
 

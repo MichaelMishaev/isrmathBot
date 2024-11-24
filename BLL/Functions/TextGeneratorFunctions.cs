@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static Org.BouncyCastle.Asn1.Cmp.Challenge;
 
 namespace BLL.Functions
 {
@@ -225,6 +226,122 @@ namespace BLL.Functions
             // Return the chosen message
             return randomExerciseMessage;
         }
+
+
+        public static string Get5ExerciseSolvedMessage()
+        {
+            string[] congratulatoryMessages = [
+    "🎉✨ סיימתם עוד 5 תרגילים! אתם כוכבים! 🌟🚀",
+    "🥳💡 איזה יופי! עוד 5 תרגילים נפתרו! 👏📚",
+    "🔥🏆 כל הכבוד! 5 תרגילים נוספים מאחוריכם! ✏️💪",
+    "🎯✨ מדהים! עוד 5 תרגילים בדרך להצלחה! 🎉📖",
+    "💪🌈 וואו! 5 תרגילים! אתם פשוט מדהימים! 🥳📚",
+    "🎉🥳 עוד 5 תרגילים מאחוריכם! ממשיכים לטפס לפסגה! 🏆✨",
+    "📚🚀 עוד 5 תרגילים נפתרו! קדימה, אלופים! 💡👏",
+    "🌟🔥 סיימתם 5 נוספים! אתם מעולים! 🏆✏️",
+    "✨🎉 כל הכבוד! עוד 5 תרגילים! תותחים אמיתיים! 🚀💪",
+    "💃🕺 יופי! 5 נוספים מאחוריכם! ממשיכים! 🎯📖",
+    "👏🌈 איזה הישג! 5 נוספים! אתם מדהימים! 🎉✨",
+    "🥳✨ מדהים! 5 נוספים נפתרו! אתם בדרך לפסגה! 🚀📚",
+    "🎯💪 כל הכבוד על עוד 5 תרגילים! אתם פשוט תותחים! 🌟🔥",
+    "📖🔥 וואו! 5 נוספים מאחוריכם! אתם מטורפים! 🏆🥳",
+    "🎉🚀 תותחים! 5 נוספים בדרך להצלחה! אתם אלופים! 👏✨",
+    "🌟✨ איזה הישג! עוד 5 מאחוריכם! מדהימים! 🥳📚",
+    "📚🔥 כל הכבוד! 5 נוספים סיימתם! אתם אלופים! 🏆✨",
+    "🎉✨ וואו! עוד 5! אתם בדרך לכבוש את הכל! 🚀📖",
+    "🥳🔥 איזה יופי! 5 נוספים! אתם פשוט אלופים! 💡👏",
+    "✨🎯 כל הכבוד על עוד 5! ממשיכים לעוד הצלחות! 🏆🚀"
+];
+
+            // Pick a random message
+            Random random = new Random();
+            string randomExerciseMessage = congratulatoryMessages[random.Next(congratulatoryMessages.Length)];
+
+            return randomExerciseMessage;
+
+        }
+
+        public static string GetFinishedExercisesMessage()
+        {
+            string[] messages = new string[]
+   {
+            "🎉 וואו! אתם אלופים! 👑 סיימתם הכל! 💪✨ כל הכבוד! 🏆😄\n✨ בקרוב יהיו עוד תרגילים כיפיים! 📚🤩",
+            "🚀 כל הכבוד! 🏅 אתם פשוט תותחים! 💥 המשיכו ככה! 😊",
+            "🎊 איזה הישג! 🥳 כל הכבוד על המאמצים שלכם! 💪 תרגילים חדשים בדרך! 📖🤓",
+            "👏 מדהים! 🌟 סיימתם הכל בצורה מעולה! 🥇 המשיכו להיות כוכבים! ✨",
+            "💫 וואו, אתם פשוט מצוינים! 🏆 כיף לראות אתכם מסיימים הכל בהצלחה! 😄",
+            "🔥 אתם פשוט אלופים! 🏅 סיימתם את התרגילים בצורה מרשימה! 💪 המשיכו ככה! 🚀",
+            "🌟 כל הכבוד! 🏆 אתם מלכי התרגילים! 👑 מחכים לכם תרגילים נוספים בקרוב! 📚😊",
+            "✨ איזה ביצוע מרשים! 🤩 אתם מדהימים! 😍 תמשיכו להצליח בתרגילים הבאים! 📖💡",
+            "🎉 הצלחה מרשימה! 🥳 אתם פשוט מדהימים! 💥 מחכים לכם אתגרים חדשים! 💪🚀",
+            "💪 כל הכבוד על ההשקעה! 🏆 אתם פשוט נפלאים! 💛 בקרוב יהיו עוד תרגילים כיפיים! 😊"
+   };
+
+            Random random = new Random();
+            int index = random.Next(messages.Length);
+
+            return messages[index];
+        }
+
+        public static string GetLevelUpdateMessage(string newLevel, string changeType)
+        {
+            // Messages for downgrade to Easy
+            var downgradeToEasyMessages = new[]
+            {
+        "🌟 **אל דאגה 😊! התרגילים יהיו פשוטים יותר עכשיו.** 🚀✨ **אנחנו מאמינים בכם! ממשיכים להתקדם!** 📘🌈",
+        "✨ **לפעמים כדאי לקחת צעד אחורה 😊🎉. הרמה עכשיו קלה יותר כדי לחזור בביטחון!** 🚀📘🌟",
+        "🌈 **התאמנו את הרמה 🎉 כדי להקל עליכם 😊✨! קדימה, לא עוצרים!** 🚀🌟📘"
+    };
+
+            // Messages for upgrade to Hard
+            var upgradeToHardMessages = new[]
+            {
+        "🚀 **ברכות על הקידום 🎉! אתם עכשיו בדרגת גאונים 🤓✨!** 🌈 **קדימה, נראה את הגאונות שלכם!** 🌟📘✨",
+        "🌟 **WOW! אתם משיגים גבהים חדשים! התרגילים ברמה הגבוהה ביותר עכשיו 🚀✨!** 🎉 **אתם מדהימים!** 🌈📘",
+        "🎉 **מדהים! רמת גאונות מחכה לכם עכשיו 🚀🌟!** 🌈 **קדימה, להמשיך עם כל הכוח!** 📘✨"
+    };
+
+            // Messages for change to Medium
+            var mediumUpgradeMessages = new[]
+            {
+        "🎉 **התקדמות נהדרת! מעכשיו תרגילים ברמה בינונית מחכים לכם 🚀✨!** 🌟 **אתם בדרך הנכונה!** 📘🌈",
+        "✨ **ברכות על ההתקדמות 🎉! התרגילים ברמה מאוזנת יותר עכשיו 🌟!** 🚀 **ממשיכים להוכיח את היכולות!** 🌈📘",
+        "📘 **שדרוג קטן ברמה 🚀✨!** 🌈 **עכשיו יהיו צרגילים טיפה קשים יות!** 🌟🎉"
+    };
+
+            var mediumDowngradeMessages = new[]
+            {
+        "🌟 **לא נורא 😊! התרגילים עכשיו ברמה בינונית.** 🚀✨ **זה הזמן להחזיר את הביטחון!** 🎉📘🌈",
+        "✨ **התאמנו את הרמה כדי להקל 😊🎉. התרגילים עכשיו מאוזנים יותר!** 🚀 **קדימה, בואו נתקדם יחד!** 🌟📘",
+        "🌈 **תרגילים ברמה בינונית לפניכם 😊✨!** 🚀 **לאט לאט, חוזרים לשגרה!** 🎉🌟📘"
+    };
+
+            // Select messages based on level and change type
+            string[] selectedMessages;
+
+            switch (newLevel)
+            {
+                case "Easy":
+                    selectedMessages = downgradeToEasyMessages; // Only downgrade to Easy
+                    break;
+                case "Medium":
+                    selectedMessages = changeType == "Upgraded" ? mediumUpgradeMessages : mediumDowngradeMessages;
+                    break;
+                case "Hard":
+                    selectedMessages = upgradeToHardMessages; // Only upgrade to Hard
+                    break;
+                default:
+                    selectedMessages = new[] { "🎈 **רמה חדשה הותאמה עבורכם! קדימה, נמשיך יחד!** 🚀✨📘" };
+                    break;
+            }
+
+            // Pick a random message from the selected array
+            var random = new Random();
+            return selectedMessages[random.Next(selectedMessages.Length)];
+        }
+
+
+
 
 
     }

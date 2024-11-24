@@ -15,17 +15,16 @@ namespace mathProj.Controllers
 
         private readonly WhatsAppService _whatsAppService;
         private readonly IndexService _indexService;
-        private readonly TestWhatsAppService _testWhatsAppService;
+        
 
         private readonly string _accountSid;
         private readonly string _authToken;
         private readonly string _fromPhoneNumber;
         private readonly IHttpClientFactory _httpClientFactory;
-        public WhatsAppController(WhatsAppService whatsAppService, IndexService indexService, TestWhatsAppService testWhatsAppService, IConfiguration configuration, IHttpClientFactory httpClientFactory)
+        public WhatsAppController(WhatsAppService whatsAppService, IndexService indexService, IConfiguration configuration, IHttpClientFactory httpClientFactory)
         {
             _whatsAppService = whatsAppService;
             _indexService = indexService;
-            _testWhatsAppService = testWhatsAppService;
             _httpClientFactory = httpClientFactory;
         }
 
