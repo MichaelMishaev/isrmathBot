@@ -440,7 +440,7 @@ WHERE s.StudentId = @StudentId
             FROM students AS s
             INNER JOIN classes AS c ON c.classid = s.classId
             INNER JOIN users AS u ON u.UserId = s.UserId
-            WHERE  u.Status = 1;";
+            WHERE  u.Status = 1 AND c.ClassName = @ClassName;";
 
                 using (MySqlCommand command = new MySqlCommand(query, connection))
                 {
@@ -1101,6 +1101,207 @@ public async Task<int> GetExercisesSolvedToday(int studentId)
     }
 
 
+    /// <summary>
+    /// panding teachers exercise logics
+    /// </summary>
+    /// 
+
+
+    public async Task SavePendingExercises(string pendingId, string response, int creatorUserId, string creatorRole, int classId)
+    {
+        using (var connection = GetConnection())
+        {
+            await connection.OpenAsync();
+            using (var transaction = await connection.BeginTransactionAsync())
+            {
+                try
+                {
+                    // Delete existing pending exercises for the creator
+                    await DeletePendingExercisesByCreatorUserId(creatorUserId, connection, transaction);
+
+                    // Insert new PendingExercises first
+                    var queryPendingExercises = @"INSERT INTO PendingExercises (PendingId, Response, CreatorUserId, CreatorRole, ClassId) 
+                                              VALUES (@PendingId, @Response, @CreatorUserId, @CreatorRole, @ClassId)";
+                    using (var command = new MySqlCommand(queryPendingExercises, connection, transaction))
+                    {
+                        command.Parameters.AddWithValue("@PendingId", pendingId);
+                        command.Parameters.AddWithValue("@Response", response);
+                        command.Parameters.AddWithValue("@CreatorUserId", creatorUserId);
+                        command.Parameters.AddWithValue("@CreatorRole", creatorRole);
+                        command.Parameters.AddWithValue("@ClassId", classId);
+                        await command.ExecuteNonQueryAsync();
+                    }
+
+                    // Then insert or update UserPendingExercises
+                    var queryUserPending = @"INSERT INTO UserPendingExercises (UserId, PendingId) 
+                                         VALUES (@UserId, @PendingId) 
+                                         ON DUPLICATE KEY UPDATE PendingId = @PendingId";
+                    using (var command = new MySqlCommand(queryUserPending, connection, transaction))
+                    {
+                        command.Parameters.AddWithValue("@UserId", creatorUserId);
+                        command.Parameters.AddWithValue("@PendingId", pendingId);
+                        await command.ExecuteNonQueryAsync();
+                    }
+
+                    await transaction.CommitAsync();
+                }
+                catch
+                {
+                    await transaction.RollbackAsync();
+                   
+                }
+            }
+        }
+    }
+
+
+    public async Task DeletePendingExercisesByCreatorUserId(int creatorUserId, MySqlConnection connection, MySqlTransaction transaction)
+    {
+        string pendingIdQuery = "SELECT PendingId FROM UserPendingExercises WHERE UserId = @CreatorUserId";
+        string? pendingId = null;
+
+        using (var command = new MySqlCommand(pendingIdQuery, connection, transaction))
+        {
+            command.Parameters.AddWithValue("@CreatorUserId", creatorUserId);
+            var result = await command.ExecuteScalarAsync();
+            pendingId = result as string;
+        }
+
+        if (!string.IsNullOrEmpty(pendingId))
+        {
+            var deletePendingQuery = "DELETE FROM PendingExercises WHERE PendingId = @PendingId";
+            using (var command = new MySqlCommand(deletePendingQuery, connection, transaction))
+            {
+                command.Parameters.AddWithValue("@PendingId", pendingId);
+                await command.ExecuteNonQueryAsync();
+            }
+
+            var deleteUserPendingQuery = "DELETE FROM UserPendingExercises WHERE UserId = @CreatorUserId";
+            using (var command = new MySqlCommand(deleteUserPendingQuery, connection, transaction))
+            {
+                command.Parameters.AddWithValue("@CreatorUserId", creatorUserId);
+                await command.ExecuteNonQueryAsync();
+            }
+        }
+    }
+
+    public async Task<PendingExerciseModel> GetPendingExercises(string pendingId)
+    {
+        var query = "SELECT * FROM PendingExercises WHERE PendingId = @PendingId";
+
+        using (var connection = GetConnection())
+        {
+            await connection.OpenAsync();
+            using (var command = new MySqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@PendingId", pendingId);
+
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    if (await reader.ReadAsync())
+                    {
+                        return new PendingExerciseModel
+                        {
+                            PendingId = reader["PendingId"].ToString(),
+                            Response = reader["Response"].ToString(),
+                            CreatorUserId = Convert.ToInt32(reader["CreatorUserId"]),
+                            CreatorRole = reader["CreatorRole"].ToString(),
+                            ClassId = Convert.ToInt32(reader["ClassId"])
+                        };
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public async Task DeletePendingExercises(string pendingId)
+    {
+        using (var connection = GetConnection())
+        {
+            await connection.OpenAsync();
+            using (var transaction = await connection.BeginTransactionAsync())
+            {
+                try
+                {
+                    var deletePendingQuery = "DELETE FROM PendingExercises WHERE PendingId = @PendingId";
+                    using (var command = new MySqlCommand(deletePendingQuery, connection, transaction))
+                    {
+                        command.Parameters.AddWithValue("@PendingId", pendingId);
+                        await command.ExecuteNonQueryAsync();
+                    }
+
+                    var deleteUserPendingQuery = "DELETE FROM UserPendingExercises WHERE PendingId = @PendingId";
+                    using (var command = new MySqlCommand(deleteUserPendingQuery, connection, transaction))
+                    {
+                        command.Parameters.AddWithValue("@PendingId", pendingId);
+                        await command.ExecuteNonQueryAsync();
+                    }
+
+                    await transaction.CommitAsync();
+                }
+                catch
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+            }
+        }
+    }
+
+    public async Task SavePendingExerciseIdForUser(int userId, string pendingId)
+    {
+        var query = @"INSERT INTO UserPendingExercises (UserId, PendingId) 
+                      VALUES (@UserId, @PendingId) 
+                      ON DUPLICATE KEY UPDATE PendingId = @PendingId";
+
+        using (var connection = GetConnection())
+        {
+            await connection.OpenAsync();
+            using (var command = new MySqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@UserId", userId);
+                command.Parameters.AddWithValue("@PendingId", pendingId);
+                await command.ExecuteNonQueryAsync();
+            }
+        }
+    }
+
+    public async Task<string?> GetPendingExerciseIdForUser(int userId)
+    {
+        var query = "SELECT PendingId FROM UserPendingExercises WHERE UserId = @UserId";
+
+        using (var connection = GetConnection())
+        {
+            await connection.OpenAsync();
+            using (var command = new MySqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@UserId", userId);
+                var result = await command.ExecuteScalarAsync();
+                return result as string;
+            }
+        }
+    }
+
+    public async Task DeletePendingExerciseIdForUser(int userId)
+    {
+        var query = "DELETE FROM UserPendingExercises WHERE UserId = @UserId";
+
+        using (var connection = GetConnection())
+        {
+            await connection.OpenAsync();
+            using (var command = new MySqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@UserId", userId);
+                await command.ExecuteNonQueryAsync();
+            }
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////
+
 
     public class ClassProgress
     {
@@ -1112,6 +1313,17 @@ public async Task<int> GetExercisesSolvedToday(int studentId)
         public string FullName { get; set; }
         public int CorrectAnswers { get; set; }
         public int  WrongAnswers { get; set; }
+    }
+
+
+    public class PendingExerciseModel
+    {
+        public string PendingId { get; set; }
+        public string Response { get; set; }
+        public int CreatorUserId { get; set; }
+        public string CreatorRole { get; set; }
+        public int ClassId { get; set; }
+        public DateTime CreatedAt { get; set; }
     }
 
 

@@ -34,15 +34,15 @@ namespace mathProj.Controllers
         [HttpPost("messageTEST")]
         public async Task<IActionResult> ReceiveMessageTEST([FromForm] string From, [FromForm] string Body)
         {
-            Console.WriteLine($"Received message from {From}: {Body}");
+            //Console.WriteLine($"Received message from {From}: {Body}");
 
-            // Send a response back to the user
+            //// Send a response back to the user
             
-            // await SendWhatsAppMessage(From, responseMessage);
+            //// await SendWhatsAppMessage(From, responseMessage);
 
-            var responseMessage = "Hello! Thanks for your message. This is an automated response from ASP.NET Core.";
+            //var responseMessage = "Hello! Thanks for your message. This is an automated response from ASP.NET Core.";
 
-            await SendResponseToSender(From, responseMessage);
+            //await SendResponseToSender(From, responseMessage);
 
             return Ok();
         }
