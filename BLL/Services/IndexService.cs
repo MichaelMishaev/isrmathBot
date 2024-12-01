@@ -64,7 +64,7 @@ namespace BL.Serives
 
 
             //For teacher use, wait for theacher to approve or delete exercises created by api
-         
+
 
 
             if (isValid)
@@ -75,8 +75,8 @@ namespace BL.Serives
                     switch (userType.UserType)
                     {
                         case Constants.Teacher:
-                           result = await HandleTeacherMessage(numericPhoneNumber, body, userId);
-                         //  result = await HandleStudentMessage(numericPhoneNumber, body); //FOR TEST IF NEED AS STUDENT
+                            //  result = await HandleTeacherMessage(numericPhoneNumber, body, userId);
+                            result = await HandleStudentMessage(numericPhoneNumber, body); //FOR TEST IF NEED AS STUDENT
                             break;
                         case Constants.Parent:
                             result = await HandleParentMessage(numericPhoneNumber, body);
@@ -125,8 +125,9 @@ namespace BL.Serives
 
             if (normalizedMessage == "test")
             {
-                await SendImageToSender(phoneNumber, "10InRow_", "");
+                //await SendImageToSender(phoneNumber, "10InRow_", "");
                 var num = await _exerciseRepository.GetLastCorrectAnswers(13);
+                await SendImageToSender(phoneNumber, "5InRow_", "");
                 //await _whatsAppService.GetHelpForStudent("2 * 43");
                 //await SendImageToSender(phoneNumber, "5_", "");
 
@@ -326,7 +327,12 @@ namespace BL.Serives
 
                     var lastCurrectAnswersInRow = await _exerciseRepository.GetLastCorrectAnswers(studentId);
 
-                    if (exercisesSolvedToday % 5 == 0 && exercisesSolvedToday % 10 != 0 && (lastCurrectAnswersInRow > 0 && lastCurrectAnswersInRow % 5 != 0))
+                    if (lastCurrectAnswersInRow > 0 && lastCurrectAnswersInRow == 5)
+                    {
+                        await SendImageToSender(phoneNumber, "5InRow_", "");
+                        Thread.Sleep(1000);
+                    }
+                    else if (exercisesSolvedToday % 5 == 0 && exercisesSolvedToday % 10 != 0 && (lastCurrectAnswersInRow > 0 && lastCurrectAnswersInRow % 5 != 0))
                     {
                         await SendImageToSender(phoneNumber, "5_", "");
                         //await SendResponseToSender(phoneNumber, TextGeneratorFunctions.Get5ExerciseSolvedMessage());
@@ -347,16 +353,37 @@ namespace BL.Serives
                         return "";
                     }
 
-                    else if (lastCurrectAnswersInRow > 0 && lastCurrectAnswersInRow % 5 == 0 && lastCurrectAnswersInRow % 10 != 0)
-                    {
-                        await SendImageToSender(phoneNumber, "5InRow_", "");
-                        Thread.Sleep(1000);
-                    }
-                    else if (lastCurrectAnswersInRow > 0 && lastCurrectAnswersInRow % 10 == 0)
+
+                    else if (lastCurrectAnswersInRow > 0 && lastCurrectAnswersInRow == 10)
                     {
                         await SendImageToSender(phoneNumber, "10InRow_", "");
                         Thread.Sleep(1000);
                     }
+
+                    else if (lastCurrectAnswersInRow > 0 && lastCurrectAnswersInRow == 15)
+                    {
+                        await SendImageToSender(phoneNumber, "15InRow_", "");
+                        Thread.Sleep(1000);
+                    }
+
+                    else if (lastCurrectAnswersInRow > 0 && lastCurrectAnswersInRow == 20)
+                    {
+                        await SendImageToSender(phoneNumber, "20InRow_", "");
+                        Thread.Sleep(1000);
+                    }
+                    else if (lastCurrectAnswersInRow > 0 && lastCurrectAnswersInRow == 25)
+                    {
+                        await SendImageToSender(phoneNumber, "25InRow_", "");
+                        Thread.Sleep(1000);
+                    }
+                    else if (lastCurrectAnswersInRow > 0 && lastCurrectAnswersInRow == 30)
+                    {
+                        await SendImageToSender(phoneNumber, "30InRow_", "");
+                        Thread.Sleep(1000);
+                    }
+
+                    //topInRow_1.jpeg
+
 
                     // Fetch the next unassigned exercise
                     var nextExercise = await _exerciseRepository.GetNextUnassignedExercise(studentId);
@@ -422,12 +449,12 @@ namespace BL.Serives
 
                         await _exerciseRepository.UpdateIsWaitingForHelp(studentId, inProgressExercise.ExerciseId, true);
 
-                     
+
                         await SendImageToSender(phoneNumber, "helpOnTheWay_", "");
                         //Thread.Sleep(10000);
                         //##################
                         _ = GenerateAndSendHelpAsync(studentId, phoneNumber, inProgressExercise);
-                       
+
                         //##################
                         //  string chatGptResponse = await _whatsAppService.GetHelpForStudent(inProgressExercise.Exercise);
 
@@ -529,7 +556,7 @@ namespace BL.Serives
 
         //********************
         // Services/IndexService.cs
-        private async Task<string> HandleTeacherMessage(string phoneNumber, string teacherMessage,int? userId)
+        private async Task<string> HandleTeacherMessage(string phoneNumber, string teacherMessage, int? userId)
         {
             var resTecherUpdate = await TecherExercisesCreationHandle(userId, teacherMessage);
 
@@ -765,7 +792,7 @@ namespace BL.Serives
 
         private async Task<string> TecherExercisesCreationHandle(int? userId, string? body)
         {
-            Console.WriteLine($"approve teacher: user: {userId}, body: {body} " );
+            Console.WriteLine($"approve teacher: user: {userId}, body: {body} ");
             if (userId != null)
             {
                 // Check if the user has pending exercises awaiting confirmation
