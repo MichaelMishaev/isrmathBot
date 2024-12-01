@@ -30,12 +30,12 @@ namespace BL.Serives
 
             var requestBody = new
             {
-                model = "gpt-4-turbo",
+                model = "gpt-4o-mini",
                 messages = new[]
                 {
             new { role = "user", content = prompt }
         },
-                max_tokens = 2500 // Adjust as needed
+                max_tokens = 3500 // Adjust as needed
             };
 
             var jsonRequestBody = JsonConvert.SerializeObject(requestBody);
@@ -118,14 +118,14 @@ namespace BL.Serives
 
         #endregion
 
-        public async Task<string> AskChatGPTReduceTokens(string prompt)
+        public async Task<string> AskChatGPTReduceTokens(string prompt, CancellationToken cancellationToken)
         {
 
             var requestUri = "https://api.openai.com/v1/chat/completions";  // Ensure this is correct!
 
             var requestBody = new
             {
-                model = "gpt-4-turbo",  // Double-check this model name
+                model = "gpt-4o-mini", // Double-check this model name
                 messages = new[]
                 {
                 new { role = "system", content = "You are ChatGPT." },
@@ -141,7 +141,7 @@ namespace BL.Serives
             _httpClient.DefaultRequestHeaders.Clear();
             _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_apiKey}");
 
-            var response = await _httpClient.PostAsync(requestUri, content);
+            var response = await _httpClient.PostAsync(requestUri, content, cancellationToken);
 
             if (response.IsSuccessStatusCode)
             {

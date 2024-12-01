@@ -76,7 +76,7 @@ namespace BL.Serives
                     {
                         case Constants.Teacher:
                            result = await HandleTeacherMessage(numericPhoneNumber, body, userId);
-                    //        result = await HandleStudentMessage(numericPhoneNumber, body); //FOR TEST IF NEED AS STUDENT
+                         //  result = await HandleStudentMessage(numericPhoneNumber, body); //FOR TEST IF NEED AS STUDENT
                             break;
                         case Constants.Parent:
                             result = await HandleParentMessage(numericPhoneNumber, body);
@@ -127,7 +127,7 @@ namespace BL.Serives
             {
                 await SendImageToSender(phoneNumber, "10InRow_", "");
                 var num = await _exerciseRepository.GetLastCorrectAnswers(13);
-                await _whatsAppService.GetHelpForStudent("2 * 43");
+                //await _whatsAppService.GetHelpForStudent("2 * 43");
                 //await SendImageToSender(phoneNumber, "5_", "");
 
                 return "";
@@ -299,6 +299,12 @@ namespace BL.Serives
 
             if (inProgressExercise != null)
             {
+                if (inProgressExercise.IsWaitingForHelp)
+                {
+                    // Inform the student to wait and prevent further processing
+                    await SendResponseToSender(phoneNumber, "📚 העזרה בדרך! אנא המתן לפני שתנסה שוב. 🕐");
+                    return "";
+                }
                 // Check if the exercise was last updated less than 5 hours ago
                 bool isCorrect = string.Equals(studentAnswer.Trim(), inProgressExercise.CorrectAnswer.Trim(), StringComparison.OrdinalIgnoreCase);
                 //if left a while ago and answered wrong
@@ -314,6 +320,9 @@ namespace BL.Serives
                 {
                     await _exerciseRepository.UpdateStudentProgress(studentId, inProgressExercise.ExerciseId, studentAnswer, isCorrect);
                     int exercisesSolvedToday = await _exerciseRepository.GetExercisesSolvedToday(studentId);
+
+                    await _exerciseRepository.UpdateIsWaitingForHelp(studentId, inProgressExercise.ExerciseId, false);
+
 
                     var lastCurrectAnswersInRow = await _exerciseRepository.GetLastCorrectAnswers(studentId);
 
@@ -384,14 +393,6 @@ namespace BL.Serives
                         string response = $"{randomCorrectAnswer}\n{exercisesLeftText}\n{exerciseText}";
 
 
-                        //if (includeAscii)
-                        //{
-                        //    response += "\n" + asciiFunction.randomDraw();
-                        //}
-                        //else
-                        //{
-                        //    response += "\n" + asciiFunction.emojisDraw();
-                        //}
 
                         return response;
 
@@ -419,30 +420,28 @@ namespace BL.Serives
                     if (incorrectAttempts == 1)
                     {
 
-                        string helpMessage = @"
-        כבר שולח עזרה..... ✨📝
-        👦📚👧
-            📖  בדרך...  📖
-              💡✨💬
+                        await _exerciseRepository.UpdateIsWaitingForHelp(studentId, inProgressExercise.ExerciseId, true);
 
-        ";
-                        // await SendResponseToSender(phoneNumber, helpMessage);
-                        // await Task.Delay(1500);
+                     
                         await SendImageToSender(phoneNumber, "helpOnTheWay_", "");
+                        //Thread.Sleep(10000);
+                        //##################
+                        _ = GenerateAndSendHelpAsync(studentId, phoneNumber, inProgressExercise);
+                       
+                        //##################
+                        //  string chatGptResponse = await _whatsAppService.GetHelpForStudent(inProgressExercise.Exercise);
 
-                        string chatGptResponse = await _whatsAppService.GetHelpForStudent(inProgressExercise.Exercise);
+                        //await _exerciseRepository.UpdateGptHelpUsed(studentId, inProgressExercise.ExerciseId);
 
-                        await _exerciseRepository.UpdateGptHelpUsed(studentId, inProgressExercise.ExerciseId);
+                        //string skipText = string.Empty;
+                        //if (incorrectAttempts == 3)
+                        //{
+                        //    skipText = "*✨ אם ברצונך לדלג על התרגיל הזה, יש להקליד: דלג 💨*";
+                        //}
 
-                        string skipText = string.Empty;
-                        if (incorrectAttempts == 3)
-                        {
-                            skipText = "*✨ אם ברצונך לדלג על התרגיל הזה, יש להקליד: דלג 💨*";
-                        }
-
-                        string exerciseFormatted = MathFunctions.FormatExerciseString(inProgressExercise.Exercise).PadLeft(0, ' '); // Adjust the padding value as needed to align properly
-                        string response = $"{skipText}\n\nתשובה לא נכונה 🙁. נראה שאתם מתקשים. הנה עזרה ממני 🆘:\n{chatGptResponse}\n\n⬇️ הנה התרגיל שלך ⬇️\n\n{exerciseFormatted}\n";
-                        return response;
+                        //string exerciseFormatted = MathFunctions.FormatExerciseString(inProgressExercise.Exercise).PadLeft(0, ' '); // Adjust the padding value as needed to align properly
+                        //string response = $"{skipText}\n\nתשובה לא נכונה 🙁. נראה שאתם מתקשים. הנה עזרה ממני 🆘:\n{chatGptResponse}\n\n⬇️ הנה התרגיל שלך ⬇️\n\n{exerciseFormatted}\n";
+                        return "";//response;
                     }
 
                     //################
@@ -470,6 +469,62 @@ namespace BL.Serives
                 return "0";
             }
         }
+
+
+
+        private async Task GenerateAndSendHelpAsync(int studentId, string phoneNumber, ExerciseModel inProgressExercise)
+        {
+            try
+            {
+                /////######### Create a CancellationTokenSource with a 20-second timeout
+                using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
+                {
+                    /////######### Get help from GPT API with cancellation token
+                    string chatGptResponse = await _whatsAppService.GetHelpForStudent(inProgressExercise.Exercise, cts.Token);
+
+                    // Check if the student is still on the same exercise
+                    var currentExercise = await _exerciseRepository.GetInProgressExercise(studentId);
+                    if (currentExercise != null && currentExercise.ExerciseId == inProgressExercise.ExerciseId)
+                    {
+                        /////######### Reset the waiting state
+                        await _exerciseRepository.UpdateIsWaitingForHelp(studentId, inProgressExercise.ExerciseId, false);
+
+                        await _exerciseRepository.UpdateGptHelpUsed(studentId, inProgressExercise.ExerciseId);
+
+                        string exerciseFormatted = MathFunctions.FormatExerciseString(inProgressExercise.Exercise).PadLeft(0, ' ');
+                        string response = $"תשובה לא נכונה 🙁. הנה עזרה ממני 🆘:\n{chatGptResponse}\n\n⬇️ הנה התרגיל שלך ⬇️\n\n{exerciseFormatted}\n";
+
+                        await SendResponseToSender(phoneNumber, response);
+                    }
+                    else
+                    {
+                        // The student has moved on; reset the waiting state
+                        await _exerciseRepository.UpdateIsWaitingForHelp(studentId, inProgressExercise.ExerciseId, false);
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // Timeout occurred
+                /////######### Reset the waiting state
+                await _exerciseRepository.UpdateIsWaitingForHelp(studentId, inProgressExercise.ExerciseId, false);
+
+                // Inform the student that help is unavailable
+                await SendResponseToSender(phoneNumber, "⏰ מצטערים, כרגע לא ניתן לספק עזרה. אנא נסה שוב או המשך לתרגיל הבא.");
+            }
+            catch (Exception ex)
+            {
+                // Handle other exceptions
+                /////######### Reset the waiting state
+                await _exerciseRepository.UpdateIsWaitingForHelp(studentId, inProgressExercise.ExerciseId, false);
+
+                Console.WriteLine($"Error generating help: {ex.Message}");
+
+                // Optionally inform the student about the error
+                await SendResponseToSender(phoneNumber, "אירעה שגיאה בעת יצירת העזרה. אנא נסה שוב מאוחר יותר.");
+            }
+        }
+
 
 
         //********************

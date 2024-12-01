@@ -362,7 +362,7 @@ public class ExerciseRepository : DatabaseService
             await connection.OpenAsync();
 
             string query = @"
-            SELECT e.id, e.exercise, e.correctAnswer, sp.updatedAt,sp.incorrectAttempts,sp.ProgressId
+            SELECT e.id, e.exercise, e.correctAnswer, sp.updatedAt,sp.incorrectAttempts,sp.ProgressId,IsWaitingForHelp
             FROM exercises e
             INNER JOIN studentprogress sp ON sp.ExerciseId = e.id
             WHERE sp.StudentId = @StudentId 
@@ -386,7 +386,8 @@ public class ExerciseRepository : DatabaseService
                             CorrectAnswer = reader["correctAnswer"].ToString(),
                             UpdatedAt = reader.GetDateTime(reader.GetOrdinal("updatedAt")), // Add updatedAt field
                             IncorrectAttempts = Convert.ToInt32(reader["incorrectAttempts"]),
-                            ProgressId = Convert.ToInt32(reader["ProgressId"])
+                            ProgressId = Convert.ToInt32(reader["ProgressId"]),
+                            IsWaitingForHelp = Convert.ToBoolean(reader["IsWaitingForHelp"])
                         };
                     }
                 }
@@ -421,6 +422,29 @@ WHERE s.StudentId = @StudentId
 
                 var result = await command.ExecuteScalarAsync();
                 return Convert.ToInt32(result); // Return the count of remaining exercises
+            }
+        }
+    }
+
+
+    public async Task UpdateIsWaitingForHelp(int studentId, int exerciseId, bool isWaiting)
+    {
+        using (MySqlConnection connection = GetConnection())
+        {
+            await connection.OpenAsync();
+
+            string query = @"
+            UPDATE studentprogress
+            SET IsWaitingForHelp = @IsWaitingForHelp
+            WHERE StudentId = @StudentId AND ExerciseId = @ExerciseId";
+
+            using (MySqlCommand command = new MySqlCommand(query, connection))
+            {
+                /////######### Set the IsWaitingForHelp parameter
+                command.Parameters.AddWithValue("@IsWaitingForHelp", isWaiting ? 1 : 0);
+                command.Parameters.AddWithValue("@StudentId", studentId);
+                command.Parameters.AddWithValue("@ExerciseId", exerciseId);
+                await command.ExecuteNonQueryAsync();
             }
         }
     }
@@ -487,7 +511,7 @@ WHERE s.StudentId = @StudentId
                 // Query to fetch the next unassigned exercise
                 string createdAtCondition = lastDays.HasValue
      ? "AND e.CreatedAt >= NOW() - INTERVAL @LastDays DAY"
-     : "AND e.CreatedAt >= NOW() - INTERVAL 1 DAY";
+     : "AND e.CreatedAt >= NOW() - INTERVAL 7 DAY";
 
 
                 // Updated query with proper integration of the createdAtCondition
