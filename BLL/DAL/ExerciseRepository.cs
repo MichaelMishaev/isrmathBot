@@ -369,7 +369,7 @@ public class ExerciseRepository : DatabaseService
             AND ((sp.StudentAnswer IS NULL OR sp.StudentAnswer = '') OR IsCorrect = 0)
             AND IsSkipped = 0
             AND status = 1
-            ORDER BY sp.ProgressId ASC
+           ORDER BY sp.updatedAt ASC
             LIMIT 1";
 
             using (MySqlCommand command = new MySqlCommand(query, connection))
@@ -485,30 +485,33 @@ WHERE s.StudentId = @StudentId
                 }
 
                 // Query to fetch the next unassigned exercise
-                string query = @"
-            SELECT e.id, e.exercise, e.correctAnswer, e.DifficultyLevel, e.*
-            FROM exercises e
-            INNER JOIN students s ON e.classId = s.ClassId
-            WHERE s.StudentId = @StudentId
-              AND e.id NOT IN (
-                  SELECT sp.ExerciseId
-                  FROM studentprogress sp
-                  WHERE sp.StudentId = @StudentId
-                    AND (sp.IsCorrect = 1 OR sp.IsSkipped = 1)
-              )
-              AND e.status = 1
-              AND e.DifficultyLevel = (
-                  SELECT PreferredDifficultyLevel
-                  FROM students
-                  WHERE StudentId = @StudentId
-              )
-              {0}
-            ORDER BY RAND()
-            LIMIT 1;";
+                string createdAtCondition = lastDays.HasValue
+     ? "AND e.CreatedAt >= NOW() - INTERVAL @LastDays DAY"
+     : "AND e.CreatedAt >= NOW() - INTERVAL 1 DAY";
 
-                // Add condition for lastDays if provided
-                string createdAtCondition = lastDays.HasValue ? "AND e.CreatedAt >= NOW() - INTERVAL @LastDays DAY" : "";
-                query = string.Format(query, createdAtCondition);
+
+                // Updated query with proper integration of the createdAtCondition
+                string query = $@"
+    SELECT e.id, e.exercise, e.correctAnswer, e.DifficultyLevel, e.*
+    FROM exercises e
+    INNER JOIN students s ON e.classId = s.ClassId
+    WHERE s.StudentId = @StudentId
+      AND e.id NOT IN (
+          SELECT sp.ExerciseId
+          FROM studentprogress sp
+          WHERE sp.StudentId = @StudentId
+            AND (sp.IsCorrect = 1 OR sp.IsSkipped = 1)
+      )
+      AND e.status = 1
+      AND e.DifficultyLevel = (
+          SELECT PreferredDifficultyLevel
+          FROM students
+          WHERE StudentId = @StudentId
+      )
+      {createdAtCondition}
+    ORDER BY RAND()
+    LIMIT 1;";
+
 
                 using (MySqlCommand command = new MySqlCommand(query, connection))
                 {
