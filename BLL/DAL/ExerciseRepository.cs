@@ -491,6 +491,45 @@ WHERE s.StudentId = @StudentId
     }
 
 
+    public async Task<string> GetUserFullNameByStudentIdAsync(int studentId)
+    {
+        try
+        {
+            using (MySqlConnection connection = GetConnection())
+            {
+                await connection.OpenAsync();
+
+                string query = @"
+                SELECT u.FullName
+                FROM students AS s
+                INNER JOIN users AS u ON s.UserId = u.UserId
+                WHERE s.StudentId = @StudentId AND u.Status = 1;";
+
+                using (MySqlCommand command = new MySqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@StudentId", studentId);
+
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            return reader["FullName"].ToString();
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            // Log or handle the exception as necessary
+            Console.WriteLine($"Error fetching FullName: {e.Message}");
+        }
+
+        return null; // Return null if not found or in case of an error
+    }
+
+
+
     public async Task<(ExerciseModel? exercise, string? difficultyUpdate, string? changeType)> GetNextUnassignedExercise(int studentId, int? lastDays = null)
     {
         try

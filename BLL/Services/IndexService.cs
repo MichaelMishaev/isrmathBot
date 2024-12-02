@@ -75,8 +75,8 @@ namespace BL.Serives
                     switch (userType.UserType)
                     {
                         case Constants.Teacher:
-                            //  result = await HandleTeacherMessage(numericPhoneNumber, body, userId);
-                            result = await HandleStudentMessage(numericPhoneNumber, body); //FOR TEST IF NEED AS STUDENT
+                             result = await HandleTeacherMessage(numericPhoneNumber, body, userId);
+                           // result = await HandleStudentMessage(numericPhoneNumber, body); //FOR TEST IF NEED AS STUDENT
                             break;
                         case Constants.Parent:
                             result = await HandleParentMessage(numericPhoneNumber, body);
@@ -251,6 +251,7 @@ namespace BL.Serives
             studentAnswer = studentAnswer.Replace(",", "");
             studentAnswer = Regex.Replace(studentAnswer, @"\D", "");
             var hasStarted = await _exerciseRepository.CheckIfStudentStarted(studentId);
+            string studentName = await _exerciseRepository.GetUserFullNameByStudentIdAsync(studentId);
 
             if (!hasStarted)
             {
@@ -334,11 +335,11 @@ namespace BL.Serives
                     }
                     else if (exercisesSolvedToday % 5 == 0 && exercisesSolvedToday % 10 != 0 && (lastCurrectAnswersInRow > 0 && lastCurrectAnswersInRow % 5 != 0))
                     {
-                        await SendImageToSender(phoneNumber, "5_", "");
+                        //await SendImageToSender(phoneNumber, "5_", "");
                         //await SendResponseToSender(phoneNumber, TextGeneratorFunctions.Get5ExerciseSolvedMessage());
-                        Thread.Sleep(1000);
+                        //Thread.Sleep(1000);
                         // Send a congratulatory message to the student
-                        string congratulatoryMessage = TextGeneratorFunctions.GetRandomCongratulatoryMessage(exercisesSolvedToday);
+                        string congratulatoryMessage = TextGeneratorFunctions.Get5ExerciseSolvedMessage(studentName);
 
                         await SendResponseToSender(phoneNumber, congratulatoryMessage);
                     }
