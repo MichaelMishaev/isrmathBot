@@ -596,10 +596,10 @@ namespace BL.Serives
                 sb.AppendLine("```");
 
                 // Header line
-                sb.AppendLine("שם התלמיד         | ✅ נכונות | ❌ שגויות | ⏭️ דילוגים | ממוצע (%)"); // Hebrew: Student | Correct | Wrong | Skips | Average (%)
+                sb.AppendLine("שם התלמיד    | ✅  | ❌  | ⏭️ דילוגים | ממוצע (%)"); // Hebrew: Student | Correct | Wrong | Skips | Average (%)
 
                 // Separator
-                sb.AppendLine("---------------------------------------------------");
+                sb.AppendLine("---------------------------------------------");
 
                 // Data rows
                 foreach (var student in classProgress.Students)
@@ -612,7 +612,7 @@ namespace BL.Serives
 
                     // Append data row with proper alignment
                     sb.AppendLine(
-                        $"{student.FullName,-20} | {student.CorrectAnswers,3} | {student.WrongAnswers,3} | {student.Skip,3} | {student.AverageCorrect,6}"
+                        $"{student.FullName,-15} | {student.CorrectAnswers,3} | {student.WrongAnswers,3} | {student.Skip,3} | {average,6}"
                     );
                 }
 
