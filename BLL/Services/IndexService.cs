@@ -592,18 +592,39 @@ namespace BL.Serives
             {
                 var classProgress = await _exerciseRepository.GetClassProgress(teacherId);
                 StringBuilder sb = new StringBuilder();
-                sb.AppendLine("*📊 סטטוס כיתתי ב 7 ימים אחרונים:*"); // Hebrew: Class Progress
+                sb.AppendLine("*📊 סטטוס כיתתי ב-7 ימים אחרונים:*"); // Hebrew: Class Progress
                 sb.AppendLine("```");
-                sb.AppendLine("🧑‍🎓 שם התלמיד      | ✅ תשובות נכונות"); // Hebrew: Student Name | Correct Answers
-                sb.AppendLine("-------------------------------");
+
+                // Header line
+                sb.AppendLine("שם התלמיד         | ✅ נכונות | ❌ שגויות | ⏭️ דילוגים | ממוצע (%)"); // Hebrew: Student | Correct | Wrong | Skips | Average (%)
+
+                // Separator
+                sb.AppendLine("---------------------------------------------------");
+
+                // Data rows
                 foreach (var student in classProgress.Students)
                 {
-                    sb.AppendLine($"{student.FullName,-15}| {student.CorrectAnswers,7}");
+                    // Calculate average percentage
+                    double totalAttempts = student.CorrectAnswers + student.WrongAnswers;
+                    string average = totalAttempts > 0
+                        ? $"{(student.CorrectAnswers / totalAttempts * 100):F2}" // Format as percentage
+                        : "N/A"; // Handle cases with no attempts
+
+                    // Append data row with proper alignment
+                    sb.AppendLine(
+                        $"{student.FullName,-20} | {student.CorrectAnswers,3} | {student.WrongAnswers,3} | {student.Skip,3} | {student.AverageCorrect,6}"
+                    );
                 }
+
                 sb.AppendLine("```");
 
                 return sb.ToString();
             }
+
+
+
+
+
 
 
             else if (normalizedMessage.StartsWith("#update"))

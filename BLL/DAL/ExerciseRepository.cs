@@ -39,7 +39,7 @@ public class ExerciseRepository : DatabaseService
                         command.Parameters.AddWithValue("@HelpContent", exercise.Hint);
                         command.Parameters.AddWithValue("@CreatedAt", DateTime.UtcNow);
                         command.Parameters.AddWithValue("@ClassId", classId);
-                        command.Parameters.AddWithValue("@DifficultyLevel", exercise.DifficultyLevel??"Easy");
+                        command.Parameters.AddWithValue("@DifficultyLevel", exercise.DifficultyLevel ?? "Easy");
 
 
                         await command.ExecuteNonQueryAsync();
@@ -458,7 +458,7 @@ WHERE s.StudentId = @StudentId
             {
                 await connection.OpenAsync();
                 //c.ClassName = @ClassName
-                
+
                 string query = @"
             SELECT DISTINCT u.PhoneNumber, u.FullName
             FROM students AS s
@@ -888,12 +888,21 @@ WHERE streakBreak = 0;
     // DAL/ExerciseRepository.cs
     public async Task<ClassProgress> GetClassProgress(int teacherId)
     {
-        using (MySqlConnection connection = GetConnection())
+        try
         {
-            await connection.OpenAsync();
 
-            string query = @"
-            SELECT s.StudentId, u.FullName, COUNT(sp.IsCorrect) AS CorrectAnswers, COUNT(sp.IncorrectAttempts) AS WrongAnswers
+
+            using (MySqlConnection connection = GetConnection())
+            {
+                await connection.OpenAsync();
+
+                string query = @"
+            SELECT s.StudentId, u.FullName, SUM(sp.IsCorrect) AS CorrectAnswers, SUM(sp.IncorrectAttempts) AS WrongAnswers,SUM(sp.IsSkipped) AS skiped,
+                    CASE 
+                        WHEN SUM(sp.IsCorrect) + SUM(sp.IncorrectAttempts) > 0 
+                        THEN ROUND((SUM(sp.IsCorrect) / (SUM(sp.IsCorrect) + SUM(sp.IncorrectAttempts)) * 100), 2)
+                        ELSE NULL
+                    END AS AverageCorrect
             FROM teachers t
             INNER JOIN students s ON s.ClassId = t.ClassId
             INNER JOIN users u ON s.UserId = u.UserId
@@ -903,24 +912,32 @@ WHERE streakBreak = 0;
             GROUP BY s.StudentId
             ORDER BY CorrectAnswers DESC;";
 
-            using (MySqlCommand command = new MySqlCommand(query, connection))
-            {
-                command.Parameters.AddWithValue("@TeacherId", teacherId);
-                using (var reader = await command.ExecuteReaderAsync())
+                using (MySqlCommand command = new MySqlCommand(query, connection))
                 {
-                    List<StudentScore> classProgress = new List<StudentScore>();
-                    while (await reader.ReadAsync())
+                    command.Parameters.AddWithValue("@TeacherId", teacherId);
+                    using (var reader = await command.ExecuteReaderAsync())
                     {
-                        classProgress.Add(new StudentScore
+                        List<StudentScore> classProgress = new List<StudentScore>();
+                        while (await reader.ReadAsync())
                         {
-                            FullName = reader["FullName"].ToString(),
-                            CorrectAnswers = Convert.ToInt32(reader["CorrectAnswers"]),
-                            WrongAnswers = Convert.ToInt32(reader["WrongAnswers"])
-                        });
+                            classProgress.Add(new StudentScore
+                            {
+                                FullName = reader["FullName"].ToString(),
+                                CorrectAnswers = reader["CorrectAnswers"] == DBNull.Value ? 0 : Convert.ToInt32(reader["CorrectAnswers"]),
+                                WrongAnswers = reader["WrongAnswers"] == DBNull.Value ? 0 : Convert.ToInt32(reader["WrongAnswers"]),
+                                Skip = reader["skiped"] == DBNull.Value ? 0 : Convert.ToInt32(reader["skiped"]),
+                                AverageCorrect = reader["AverageCorrect"] == DBNull.Value ? 0 : Convert.ToInt32(reader["AverageCorrect"])
+                            });
+                        }
+                        return new ClassProgress { Students = classProgress };
                     }
-                    return new ClassProgress { Students = classProgress };
                 }
             }
+        }
+        catch (Exception e)
+        {
+
+            throw e;
         }
     }
 
@@ -931,48 +948,48 @@ WHERE streakBreak = 0;
         {
 
 
-        using (MySqlConnection connection = GetConnection())
-        {
-            await connection.OpenAsync();
+            using (MySqlConnection connection = GetConnection())
+            {
+                await connection.OpenAsync();
 
-            // Validate the className
-            string validateQuery = @"
+                // Validate the className
+                string validateQuery = @"
             SELECT c.ClassId
             FROM classes c
             WHERE c.ClassName = @ClassName;";
 
-            int? classId = null;
-            using (MySqlCommand validateCommand = new MySqlCommand(validateQuery, connection))
-            {
-                validateCommand.Parameters.AddWithValue("@ClassName", className);
-                var result = await validateCommand.ExecuteScalarAsync();
-                if (result != null)
+                int? classId = null;
+                using (MySqlCommand validateCommand = new MySqlCommand(validateQuery, connection))
                 {
-                    classId = Convert.ToInt32(result);
+                    validateCommand.Parameters.AddWithValue("@ClassName", className);
+                    var result = await validateCommand.ExecuteScalarAsync();
+                    if (result != null)
+                    {
+                        classId = Convert.ToInt32(result);
+                    }
                 }
-            }
 
-            // If className is invalid, return false
-            if (classId == null)
-            {
-                return false;
-            }
+                // If className is invalid, return false
+                if (classId == null)
+                {
+                    return false;
+                }
 
-            // Update the teacher's ClassId
-            string updateQuery = @"
+                // Update the teacher's ClassId
+                string updateQuery = @"
             UPDATE teachers
             SET ClassId = @ClassId
             WHERE TeacherId = @TeacherId;";
 
-            using (MySqlCommand updateCommand = new MySqlCommand(updateQuery, connection))
-            {
-                updateCommand.Parameters.AddWithValue("@ClassId", classId);
-                updateCommand.Parameters.AddWithValue("@TeacherId", teacherId);
+                using (MySqlCommand updateCommand = new MySqlCommand(updateQuery, connection))
+                {
+                    updateCommand.Parameters.AddWithValue("@ClassId", classId);
+                    updateCommand.Parameters.AddWithValue("@TeacherId", teacherId);
 
-                int rowsAffected = await updateCommand.ExecuteNonQueryAsync();
-                return rowsAffected > 0; // Return true if the update was successful
+                    int rowsAffected = await updateCommand.ExecuteNonQueryAsync();
+                    return rowsAffected > 0; // Return true if the update was successful
+                }
             }
-        }
         }
         catch (Exception e)
         {
@@ -993,7 +1010,7 @@ WHERE streakBreak = 0;
             await connection.OpenAsync();
 
             string query = @"
-            SELECT u.FullName, COUNT(sp.IsCorrect) AS CorrectAnswers
+            SELECT u.FullName, SUM(sp.IsCorrect) AS CorrectAnswers, SUM(sp.IncorrectAttempts) AS WrongAnswers
             FROM teachers t
             INNER JOIN students s ON s.ClassId = t.ClassId
             INNER JOIN users u ON s.UserId = u.UserId
@@ -1013,7 +1030,8 @@ WHERE streakBreak = 0;
                         leaderboard.Add(new StudentScore
                         {
                             FullName = reader["FullName"].ToString(),
-                            CorrectAnswers = Convert.ToInt32(reader["CorrectAnswers"])
+                            CorrectAnswers = Convert.ToInt32(reader["CorrectAnswers"]),
+                            WrongAnswers = Convert.ToInt32(reader["WrongAnswers"])
                         });
                     }
                     return leaderboard;
@@ -1102,29 +1120,29 @@ WHERE streakBreak = 0;
     }
 
 
-    
-public async Task<int> GetExercisesSolvedToday(int studentId)
-{
-    using (MySqlConnection connection = GetConnection())
-    {
-        await connection.OpenAsync();
 
-        string countQuery = @"
+    public async Task<int> GetExercisesSolvedToday(int studentId)
+    {
+        using (MySqlConnection connection = GetConnection())
+        {
+            await connection.OpenAsync();
+
+            string countQuery = @"
         SELECT COUNT(*) 
         FROM studentprogress 
         WHERE StudentId = @StudentId 
         AND IsCorrect = 1 
         AND DATE(UpdatedAt) = CURDATE()";
 
-        using (MySqlCommand countCommand = new MySqlCommand(countQuery, connection))
-        {
-            countCommand.Parameters.AddWithValue("@StudentId", studentId);
+            using (MySqlCommand countCommand = new MySqlCommand(countQuery, connection))
+            {
+                countCommand.Parameters.AddWithValue("@StudentId", studentId);
 
-            var countResult = await countCommand.ExecuteScalarAsync();
-            return Convert.ToInt32(countResult);
+                var countResult = await countCommand.ExecuteScalarAsync();
+                return Convert.ToInt32(countResult);
+            }
         }
     }
-}
     //********************
     // DAL/ExerciseRepository.cs
     public async Task IncrementWrongAnswerCount(int studentId)
@@ -1214,7 +1232,7 @@ public async Task<int> GetExercisesSolvedToday(int studentId)
                 catch
                 {
                     await transaction.RollbackAsync();
-                   
+
                 }
             }
         }
@@ -1378,7 +1396,9 @@ public async Task<int> GetExercisesSolvedToday(int studentId)
     {
         public string FullName { get; set; }
         public int CorrectAnswers { get; set; }
-        public int  WrongAnswers { get; set; }
+        public int WrongAnswers { get; set; }
+        public int Skip { get; set; }
+        public int AverageCorrect { get; set; }
     }
 
 
