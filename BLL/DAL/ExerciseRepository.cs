@@ -1,4 +1,5 @@
 ﻿using BLL;
+using BLL.Functions;
 using BLL.Objects;
 using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient; // MySQL client namespace
@@ -10,7 +11,11 @@ using System.Threading.Tasks;
 
 public class ExerciseRepository : DatabaseService
 {
-    public ExerciseRepository(IConfiguration configuration) : base(configuration) { }
+    private readonly CommonFunctions _commonFunctions;
+    public ExerciseRepository(IConfiguration configuration, CommonFunctions commonFunctions) : base(configuration) {
+    _commonFunctions = commonFunctions;
+    }
+
 
     //********************
     // DAL/ExerciseRepository.cs
@@ -18,7 +23,9 @@ public class ExerciseRepository : DatabaseService
     {
         try
         {
-            List<ExerciseModel> exercises = JsonConvert.DeserializeObject<List<ExerciseModel>>(jsonResponse);
+            // Step 1: Handle double-serialized JSON
+            string innerJson = JsonConvert.DeserializeObject<string>(jsonResponse);
+            List<ExerciseModel> exercises = JsonConvert.DeserializeObject<List<ExerciseModel>>(innerJson);
 
             using (MySqlConnection connection = GetConnection())
             {
@@ -27,8 +34,8 @@ public class ExerciseRepository : DatabaseService
                 foreach (var exercise in exercises)
                 {
                     string insertQuery = @"INSERT INTO exercises 
-                    (CreatedByUserId, CreatedByRole, exercise, correctAnswer, HelpContent, CreatedAt, classId,DifficultyLevel) 
-                    VALUES (@CreatedByUserId, @CreatedByRole, @Exercise, @CorrectAnswer, @HelpContent, @CreatedAt, @ClassId,@DifficultyLevel)";
+                (CreatedByUserId, CreatedByRole, exercise, correctAnswer, HelpContent, CreatedAt, classId, DifficultyLevel) 
+                VALUES (@CreatedByUserId, @CreatedByRole, @Exercise, @CorrectAnswer, @HelpContent, @CreatedAt, @ClassId, @DifficultyLevel)";
 
                     using (MySqlCommand command = new MySqlCommand(insertQuery, connection))
                     {
@@ -41,7 +48,6 @@ public class ExerciseRepository : DatabaseService
                         command.Parameters.AddWithValue("@ClassId", classId);
                         command.Parameters.AddWithValue("@DifficultyLevel", exercise.DifficultyLevel ?? "Easy");
 
-
                         await command.ExecuteNonQueryAsync();
                     }
                 }
@@ -51,9 +57,11 @@ public class ExerciseRepository : DatabaseService
         catch (Exception e)
         {
             Console.WriteLine($"Error: {e.Message}");
+            await _commonFunctions.SendResponseToSender("972544345287", $"error in SaveExercisesToDatabase {e.Message}");
             return false;
         }
     }
+
 
 
 
@@ -1405,6 +1413,7 @@ WHERE streakBreak = 0;
     public class PendingExerciseModel
     {
         public string PendingId { get; set; }
+
         public string Response { get; set; }
         public int CreatorUserId { get; set; }
         public string CreatorRole { get; set; }

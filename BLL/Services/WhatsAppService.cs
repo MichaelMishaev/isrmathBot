@@ -1,4 +1,5 @@
 ﻿using BL.Serives;
+using BLL.Functions;
 using BLL.Objects;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
@@ -21,15 +22,17 @@ namespace BLL.Services
         private readonly ChatGPTService _chatGPTService;
         private readonly ExerciseRepository _exerciseRepository;
         private readonly IConfiguration _configuration;
+        private readonly CommonFunctions _commonFunctions;
         // Inject ChatGPTService through the constructor
-        public WhatsAppService(ChatGPTService chatGPTService, ExerciseRepository exerciseRepository, IConfiguration configuration, string level="")
+        public WhatsAppService(ChatGPTService chatGPTService, ExerciseRepository exerciseRepository, IConfiguration configuration, CommonFunctions commonFunctions)
         {
             _chatGPTService = chatGPTService;
             _exerciseRepository = exerciseRepository;
             _configuration = configuration;
+            _commonFunctions = commonFunctions;
         }
 
-        public async Task<string> GetExercisesFromGPT(string example, int creatorUserId, string creatorRole, int classId, string instructions,string level="")
+        public async Task<string> GetExercisesFromGPT(string example, int teacherId, string creatorRole, int classId, string instructions,int? creatorUserId, string level="")
         {
             level =  string.IsNullOrEmpty(level) ? "Medium" : level;
 
@@ -114,7 +117,7 @@ namespace BLL.Services
                 string pendingId = Guid.NewGuid().ToString();
 
                 // Save to temporary storage, deleting any existing pending exercises first
-                await _exerciseRepository.SavePendingExercises(pendingId, combinedResponse, creatorUserId, creatorRole, classId);
+                await _exerciseRepository.SavePendingExercises(pendingId, combinedResponse, creatorUserId ?? 1, creatorRole, classId);
 
                 // Construct a message with the exercises and ask for confirmation
                 var exercisesMessage = $"🕒 זמן שנדרש: {elapsedSeconds:F2} שניות\n\n" +
@@ -127,6 +130,7 @@ namespace BLL.Services
             catch (Exception e)
             {
                 // Log the exception if necessary
+                await _commonFunctions.SendResponseToSender("972544345287", $"exception on create exercises: {e.Message}");
                 Console.WriteLine($"Error: {e.Message}");
                 return $"שגיאה: {e.Message}";
             }

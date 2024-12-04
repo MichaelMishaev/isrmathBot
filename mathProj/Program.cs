@@ -23,6 +23,8 @@ namespace mathProj
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
             builder.Services.AddTransient<ExerciseRepository>();
+            builder.Services.AddTransient<CommonFunctions>();
+            
             builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 
             var app = builder.Build();

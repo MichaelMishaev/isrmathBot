@@ -612,7 +612,7 @@ namespace BL.Serives
 
                     // Append data row with proper alignment
                     sb.AppendLine(
-                        $"{student.FullName,-15} | {student.CorrectAnswers,3} | {student.WrongAnswers,3} | {student.Skip,3} | {average,6}"
+                        $"{student.FullName,-15} | {student.CorrectAnswers,3} | {student.WrongAnswers,4} | {student.Skip,4} | {average,6}"
                     );
                 }
 
@@ -694,7 +694,7 @@ namespace BL.Serives
                 await SendResponseToSender(phoneNumber, midMessage);
                 //              await _whatsAppService.SendMessageToUser(phoneNumber, midMessage);
                 difficultyLevel = "Easy";
-                return await _whatsAppService.GetExercisesFromGPT(exampleText, teacherId, Constants.Teacher, classId, instructionText, difficultyLevel); //TODO: change the 1, now its for test cos same user is teacher and student
+                return await _whatsAppService.GetExercisesFromGPT(exampleText, teacherId, Constants.Teacher, classId, instructionText,userId, difficultyLevel); //TODO: change the 1, now its for test cos same user is teacher and student
             }
 
             //remind students
@@ -836,7 +836,6 @@ namespace BL.Serives
                         // Remove pending exercises
                         await _exerciseRepository.DeletePendingExercises(pendingExerciseId);
                         await _exerciseRepository.DeletePendingExerciseIdForUser(userId.Value);
-
                         return "התרגילים נשמרו בהצלחה!";
                     }
                     else if (normalizedResponse == "לא" || normalizedResponse == "no")
