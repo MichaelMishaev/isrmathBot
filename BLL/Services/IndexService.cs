@@ -15,6 +15,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Tesseract;
 using Twilio.TwiML.Messaging;
+using Twilio.Types;
 
 
 namespace BL.Serives
@@ -75,8 +76,8 @@ namespace BL.Serives
                     switch (userType.UserType)
                     {
                         case Constants.Teacher:
-                             result = await HandleTeacherMessage(numericPhoneNumber, body, userId);
-                           // result = await HandleStudentMessage(numericPhoneNumber, body); //FOR TEST IF NEED AS STUDENT
+                           //  result = await HandleTeacherMessage(numericPhoneNumber, body, userId);
+                            result = await HandleStudentMessage(numericPhoneNumber, body); //FOR TEST IF NEED AS STUDENT
                             break;
                         case Constants.Parent:
                             result = await HandleParentMessage(numericPhoneNumber, body);
@@ -320,13 +321,22 @@ namespace BL.Serives
                 // Update student progress in the database
                 if (isCorrect)
                 {
+
+                    //########################################
+                    //##############DB LOGICS#################
+                    //########################################
                     await _exerciseRepository.UpdateStudentProgress(studentId, inProgressExercise.ExerciseId, studentAnswer, isCorrect);
                     int exercisesSolvedToday = await _exerciseRepository.GetExercisesSolvedToday(studentId);
-
-                    await _exerciseRepository.UpdateIsWaitingForHelp(studentId, inProgressExercise.ExerciseId, false);
-
-
+                    await _exerciseRepository.UpdateIsWaitingForHelp(studentId, inProgressExercise.ExerciseId, false);//to prevent send message while waiting gpt answer
+                    bool isFastAnswers = await _exerciseRepository.isStudentAnswerFast(studentId);//is to send congrat for fast answers
                     var lastCurrectAnswersInRow = await _exerciseRepository.GetLastCorrectAnswers(studentId);
+                    //#########################################
+                    if(isFastAnswers)
+                    {
+                        await SendImageToSender(phoneNumber, "fastSolve_", "");
+                        await SendResponseToSender(phoneNumber, "🔥 וואו! 10 תרגילים בדקה! לא יאומן! 🏆🎈");
+                        Thread.Sleep(1000);
+                    }
 
                     if (lastCurrectAnswersInRow > 0 && lastCurrectAnswersInRow == 5)
                     {
@@ -833,6 +843,11 @@ namespace BL.Serives
                         // Save exercises to the database
                         var res = await _exerciseRepository.SaveExercisesToDatabase(pendingExercises.Response, pendingExercises.CreatorUserId, pendingExercises.CreatorRole, pendingExercises.ClassId);
 
+                        if (!res)
+                        {
+                            //await SendResponseToSender("972544345287", "שגיאה ביצירת תרגילים");
+                            return "שגיאה ביצירת תרגילים,";
+                        }
                         // Remove pending exercises
                         await _exerciseRepository.DeletePendingExercises(pendingExerciseId);
                         await _exerciseRepository.DeletePendingExerciseIdForUser(userId.Value);
