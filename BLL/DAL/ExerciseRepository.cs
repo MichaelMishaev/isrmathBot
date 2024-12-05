@@ -790,7 +790,27 @@ WHERE streakBreak = 0;
     }
 
 
+    public async Task<bool> isStudentAnswerFast(int studentId, int limit = 10)
+    {
+        using (MySqlConnection connection = GetConnection())
+        {
+            await connection.OpenAsync();
 
+            string query = @"
+            SELECT COUNT(*) 
+            FROM studentprogress
+            WHERE StudentId = @StudentId
+              AND UpdatedAt >= NOW() - INTERVAL 1 MINUTE";
+
+            using (MySqlCommand command = new MySqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@StudentId", studentId);
+
+                int attemptsInLastMinute = Convert.ToInt32(await command.ExecuteScalarAsync());
+                return attemptsInLastMinute > limit;
+            }
+        }
+    }
 
     public async Task<string> GetHelpForExercise(int exerciseId, int studentId)
     {

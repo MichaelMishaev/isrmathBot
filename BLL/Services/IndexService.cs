@@ -338,7 +338,7 @@ namespace BL.Serives
                         Thread.Sleep(1000);
                     }
 
-                    if (lastCurrectAnswersInRow > 0 && lastCurrectAnswersInRow == 5)
+                    else if (lastCurrectAnswersInRow > 0 && lastCurrectAnswersInRow == 5)
                     {
                         await SendImageToSender(phoneNumber, "5InRow_", "");
                         Thread.Sleep(1000);
