@@ -23,7 +23,7 @@ namespace BLL.Services
             int sessionId = await _exerciseRepository.CreateQuizSession(studentId);
 
             await _commonFunctions.SendResponseToSender(phoneNumber, TextGeneratorFunctions.GetQuizStartMessage());
-            Thread.Sleep(3000);
+            Thread.Sleep(4000);
             // Fetch the first question
             var exercise = await _exerciseRepository.GetNextUnassignedExercise(studentId);
             if (exercise.exercise == null || exercise.exercise == null)
@@ -110,12 +110,13 @@ namespace BLL.Services
             if (sessionStats.HasValue)
             {
                 summary = $"🎉 **החידון הסתיים!** 🏆\n\n" +
+                 $"🔥 אתם פשוט אלופים! 💪\n" +
                  $"📊 סיכום התוצאות:\n" +
                  $"🔢 סך הכל שאלות: {sessionStats.Value.TotalQuestions} ❓\n" +
                  $"✅ תשובות נכונות: {sessionStats.Value.TotalCorrectAnswers} \n" +
                  $"❌ תשובות לא נכונות: {sessionStats.Value.TotalQuestions - sessionStats.Value.TotalCorrectAnswers} \n\n" +
-                 $"🔥 אתם פשוט אלופים! 💪\n" +
-                 $"🌟 כל הכבוד על המאמץ! ✨\n";
+                 $"🌟 רוצים להמשיך לפתור תרגילים? ✨\n\n" +
+                 $"✏️💬 כתבו **'🟢 כן 🟢'** 🎉 ונמשיך ! ✨";
 
             }
             return summary;

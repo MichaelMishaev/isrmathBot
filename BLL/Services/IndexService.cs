@@ -14,8 +14,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Tesseract;
-using Twilio.TwiML.Messaging;
-using Twilio.Types;
+
 
 
 namespace BL.Serives
@@ -134,7 +133,7 @@ namespace BL.Serives
                 {
 
         
-               res = await  _quizService.StartQuiz(studentId, phoneNumber);
+               //res = await  _quizService.StartQuiz(studentId, phoneNumber);
                 }
                 catch (Exception e)
                 {
@@ -147,7 +146,7 @@ namespace BL.Serives
                 //await _whatsAppService.GetHelpForStudent("2 * 43");
                 //await SendImageToSender(phoneNumber, "5_", "");
 
-                return res;
+                return "";
             }
 
             if (activeQuiz != null)
@@ -348,8 +347,10 @@ namespace BL.Serives
                     await _exerciseRepository.UpdateIsWaitingForHelp(studentId, inProgressExercise.ExerciseId, false);//to prevent send message while waiting gpt answer
                     bool isFastAnswers = await _exerciseRepository.isStudentAnswerFast(studentId);//is to send congrat for fast answers
                     var lastCurrectAnswersInRow = await _exerciseRepository.GetLastCorrectAnswers(studentId);
+
+
                     //#########################################
-                    if(isFastAnswers)
+                    if (isFastAnswers)
                     {
                         await SendImageToSender(phoneNumber, "fastSolve_", "");
                         await SendResponseToSender(phoneNumber, "🔥 וואו! 10 תרגילים בדקה! לא יאומן! 🏆🎈");
@@ -374,11 +375,22 @@ namespace BL.Serives
 
                     else if (exercisesSolvedToday % 10 == 0 && (lastCurrectAnswersInRow > 0 && lastCurrectAnswersInRow % 10 != 0))
                     {
+                        if (exercisesSolvedToday == 10)
+                        {
+                            
+                            await SendImageToSender(phoneNumber, "quiz_", "");
+                            Thread.Sleep(2000);
+                            var res = await _quizService.StartQuiz(studentId, phoneNumber);
+                            return res;
+                        }
+
                         await SendImageToSender(phoneNumber, "final_", "");
                         string congratulatoryMessage = $"כל הכבוד על פתרון {exercisesSolvedToday} תרגילים היום! 💪✨ האם תרצה להמשיך?";
 
 
                         await SendResponseToSender(phoneNumber, congratulatoryMessage);
+
+
                         return "";
                     }
                     
