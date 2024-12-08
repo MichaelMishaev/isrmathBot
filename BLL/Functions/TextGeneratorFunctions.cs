@@ -205,6 +205,32 @@ namespace BLL.Functions
             return randomCompletionMessage;
         }
 
+        public static string GetFormattedExerciseQuizMessage(string exercise, int remainingTime)
+        {
+            // Array of possible responses
+            string[] exerciseMessages = new[]
+            {
+        $"⏱️**{remainingTime}** שניות! 🎯\n\n{exercise}",
+        $"⏱️**{remainingTime}** שניות! 🚀\n\n{exercise}",
+        $"⏱️**{remainingTime}** שניות! ✨\n\n{exercise}",
+        $"⏱️**{remainingTime}** שניות! 🏆\n\n{exercise}",
+        $"⏱️**{remainingTime}** שניות! 🔥\n\n{exercise}",
+        $"⏱️**{remainingTime}** שניות! 📢\n\n{exercise}",
+        $"⏱️**{remainingTime}** שניות! 🌟\n\n{exercise}",
+        $"⏱️**{remainingTime}** שניות! 💡\n\n{exercise}",
+        $"⏱️**{remainingTime}** שניות! 🎉\n\n{exercise}",
+        $"⏱️**{remainingTime}** שניות! 🧠\n\n{exercise}"
+    };
+
+            // Choose one random message from the array
+            Random random = new Random();
+            string randomMessage = exerciseMessages[random.Next(exerciseMessages.Length)];
+
+            // Return the chosen message
+            return randomMessage;
+        }
+
+
         public static string GetRandomExerciseMessage(string exercise)
         {
             // Array of possible responses
@@ -226,6 +252,73 @@ namespace BLL.Functions
             // Return the chosen message
             return randomExerciseMessage;
         }
+
+
+        public static string GetQuizStartMessage()
+        {
+            string[] quizStartMessages = new[]
+           {
+    "🎉 **חידון התחיל עכשיו!** 🕐\n⏱️ יש לכם **60 שניות** לענות על כמה שיותר שאלות! 🚀",
+
+    "🚨 **זה חידון!** ⏱️\nיש לכם **60 שניות** בלבד להצליח בגדול! 💥",
+
+    "🏆 **החידון התחיל!** 🕒\n⏱️ **60 שניות** של שאלות ואתם על השעון! ⏳",
+
+    "⚡ **חידון בזק!** ⏱️\nיש לכם **60 שניות** להראות מה אתם יודעים! 🎯",
+
+    "🚀 **היכון, חידון, צא!** 🕐\n⏱️ **60 שניות** לענות על כמה שיותר שאלות! 💪"
+};
+
+
+
+
+            Random random = new Random();
+            return quizStartMessages[random.Next(quizStartMessages.Length)];
+
+        }
+
+        public static string GetRandomCorrectOrIncorrectMessage(bool isCorrect)
+        {
+            string[] messages;
+
+            if (isCorrect)
+            {
+                messages = new[]
+                {
+        "✅ תשובה נכונה! 💥",
+        "🎉 מעולה! 🌟",
+        "🚀 יפה מאוד! 🥇",
+        "💪 כל הכבוד! 💯",
+        "🔥 נכון מאוד! 😊",
+        "🎯 בול פגיעה! 🏆",
+        "💎 מושלם! 🌹",
+        "✨ שיחקתם אותה! 💪",
+        "🌟 מצוין! 🎖️",
+        "🥳 אליפות! 🌈"
+    };
+            }
+            else
+            {
+                messages = new[]
+                {
+        "❌ לא נכון! ✨",
+        "😅 נסו שוב! 🚀",
+        "🌟 כמעט, אבל לא. 💡",
+        "❓ טעות קטנה. 🍀",
+        "🙃 קרוב, אבל לא. 🎯",
+        "😓 לא הפעם! 🌈",
+        "😐 טעות, נמשיך! 💥",
+        "🙁 לא נכון, קדימה! 🚀",
+        "😕 שגוי, תנסו שוב! 🔥",
+        "🤔 נסו שוב, זה יצליח! 🧠"
+    };
+            }
+
+
+            Random random = new Random();
+            return messages[random.Next(messages.Length)];
+        }
+
 
 
         public static string Get5ExerciseSolvedMessage(string studentName)

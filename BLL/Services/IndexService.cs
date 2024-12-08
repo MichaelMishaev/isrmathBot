@@ -26,14 +26,16 @@ namespace BL.Serives
         private readonly WhatsAppService _whatsAppService;
         private readonly ImgFunctions _imgFunctions;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly QuizService _quizService;
 
 
-        public IndexService(ExerciseRepository exerciseRepository, WhatsAppService whatsAppService, ImgFunctions imgFunctions, IHttpClientFactory httpClientFactory)
+        public IndexService(ExerciseRepository exerciseRepository, WhatsAppService whatsAppService, ImgFunctions imgFunctions, IHttpClientFactory httpClientFactory, QuizService quizService)
         {
             _exerciseRepository = exerciseRepository;
             _whatsAppService = whatsAppService;
             _imgFunctions = imgFunctions;
             _httpClientFactory = httpClientFactory;
+            _quizService = quizService;
         }
         public async Task<string> UserBalancer(string phoneNumber, string? body, List<string>? MediaUrl0, List<string>? MediaContentType0)
         {
@@ -76,8 +78,8 @@ namespace BL.Serives
                     switch (userType.UserType)
                     {
                         case Constants.Teacher:
-                           //  result = await HandleTeacherMessage(numericPhoneNumber, body, userId);
-                            result = await HandleStudentMessage(numericPhoneNumber, body); //FOR TEST IF NEED AS STUDENT
+                            result = await HandleTeacherMessage(numericPhoneNumber, body, userId);
+                          //  result = await HandleStudentMessage(numericPhoneNumber, body); //FOR TEST IF NEED AS STUDENT
                             break;
                         case Constants.Parent:
                             result = await HandleParentMessage(numericPhoneNumber, body);
@@ -121,22 +123,38 @@ namespace BL.Serives
             // Get the student ID based on the phone number
             int studentId = await _exerciseRepository.GetStudentIdByPhoneNumber(phoneNumber);
             var inProgressExercise = await _exerciseRepository.GetInProgressExercise(studentId);
+            var activeQuiz = await _exerciseRepository.GetActiveQuizSession(studentId);
             // Normalize the incoming message
             string normalizedMessage = studentMessage.Trim().ToLower();
 
             if (normalizedMessage == "test")
             {
+                string res;
+                try
+                {
+
+        
+               res = await  _quizService.StartQuiz(studentId, phoneNumber);
+                }
+                catch (Exception e)
+                {
+
+                    throw;
+                }
                 //await SendImageToSender(phoneNumber, "10InRow_", "");
-                var num = await _exerciseRepository.GetLastCorrectAnswers(13);
-                await SendImageToSender(phoneNumber, "5InRow_", "");
+                
+                //await SendImageToSender(phoneNumber, "5InRow_", "");
                 //await _whatsAppService.GetHelpForStudent("2 * 43");
                 //await SendImageToSender(phoneNumber, "5_", "");
 
-                return "";
-
-
-
+                return res;
             }
+
+            if (activeQuiz != null)
+            {
+                return await _quizService.HandleQuizAnswer(studentId, (int)activeQuiz, phoneNumber, studentMessage);
+            }
+
             // Check if the message is a command
             if (normalizedMessage == "start")
             {
@@ -363,7 +381,7 @@ namespace BL.Serives
                         await SendResponseToSender(phoneNumber, congratulatoryMessage);
                         return "";
                     }
-
+                    
 
                     else if (lastCurrectAnswersInRow > 0 && lastCurrectAnswersInRow == 10)
                     {

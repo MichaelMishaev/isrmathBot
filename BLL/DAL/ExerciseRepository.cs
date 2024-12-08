@@ -1412,6 +1412,286 @@ WHERE streakBreak = 0;
     }
 
 
+    //#################################################################
+    //############################## QUEEZ ############################
+    //#################################################################
+
+    public async Task<int> CreateQuizSession(int studentId)
+    {
+        using (var connection = GetConnection())
+        {
+            await connection.OpenAsync();
+            string query = @"
+        INSERT INTO quiz_sessions (StudentId, StartTime, IsActive)
+        VALUES (@StudentId, NOW(), TRUE);
+        SELECT LAST_INSERT_ID();";
+
+            using (var command = new MySqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@StudentId", studentId);
+                return Convert.ToInt32(await command.ExecuteScalarAsync());
+            }
+        }
+    }
+
+    public async Task<(int TotalQuestions, int TotalCorrectAnswers)?> GetQuizSessionStats(int sessionId)
+    {
+        using (var connection = GetConnection())
+        {
+            await connection.OpenAsync();
+            string query = @"
+        SELECT 
+            COUNT(*) AS TotalQuestions,
+            SUM(IsCorrect) AS TotalCorrectAnswers
+        FROM quiz_attempts
+        WHERE SessionId = @SessionId;";
+
+            using (var command = new MySqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@SessionId", sessionId);
+
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    if (await reader.ReadAsync())
+                    {
+                        return (
+                            reader.GetInt32("TotalQuestions"),
+                            reader.IsDBNull("TotalCorrectAnswers") ? 0 : reader.GetInt32("TotalCorrectAnswers")
+                        );
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    public async Task EndQuizSession(int sessionId, int totalCorrectAnswers)
+    {
+        using (var connection = GetConnection())
+        {
+            await connection.OpenAsync();
+            string query = @"
+        UPDATE quiz_sessions
+        SET IsActive = FALSE, EndTime = NOW(), TotalCorrectAnswers = @TotalCorrectAnswers
+        WHERE SessionId = @SessionId;";
+
+            using (var command = new MySqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@SessionId", sessionId);
+                command.Parameters.AddWithValue("@TotalCorrectAnswers", totalCorrectAnswers);
+                await command.ExecuteNonQueryAsync();
+            }
+        }
+    }
+
+
+
+    public async Task<ExerciseModel?> GetNextQuizQuestion(int sessionId, int studentId, int? lastDays = null)
+    {
+        try
+        {
+            using (var connection = GetConnection())
+            {
+                await connection.OpenAsync();
+
+                // Determine the createdAt condition
+                string createdAtCondition = lastDays.HasValue
+                    ? "AND e.CreatedAt >= NOW() - INTERVAL @LastDays DAY"
+                    : "AND e.CreatedAt >= NOW() - INTERVAL 7 DAY";
+
+                // Query to fetch the next quiz question, incorporating additional filtering logic
+                string query = $@"
+            SELECT e.id, e.exercise, e.correctAnswer, e.DifficultyLevel, e.*
+            FROM exercises e
+            INNER JOIN students s ON e.classId = s.ClassId
+            WHERE s.StudentId = @StudentId
+              AND e.id NOT IN (
+                  SELECT ExerciseId
+                  FROM quiz_attempts
+                  WHERE SessionId = @SessionId
+              )
+              AND e.status = 1
+              AND e.DifficultyLevel = (
+                  SELECT PreferredDifficultyLevel
+                  FROM students
+                  WHERE StudentId = @StudentId
+              )
+              {createdAtCondition}
+            ORDER BY RAND()
+            LIMIT 1;";
+
+                using (var command = new MySqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@StudentId", studentId);
+                    command.Parameters.AddWithValue("@SessionId", sessionId);
+
+                    if (lastDays.HasValue)
+                    {
+                        command.Parameters.AddWithValue("@LastDays", lastDays.Value);
+                    }
+
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            return new ExerciseModel
+                            {
+                                ExerciseId = Convert.ToInt32(reader["id"]),
+                                Exercise = reader["exercise"].ToString(),
+                                CorrectAnswer = reader["correctAnswer"].ToString(),
+                                DifficultyLevel = reader["DifficultyLevel"].ToString()
+                            };
+                        }
+                    }
+                }
+            }
+
+            // Return null if no question is found
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in GetNextQuizQuestion: {ex.Message}");
+            return null;
+        }
+    }
+
+
+
+    public async Task LogQuizAttempt(int sessionId, int exerciseId, string studentAnswer, bool isCorrect)
+    {
+        using (var connection = GetConnection())
+        {
+            await connection.OpenAsync();
+            string query = @"
+        INSERT INTO quiz_attempts (SessionId, ExerciseId, StudentAnswer, IsCorrect, AttemptedAt)
+        VALUES (@SessionId, @ExerciseId, @StudentAnswer, @IsCorrect, NOW())";
+
+            using (var command = new MySqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@SessionId", sessionId);
+                command.Parameters.AddWithValue("@ExerciseId", exerciseId);
+                command.Parameters.AddWithValue("@StudentAnswer", studentAnswer);
+                command.Parameters.AddWithValue("@IsCorrect", isCorrect);
+                await command.ExecuteNonQueryAsync();
+            }
+        }
+    }
+
+    public async Task SaveCurrentQuizQuestion(int sessionId, int exerciseId)
+    {
+        using (var connection = GetConnection())
+        {
+            await connection.OpenAsync();
+            string query = @"
+            UPDATE quiz_sessions
+            SET CurrentExerciseId = @ExerciseId
+            WHERE SessionId = @SessionId";
+
+            using (var command = new MySqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@ExerciseId", exerciseId);
+                command.Parameters.AddWithValue("@SessionId", sessionId);
+                await command.ExecuteNonQueryAsync();
+            }
+        }
+    }
+
+    public async Task<int?> GetActiveQuizSession(int studentId)
+    {
+        using (var connection = GetConnection())
+        {
+            await connection.OpenAsync();
+
+            // Query to get the latest session
+            string fetchLatestSessionIdQuery = @"
+        SELECT SessionId
+        FROM quiz_sessions
+        WHERE StudentId = @StudentId AND IsActive = TRUE
+        ORDER BY StartTime DESC
+        LIMIT 1;";
+
+            // Query to deactivate older sessions
+            string deactivateOlderSessionsQuery = @"
+        UPDATE quiz_sessions
+        SET IsActive = FALSE
+        WHERE StudentId = @StudentId AND IsActive = TRUE AND SessionId != @LatestSessionId;";
+
+            using (var command = new MySqlCommand(fetchLatestSessionIdQuery, connection))
+            {
+                command.Parameters.AddWithValue("@StudentId", studentId);
+
+                var result = await command.ExecuteScalarAsync();
+                int? latestSessionId = result != null ? Convert.ToInt32(result) : (int?)null;
+
+                if (latestSessionId.HasValue)
+                {
+                    // Deactivate older sessions
+                    using (var updateCommand = new MySqlCommand(deactivateOlderSessionsQuery, connection))
+                    {
+                        updateCommand.Parameters.AddWithValue("@StudentId", studentId);
+                        updateCommand.Parameters.AddWithValue("@LatestSessionId", latestSessionId.Value);
+                        await updateCommand.ExecuteNonQueryAsync();
+                    }
+                }
+
+                return latestSessionId;
+            }
+        }
+    }
+
+
+    public async Task<ExerciseModel?> GetCurrentQuizQuestion(int sessionId)
+    {
+        using (var connection = GetConnection())
+        {
+            await connection.OpenAsync();
+            string query = @"
+            SELECT e.id, e.exercise, e.correctAnswer
+            FROM exercises e
+            INNER JOIN quiz_sessions qs ON qs.CurrentExerciseId = e.id
+            WHERE qs.SessionId = @SessionId";
+
+            using (var command = new MySqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@SessionId", sessionId);
+
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    if (await reader.ReadAsync())
+                    {
+                        return new ExerciseModel
+                        {
+                            ExerciseId = reader.GetInt32("id"),
+                            Exercise = reader.GetString("exercise"),
+                            CorrectAnswer = reader.GetString("correctAnswer")
+                        };
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+
+    public async Task<int> CalculateRemainingTime(int sessionId)
+    {
+        using (var connection = GetConnection())
+        {
+            await connection.OpenAsync();
+            string query = @"SELECT TIMESTAMPDIFF(SECOND, StartTime, NOW()) AS ElapsedTime FROM quiz_sessions WHERE SessionId = @SessionId";
+
+            using (var command = new MySqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@SessionId", sessionId);
+                var result = await command.ExecuteScalarAsync();
+                int elapsedTime = result != null ? Convert.ToInt32(result) : 0;
+                return Math.Max(60 - elapsedTime, 0); // Ensure non-negative remaining time
+            }
+        }
+    }
+
+
     ///////////////////////////////////////////////////////////////////
 
 
