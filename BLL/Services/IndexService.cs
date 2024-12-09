@@ -78,7 +78,7 @@ namespace BL.Serives
                     {
                         case Constants.Teacher:
                             result = await HandleTeacherMessage(numericPhoneNumber, body, userId);
-                          //  result = await HandleStudentMessage(numericPhoneNumber, body); //FOR TEST IF NEED AS STUDENT
+                          // result = await HandleStudentMessage(numericPhoneNumber, body); //FOR TEST IF NEED AS STUDENT
                             break;
                         case Constants.Parent:
                             result = await HandleParentMessage(numericPhoneNumber, body);
@@ -347,7 +347,7 @@ namespace BL.Serives
                     await _exerciseRepository.UpdateIsWaitingForHelp(studentId, inProgressExercise.ExerciseId, false);//to prevent send message while waiting gpt answer
                     bool isFastAnswers = await _exerciseRepository.isStudentAnswerFast(studentId);//is to send congrat for fast answers
                     var lastCurrectAnswersInRow = await _exerciseRepository.GetLastCorrectAnswers(studentId);
-
+                    var exrcisesLeft = await _exerciseRepository.GetExercisesLeftForStudent(studentId);
 
                     //#########################################
                     if (isFastAnswers)
@@ -359,6 +359,7 @@ namespace BL.Serives
 
                     else if (lastCurrectAnswersInRow > 0 && lastCurrectAnswersInRow == 5)
                     {
+
                         await SendImageToSender(phoneNumber, "5InRow_", "");
                         Thread.Sleep(1000);
                     }
@@ -375,7 +376,7 @@ namespace BL.Serives
 
                     else if (exercisesSolvedToday % 10 == 0 && (lastCurrectAnswersInRow > 0 && lastCurrectAnswersInRow % 10 != 0))
                     {
-                        if (exercisesSolvedToday == 10)
+                        if (exercisesSolvedToday == 10 && exrcisesLeft >10)
                         {
                             
                             await SendImageToSender(phoneNumber, "quiz_", "");
@@ -385,7 +386,7 @@ namespace BL.Serives
                         }
 
                         await SendImageToSender(phoneNumber, "final_", "");
-                        string congratulatoryMessage = $"כל הכבוד על פתרון {exercisesSolvedToday} תרגילים היום! 💪✨ האם תרצה להמשיך?";
+                        string congratulatoryMessage = $"כל הכבוד על פתרון {exercisesSolvedToday} תרגילים היום! 💪✨ בואו נמשיך?";
 
 
                         await SendResponseToSender(phoneNumber, congratulatoryMessage);
@@ -436,7 +437,7 @@ namespace BL.Serives
 
                         await SendResponseToSender(phoneNumber, sendingText);
                     }
-                    var exrcisesLeft = await _exerciseRepository.GetExercisesLeftForStudent(studentId);
+                    
                     if (nextExercise.exercise != null)
                     {
                         // Assign the exercise to the student

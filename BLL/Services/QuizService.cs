@@ -19,6 +19,12 @@ namespace BLL.Services
 
         public async Task<string> StartQuiz(int studentId, string phoneNumber)
         {
+
+            var exrcisesLeft = await _exerciseRepository.GetExercisesLeftForStudent(studentId);
+            if (exrcisesLeft<10)
+            {
+                return string.Empty;
+            }
             // Initialize a quiz session
             int sessionId = await _exerciseRepository.CreateQuizSession(studentId);
 
@@ -29,7 +35,7 @@ namespace BLL.Services
             if (exercise.exercise == null || exercise.exercise == null)
             {
                 await _exerciseRepository.EndQuizSession(sessionId, 0);
-                return "No exercises available for the quiz. Try again later.";
+                return string.Empty;
             }
 
             // Save the first question for the session
@@ -115,8 +121,7 @@ namespace BLL.Services
                  $"🔢 סך הכל שאלות: {sessionStats.Value.TotalQuestions} ❓\n" +
                  $"✅ תשובות נכונות: {sessionStats.Value.TotalCorrectAnswers} \n" +
                  $"❌ תשובות לא נכונות: {sessionStats.Value.TotalQuestions - sessionStats.Value.TotalCorrectAnswers} \n\n" +
-                 $"🌟 רוצים להמשיך לפתור תרגילים? ✨\n\n" +
-                 $"✏️💬 כתבו **'🟢 כן 🟢'** 🎉 ונמשיך ! ✨";
+                 $"🌟 רוצים להמשיך לפתור תרגילים? ✨\n";
 
             }
             return summary;

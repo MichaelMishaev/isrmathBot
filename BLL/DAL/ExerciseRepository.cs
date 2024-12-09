@@ -12,8 +12,9 @@ using System.Threading.Tasks;
 public class ExerciseRepository : DatabaseService
 {
     private readonly CommonFunctions _commonFunctions;
-    public ExerciseRepository(IConfiguration configuration, CommonFunctions commonFunctions) : base(configuration) {
-    _commonFunctions = commonFunctions;
+    public ExerciseRepository(IConfiguration configuration, CommonFunctions commonFunctions) : base(configuration)
+    {
+        _commonFunctions = commonFunctions;
     }
 
 
@@ -764,6 +765,7 @@ FROM (
         OVER (ORDER BY sp.UpdatedAt DESC) AS streakBreak
     FROM studentprogress sp
     WHERE sp.StudentId = @StudentId
+   AND DATE(sp.UpdatedAt) = CURDATE()  -- Filter only today's records
     ORDER BY sp.UpdatedAt DESC
 ) AS sub
 WHERE streakBreak = 0;
