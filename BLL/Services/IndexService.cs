@@ -77,8 +77,8 @@ namespace BL.Serives
                     switch (userType.UserType)
                     {
                         case Constants.Teacher:
-                            result = await HandleTeacherMessage(numericPhoneNumber, body, userId);
-                          // result = await HandleStudentMessage(numericPhoneNumber, body); //FOR TEST IF NEED AS STUDENT
+                       //     result = await HandleTeacherMessage(numericPhoneNumber, body, userId);
+                             result = await HandleStudentMessage(numericPhoneNumber, body); //FOR TEST IF NEED AS STUDENT
                             break;
                         case Constants.Parent:
                             result = await HandleParentMessage(numericPhoneNumber, body);
@@ -132,8 +132,8 @@ namespace BL.Serives
                 try
                 {
 
-        
-               //res = await  _quizService.StartQuiz(studentId, phoneNumber);
+
+                    //res = await  _quizService.StartQuiz(studentId, phoneNumber);
                 }
                 catch (Exception e)
                 {
@@ -141,7 +141,7 @@ namespace BL.Serives
                     throw;
                 }
                 //await SendImageToSender(phoneNumber, "10InRow_", "");
-                
+
                 //await SendImageToSender(phoneNumber, "5InRow_", "");
                 //await _whatsAppService.GetHelpForStudent("2 * 43");
                 //await SendImageToSender(phoneNumber, "5_", "");
@@ -165,7 +165,7 @@ namespace BL.Serives
                 // Provide help for the current exercise
                 return await ProvideHelpForStudent(studentId, phoneNumber);
             }
-            else if (normalizedMessage == "דלג" && inProgressExercise.IncorrectAttempts > 3)
+            else if (normalizedMessage == "דלג" )
             {
                 if (inProgressExercise != null)
                 {
@@ -376,9 +376,9 @@ namespace BL.Serives
 
                     else if (exercisesSolvedToday % 10 == 0 && (lastCurrectAnswersInRow > 0 && lastCurrectAnswersInRow % 10 != 0))
                     {
-                        if (exercisesSolvedToday == 10 && exrcisesLeft >10)
+                        if (exercisesSolvedToday == 10 && exrcisesLeft > 10)
                         {
-                            
+
                             await SendImageToSender(phoneNumber, "quiz_", "");
                             Thread.Sleep(2000);
                             var res = await _quizService.StartQuiz(studentId, phoneNumber);
@@ -394,7 +394,7 @@ namespace BL.Serives
 
                         return "";
                     }
-                    
+
 
                     else if (lastCurrectAnswersInRow > 0 && lastCurrectAnswersInRow == 10)
                     {
@@ -446,7 +446,7 @@ namespace BL.Serives
 
                         await SendResponseToSender(phoneNumber, sendingText);
                     }
-                    
+
                     if (nextExercise.exercise != null)
                     {
                         // Assign the exercise to the student
@@ -709,7 +709,7 @@ namespace BL.Serives
             {
                 string instructionText = string.Empty;
                 string exampleText = string.Empty;
-                string difficultyLevel = string.Empty;
+                string classInstruction = string.Empty;
 
                 var messageParts = normalizedMessage.Split("***", StringSplitOptions.RemoveEmptyEntries);
                 if (messageParts.Length > 0)
@@ -723,7 +723,7 @@ namespace BL.Serives
                     {
                         var splitInstruction = instructionText.Split("###", StringSplitOptions.RemoveEmptyEntries);
                         instructionText = splitInstruction.ElementAtOrDefault(0)?.Trim() ?? string.Empty;
-                        difficultyLevel = splitInstruction.ElementAtOrDefault(1)?.Trim() ?? string.Empty;
+                        classInstruction = splitInstruction.ElementAtOrDefault(1)?.Trim() ?? string.Empty;
                     }
 
                     // Check if exampleText contains "###"
@@ -731,11 +731,11 @@ namespace BL.Serives
                     {
                         var splitExample = exampleText.Split("###", StringSplitOptions.RemoveEmptyEntries);
                         exampleText = splitExample.ElementAtOrDefault(0)?.Trim() ?? string.Empty;
-                        difficultyLevel = splitExample.ElementAtOrDefault(1)?.Trim() ?? string.Empty;
+                        classInstruction = splitExample.ElementAtOrDefault(1)?.Trim() ?? string.Empty;
                     }
-                    else if (string.IsNullOrEmpty(difficultyLevel) && messageParts.Length > 1) // Handle difficultyLevel from messageParts[1]
+                    else if (string.IsNullOrEmpty(classInstruction) && messageParts.Length > 1) // Handle difficultyLevel from messageParts[1]
                     {
-                        difficultyLevel = messageParts[1].Trim();
+                        classInstruction = messageParts[1].Trim();
                     }
                 }
 
@@ -743,9 +743,10 @@ namespace BL.Serives
 
                 await SendResponseToSender(phoneNumber, midMessage);
                 //              await _whatsAppService.SendMessageToUser(phoneNumber, midMessage);
-                difficultyLevel = "Easy";
-                return await _whatsAppService.GetExercisesFromGPT(exampleText, teacherId, Constants.Teacher, classId, instructionText,userId, difficultyLevel); //TODO: change the 1, now its for test cos same user is teacher and student
+                //    difficultyLevel = "Easy";
+                return await _whatsAppService.GetExercisesFromGPT(exampleText, teacherId, Constants.Teacher, classId, instructionText, userId, classInstruction); //TODO: change the 1, now its for test cos same user is teacher and student
             }
+
 
             //remind students
             else if (normalizedMessage.Contains("reminder"))
@@ -780,19 +781,37 @@ namespace BL.Serives
             }
             else
             {
-                string exerciseText = "\u202A" + "*** 12 + _ = 14 ";
-                string exerciseText2 = "\u202A" + "*** 12 * 6 =  ";
+                string exerciseText = "\u202A" + "*** 12 + _ = 14";
+                string exerciseText2 = "\u202A" + "*** 12 * 6";
+                string exerciseText3 = "\u202A" + "*** 15 - 7";
+
                 return "\u200F *פקודה לא מוכרת.* \n" +
-                       "\u200Fהנה הפקודות הזמינות שתוכל לשלוח:\n" +
+                       "\u200Fהנה הפקודות הזמינות שתוכל לשלוח כמורה:\n\n" +
+
                        "1. *lead*: \n" +
-                       "\u200Fקבל את לוח התוצאות של הכיתה.\n" +
+                       "\u200Fקבל את לוח התוצאות של הכיתה שלך.\n\n" +
+
                        "2. *status*: \n" +
-                       "\u200Fקבל את סטטוס ההתקדמות של כל תלמיד.\n" +
-                       "3. *<הודעה עם ***>*: \n" +
-                       "\u200F צור 10 תרגילים חדשים. דוגמאות:\n" +
+                       "\u200Fקבל דו\"ח התקדמות מפורט של התלמידים ב-7 ימים האחרונים.\n\n" +
+
+                       "3. *<הודעה עם ***>*:\n" +
+                       "\u200Fצור 10 תרגילים חדשים. דוגמאות:\n" +
                        $"{exerciseText}\n" +
-                       $"{exerciseText2}";
+                       $"{exerciseText2}\n" +
+                       $"{exerciseText3}\n" +
+                       "כדי להביא דוגמה יש להשתמש ב-`//` ואז לכתוב דוגמה. לדוגמה: `// 2+2, 5+4`\n" +
+                       "ניתן להוסיף: `###GRADE=5` כדי ליצור תרגילים לשכבה ספציפית. ציין את מספר השכבה, לדוגמה: `###GRADE=5`.\n\n" +
+
+                       "4. *#update, [ClassName]*:\n" +
+                       "\u200Fעדכן את הכיתה המשויכת אליך. לדוגמה: `#update, ה1`\n\n" +
+
+                       "5. *reminder, ClassName, Message*:\n" +
+                       "\u200Fשליחת תזכורת לתלמידי כיתה ספציפית. לדוגמה: `reminder, ה1, אל תשכחו לפתור תרגילים!`\n\n" +
+
+                       "שיהיה בהצלחה! 💪";
             }
+
+
 
 
         }
@@ -867,31 +886,58 @@ namespace BL.Serives
             Console.WriteLine($"approve teacher: user: {userId}, body: {body} ");
             if (userId != null)
             {
-                // Check if the user has pending exercises awaiting confirmation
                 var pendingExerciseId = await _exerciseRepository.GetPendingExerciseIdForUser(userId.Value);
 
                 if (!string.IsNullOrEmpty(pendingExerciseId))
                 {
-                    // Normalize the user's response
                     var normalizedResponse = body?.Trim().ToLower();
+                    var pendingExercises = await _exerciseRepository.GetPendingExercises(pendingExerciseId);
 
                     if (normalizedResponse == "כן" || normalizedResponse == "yes")
                     {
                         // User confirms the exercises
-                        var pendingExercises = await _exerciseRepository.GetPendingExercises(pendingExerciseId);
-
-                        // Save exercises to the database
-                        var res = await _exerciseRepository.SaveExercisesToDatabase(pendingExercises.Response, pendingExercises.CreatorUserId, pendingExercises.CreatorRole, pendingExercises.ClassId);
-
-                        if (!res)
+                        // Check if these exercises are for a whole grade (Grade set) and ClassId=0
+                        if (pendingExercises.Grade.HasValue && pendingExercises.ClassId == 0)
                         {
-                            //await SendResponseToSender("972544345287", "שגיאה ביצירת תרגילים");
-                            return "שגיאה ביצירת תרגילים,";
+                            // Get all classes for that grade
+                            var classIds = await _exerciseRepository.GetClassesByGrade(pendingExercises.Grade.Value);
+
+                            // Save exercises for all classes in one transaction
+                            bool gradeInsertionSuccess = await _exerciseRepository.SaveExercisesForAllClassesInGrade(
+                                pendingExercises.Response,
+                                pendingExercises.CreatorUserId,
+                                pendingExercises.CreatorRole,
+                                classIds
+                            );
+
+                            if (!gradeInsertionSuccess)
+                            {
+                                return "שגיאה ביצירת תרגילים עבור הכיתות בדרגה המבוקשת.";
+                            }
+
+                            // If successfully inserted for all classes, just remove the pending exercises
+                            await _exerciseRepository.DeletePendingExercises(pendingExerciseId);
+                            await _exerciseRepository.DeletePendingExerciseIdForUser(userId.Value);
+                            return "התרגילים נשמרו בהצלחה!";
                         }
-                        // Remove pending exercises
-                        await _exerciseRepository.DeletePendingExercises(pendingExerciseId);
-                        await _exerciseRepository.DeletePendingExerciseIdForUser(userId.Value);
-                        return "התרגילים נשמרו בהצלחה!";
+                        else
+                        {
+                            // Normal flow: single class
+                            bool res = await _exerciseRepository.SaveExercisesToDatabase(
+                                pendingExercises.Response,
+                                pendingExercises.CreatorUserId,
+                                pendingExercises.CreatorRole,
+                                pendingExercises.ClassId
+                            );
+
+                            if (!res)
+                                return "שגיאה ביצירת תרגילים";
+
+                            // Remove pending exercises
+                            await _exerciseRepository.DeletePendingExercises(pendingExerciseId);
+                            await _exerciseRepository.DeletePendingExerciseIdForUser(userId.Value);
+                            return "התרגילים נשמרו בהצלחה!";
+                        }
                     }
                     else if (normalizedResponse == "לא" || normalizedResponse == "no")
                     {
@@ -903,16 +949,20 @@ namespace BL.Serives
                     }
                     else
                     {
-                        // User provided an unexpected response
+                        // Unexpected response
                         return "אנא כתוב 'כן' כדי לאשר ולשמור את התרגילים, או 'לא' כדי לבטל ולספק הוראות חדשות.";
                     }
                 }
             }
+
+            // If no userId or no pending exercises, return empty
             return string.Empty;
         }
 
 
 
 
+
     }
+
 }

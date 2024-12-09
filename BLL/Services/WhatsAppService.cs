@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Twilio;
@@ -32,11 +33,10 @@ namespace BLL.Services
             _commonFunctions = commonFunctions;
         }
 
-        public async Task<string> GetExercisesFromGPT(string example, int teacherId, string creatorRole, int classId, string instructions,int? creatorUserId, string level="")
+        public async Task<string> GetExercisesFromGPT(string example, int teacherId, string creatorRole, int classId, string instructions,int? creatorUserId, string classInstruction = "")
         {
-            level =  string.IsNullOrEmpty(level) ? "Medium" : level;
 
-            string gptQuery = "Please create 25 unique math exercises " + instructions + " using the **same mathematical operation and format** as the given example. Difficulty level: " + level + ". Example: " + example + ".\n\n" +
+            string gptQuery = "Please create 25 unique math exercises " + instructions + " using the **same mathematical operation and format** as the given example. Example: " + example + ".\n\n" +
 
 "**Requirements:**\n" +
 "- Each generated exercise **must use the same operation** (e.g., multiplication, division, addition, subtraction) as the given example and must have the same level of complexity. recheck the answers you send\n" +
@@ -81,13 +81,16 @@ namespace BLL.Services
 
             try
             {
+                int? grade = null;
+                var gradeMatch = System.Text.RegularExpressions.Regex.Match(classInstruction, @"GRADE=(\d+)", RegexOptions.IgnoreCase);
+                if (gradeMatch.Success)
+                {
+                    grade = int.Parse(gradeMatch.Groups[1].Value);
+                }
+
                 Stopwatch stopwatch = Stopwatch.StartNew();
-                // Prepare two tasks for calling AskChatGPT
-                //var task1 = _chatGPTService.AskChatGPT(gptQuery);
-                //var task2 = _chatGPTService.AskChatGPT(gptQuery);
+
                 var response = await _chatGPTService.AskChatGPT(gptQuery);//, cancellationToken);
-                // Run both tasks in parallel
-              //  await Task.WhenAll(task1, task2);
 
                 stopwatch.Stop();
                 double elapsedSeconds = stopwatch.Elapsed.TotalSeconds;
@@ -103,22 +106,21 @@ namespace BLL.Services
 
                 // Process and deserialize each response
                 List<ExerciseModel> exercises1 = await ProcessAssistantResponse(response);
-          //      List<ExerciseModel> exercises2 = await ProcessAssistantResponse(response2);
 
-                // Combine the exercises, ensuring uniqueness
-                //var combinedExercises = exercises1.Concat(exercises2)
-                //                                 .GroupBy(e => e.Exercise)
-                //                                 .Select(g => g.First())
-                //                                 .ToList();
-
-                // Serialize the combined exercises back to JSON
                 string combinedResponse = JsonConvert.SerializeObject(response);
 
                 // Create a unique identifier for this pending exercise set
                 string pendingId = Guid.NewGuid().ToString();
 
+                int saveClassId = classId;
+                if (grade.HasValue)
+                {
+                    // If targeting a grade, set ClassId = 0 to indicate grade-level assignment
+                    saveClassId = 0;
+                }
+
                 // Save to temporary storage, deleting any existing pending exercises first
-                await _exerciseRepository.SavePendingExercises(pendingId, combinedResponse, creatorUserId ?? 1, creatorRole, classId);
+                await _exerciseRepository.SavePendingExercises(pendingId, combinedResponse, creatorUserId ?? 1, creatorRole, saveClassId, grade);
 
                 // Construct a message with the exercises and ask for confirmation
                 var exercisesMessage = $"🕒 זמן שנדרש: {elapsedSeconds:F2} שניות\n\n" +

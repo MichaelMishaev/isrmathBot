@@ -1221,7 +1221,7 @@ WHERE streakBreak = 0;
     /// 
 
 
-    public async Task SavePendingExercises(string pendingId, string response, int creatorUserId, string creatorRole, int classId)
+    public async Task SavePendingExercises(string pendingId, string response, int creatorUserId, string creatorRole, int classId, int? grade = null)
     {
         using (var connection = GetConnection())
         {
@@ -1234,8 +1234,10 @@ WHERE streakBreak = 0;
                     await DeletePendingExercisesByCreatorUserId(creatorUserId, connection, transaction);
 
                     // Insert new PendingExercises first
-                    var queryPendingExercises = @"INSERT INTO PendingExercises (PendingId, Response, CreatorUserId, CreatorRole, ClassId) 
-                                              VALUES (@PendingId, @Response, @CreatorUserId, @CreatorRole, @ClassId)";
+                    var queryPendingExercises = @"
+                INSERT INTO PendingExercises (PendingId, Response, CreatorUserId, CreatorRole, ClassId, Grade) 
+                VALUES (@PendingId, @Response, @CreatorUserId, @CreatorRole, @ClassId, @Grade)";
+
                     using (var command = new MySqlCommand(queryPendingExercises, connection, transaction))
                     {
                         command.Parameters.AddWithValue("@PendingId", pendingId);
@@ -1243,6 +1245,7 @@ WHERE streakBreak = 0;
                         command.Parameters.AddWithValue("@CreatorUserId", creatorUserId);
                         command.Parameters.AddWithValue("@CreatorRole", creatorRole);
                         command.Parameters.AddWithValue("@ClassId", classId);
+                        command.Parameters.AddWithValue("@Grade", grade as object ?? DBNull.Value);
                         await command.ExecuteNonQueryAsync();
                     }
 
@@ -1267,6 +1270,92 @@ WHERE streakBreak = 0;
             }
         }
     }
+
+
+    public async Task<List<int>> GetClassesByGrade(int grade)
+    {
+        using (MySqlConnection connection = GetConnection())
+        {
+            await connection.OpenAsync();
+            string query = "SELECT ClassId FROM classes WHERE Grade = @Grade";
+
+            using (var command = new MySqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@Grade", grade);
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    List<int> classIds = new List<int>();
+                    while (await reader.ReadAsync())
+                    {
+                        classIds.Add(Convert.ToInt32(reader["ClassId"]));
+                    }
+                    return classIds;
+                }
+            }
+        }
+    }
+
+
+    public async Task<bool> SaveExercisesForAllClassesInGrade(string jsonResponse, int creatorUserId, string creatorRole, List<int> classIds)
+    {
+        try
+        {
+            // Double-deserialize to get actual exercise list
+            string innerJson = JsonConvert.DeserializeObject<string>(jsonResponse);
+            List<ExerciseModel> exercises = JsonConvert.DeserializeObject<List<ExerciseModel>>(innerJson);
+
+            using (MySqlConnection connection = GetConnection())
+            {
+                await connection.OpenAsync();
+                using (MySqlTransaction transaction = await connection.BeginTransactionAsync())
+                {
+                    try
+                    {
+                        foreach (int classId in classIds)
+                        {
+                            foreach (var exercise in exercises)
+                            {
+                                string insertQuery = @"
+                            INSERT INTO exercises 
+                                (CreatedByUserId, CreatedByRole, exercise, correctAnswer, HelpContent, CreatedAt, classId, DifficultyLevel) 
+                            VALUES 
+                                (@CreatedByUserId, @CreatedByRole, @Exercise, @CorrectAnswer, @HelpContent, @CreatedAt, @ClassId, @DifficultyLevel)";
+
+                                using (MySqlCommand command = new MySqlCommand(insertQuery, connection, transaction))
+                                {
+                                    command.Parameters.AddWithValue("@CreatedByUserId", creatorUserId);
+                                    command.Parameters.AddWithValue("@CreatedByRole", creatorRole);
+                                    command.Parameters.AddWithValue("@Exercise", exercise.Exercise);
+                                    command.Parameters.AddWithValue("@CorrectAnswer", exercise.CorrectAnswer);
+                                    command.Parameters.AddWithValue("@HelpContent", exercise.Hint);
+                                    command.Parameters.AddWithValue("@CreatedAt", DateTime.UtcNow);
+                                    command.Parameters.AddWithValue("@ClassId", classId);
+                                    command.Parameters.AddWithValue("@DifficultyLevel", exercise.DifficultyLevel ?? "Easy");
+
+                                    await command.ExecuteNonQueryAsync();
+                                }
+                            }
+                        }
+
+                        await transaction.CommitAsync();
+                        return true;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error: {ex.Message}");
+                        await transaction.RollbackAsync();
+                        return false;
+                    }
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Error: {e.Message}");
+            return false;
+        }
+    }
+
 
 
     public async Task DeletePendingExercisesByCreatorUserId(int creatorUserId, MySqlConnection connection, MySqlTransaction transaction)
@@ -1320,7 +1409,8 @@ WHERE streakBreak = 0;
                             Response = reader["Response"].ToString(),
                             CreatorUserId = Convert.ToInt32(reader["CreatorUserId"]),
                             CreatorRole = reader["CreatorRole"].ToString(),
-                            ClassId = Convert.ToInt32(reader["ClassId"])
+                            ClassId = Convert.ToInt32(reader["ClassId"]),
+                            Grade = reader["Grade"] == DBNull.Value ? (int?)null : Convert.ToInt32(reader["Grade"])
                         };
                     }
                 }
@@ -1720,6 +1810,7 @@ WHERE streakBreak = 0;
         public int CreatorUserId { get; set; }
         public string CreatorRole { get; set; }
         public int ClassId { get; set; }
+        public int? Grade { get; set; }
         public DateTime CreatedAt { get; set; }
     }
 

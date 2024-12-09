@@ -121,7 +121,7 @@ namespace BLL.Services
                  $"🔢 סך הכל שאלות: {sessionStats.Value.TotalQuestions} ❓\n" +
                  $"✅ תשובות נכונות: {sessionStats.Value.TotalCorrectAnswers} \n" +
                  $"❌ תשובות לא נכונות: {sessionStats.Value.TotalQuestions - sessionStats.Value.TotalCorrectAnswers} \n\n" +
-                 $"🌟 רוצים להמשיך לפתור תרגילים? ✨\n";
+                 $"🌟 נמשיך בתרגילים?? ✨\n";
 
             }
             return summary;
