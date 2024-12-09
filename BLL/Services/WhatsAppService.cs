@@ -97,6 +97,7 @@ namespace BLL.Services
 
                 if (string.IsNullOrWhiteSpace(response)) //|| string.IsNullOrWhiteSpace(response2))
                 {
+                    await _commonFunctions.SendResponseToSender("972544345287", $"{response}");
                     return "שגיאה ביצירת תרגילים. אנא נסה שוב.";
                 }
 
