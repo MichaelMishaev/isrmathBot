@@ -183,7 +183,7 @@ namespace BLL.Services
             catch (Exception e)
             {
 
-                return $"נו..... {exercise}";
+                return $"אין טיפ זמין: {exercise}";
             }
 
 

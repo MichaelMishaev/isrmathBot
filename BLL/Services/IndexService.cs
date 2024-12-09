@@ -398,6 +398,15 @@ namespace BL.Serives
 
                     else if (lastCurrectAnswersInRow > 0 && lastCurrectAnswersInRow == 10)
                     {
+                        if (exercisesSolvedToday == 10 && exrcisesLeft > 10)
+                        {
+
+                            await SendImageToSender(phoneNumber, "quiz_", "");
+                            Thread.Sleep(2000);
+                            var res = await _quizService.StartQuiz(studentId, phoneNumber);
+                            return res;
+                        }
+
                         await SendImageToSender(phoneNumber, "10InRow_", "");
                         Thread.Sleep(1000);
                     }
