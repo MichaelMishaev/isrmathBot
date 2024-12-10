@@ -12,6 +12,7 @@ namespace BLL.Functions
         {
             // Replace '*' with '×' to ensure proper multiplication symbol
             exercise = exercise.Replace("*", "×");
+            exercise = exercise.Replace("/", ":");
 
             string exerciseText;
 

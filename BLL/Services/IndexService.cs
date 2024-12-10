@@ -77,8 +77,8 @@ namespace BL.Serives
                     switch (userType.UserType)
                     {
                         case Constants.Teacher:
-                       //     result = await HandleTeacherMessage(numericPhoneNumber, body, userId);
-                             result = await HandleStudentMessage(numericPhoneNumber, body); //FOR TEST IF NEED AS STUDENT
+                            result = await HandleTeacherMessage(numericPhoneNumber, body, userId);
+                          //  result = await HandleStudentMessage(numericPhoneNumber, body); //FOR TEST IF NEED AS STUDENT
                             break;
                         case Constants.Parent:
                             result = await HandleParentMessage(numericPhoneNumber, body);
@@ -467,8 +467,8 @@ namespace BL.Serives
                         bool includeAscii = random2.Next(0, 3) == 0; // 1 in 5 chance to include an ASCII drawing
 
                         string exercisesLeftText = exrcisesLeft < 10 ? $"🔥 נותרו לך עוד {exrcisesLeft} תרגילים לסיום. 💪✨\n" : "";
-
-                        string response = $"{randomCorrectAnswer}\n{exercisesLeftText}\n{exerciseText}";
+                        string skipText = TextGeneratorFunctions.GetSkipPromptMessage();
+                        string response = $"{randomCorrectAnswer}\n{exercisesLeftText}\n{exerciseText}\n\n{skipText}";
 
 
 
@@ -767,10 +767,40 @@ namespace BL.Serives
                 {
                     //  textToSend = $"{item.FullName}\n איפה נעלמת?? \n {textToSend}";
                     string constructedTextToSend = @$"
-🎉✨🎉✨🎉✨🎉✨🎉
-‏{item.FullName}, איפה היית? 🤔
- {textToSend}
-🎉✨🎉✨🎉✨🎉✨🎉
+🎉🥷✨ נינג'אדו כאן! ✨🥷🎉
+{item.FullName}, בואו נצא לדרך! 🚀
+{textToSend}
+🎉🥷✨ בואו נראה מה אתם יודעים! ✨🥷🎉
+";
+
+                    await SendResponseToSender(item.PhoneNumber, constructedTextToSend);
+
+                }
+                return string.Empty;
+            }
+
+            else if (normalizedMessage.Contains("intro"))
+            {
+
+                normalizedMessage = normalizedMessage.Normalize(NormalizationForm.FormC);
+                string[] parts = normalizedMessage.Split(',');
+                if (parts.Length != 3) return "The format should be:\nReminder, ClassName, Message to send";
+
+
+
+                var classText = parts[1].Trim();
+                string textToSend = parts[2].Trim();
+
+                var studentsList = await _exerciseRepository.GetUsersByClassAsync(classText);
+
+                foreach (var item in studentsList)
+                {
+                    //  textToSend = $"{item.FullName}\n איפה נעלמת?? \n {textToSend}";
+                    string constructedTextToSend = @$"
+🥷✨ היי {item.FullName}! אני נינג'אדו, חבר מתמטי חדש! 📐😎  
+תקוע פה בחידה! תעזור לי? 🤔🧩  
+{textToSend}  
+💥 בוא נפתור וננצח! 🚀🏆  
 ";
 
 
