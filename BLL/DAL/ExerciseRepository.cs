@@ -25,8 +25,8 @@ public class ExerciseRepository : DatabaseService
         try
         {
             // Step 1: Handle double-serialized JSON
-            string innerJson = JsonConvert.DeserializeObject<string>(jsonResponse);
-            List<ExerciseModel> exercises = JsonConvert.DeserializeObject<List<ExerciseModel>>(innerJson);
+       //     string innerJson = JsonConvert.DeserializeObject<string>(jsonResponse);
+            List<ExerciseModel> exercises = JsonConvert.DeserializeObject<List<ExerciseModel>>(jsonResponse);
 
             using (MySqlConnection connection = GetConnection())
             {
@@ -35,8 +35,8 @@ public class ExerciseRepository : DatabaseService
                 foreach (var exercise in exercises)
                 {
                     string insertQuery = @"INSERT INTO exercises 
-                (CreatedByUserId, CreatedByRole, exercise, correctAnswer, HelpContent, CreatedAt, classId, DifficultyLevel) 
-                VALUES (@CreatedByUserId, @CreatedByRole, @Exercise, @CorrectAnswer, @HelpContent, @CreatedAt, @ClassId, @DifficultyLevel)";
+                (CreatedByUserId, CreatedByRole, exercise, correctAnswer, HelpContent, CreatedAt, classId, DifficultyLevel,questionType,instructionId) 
+                VALUES (@CreatedByUserId, @CreatedByRole, @Exercise, @CorrectAnswer, @HelpContent, @CreatedAt, @ClassId, @DifficultyLevel, @QuestionType,@InstructionId)";
 
                     using (MySqlCommand command = new MySqlCommand(insertQuery, connection))
                     {
@@ -48,6 +48,9 @@ public class ExerciseRepository : DatabaseService
                         command.Parameters.AddWithValue("@CreatedAt", DateTime.UtcNow);
                         command.Parameters.AddWithValue("@ClassId", classId);
                         command.Parameters.AddWithValue("@DifficultyLevel", exercise.DifficultyLevel ?? "Easy");
+                        command.Parameters.AddWithValue("@QuestionType", exercise.QuestionType ?? "OpenAnswer");
+                        command.Parameters.AddWithValue("@InstructionId", exercise.InstructionId);
+
 
                         await command.ExecuteNonQueryAsync();
                     }
@@ -371,8 +374,10 @@ public class ExerciseRepository : DatabaseService
             await connection.OpenAsync();
 
             string query = @"
-            SELECT e.id, e.exercise, e.correctAnswer, sp.updatedAt,sp.incorrectAttempts,sp.ProgressId,IsWaitingForHelp
-            FROM exercises e
+           SELECT e.id, e.exercise, e.correctAnswer, sp.updatedAt,sp.incorrectAttempts,sp.ProgressId,IsWaitingForHelp,e.QuestionType,ins.instructiontext
+           FROM exercises e
+           LEFT JOIN Instructions as ins
+	            ON ins.instructionId = e.instructionId
             INNER JOIN studentprogress sp ON sp.ExerciseId = e.id
             WHERE sp.StudentId = @StudentId 
             AND ((sp.StudentAnswer IS NULL OR sp.StudentAnswer = '') OR IsCorrect = 0)
@@ -396,7 +401,9 @@ public class ExerciseRepository : DatabaseService
                             UpdatedAt = reader.GetDateTime(reader.GetOrdinal("updatedAt")), // Add updatedAt field
                             IncorrectAttempts = Convert.ToInt32(reader["incorrectAttempts"]),
                             ProgressId = Convert.ToInt32(reader["ProgressId"]),
-                            IsWaitingForHelp = Convert.ToBoolean(reader["IsWaitingForHelp"])
+                            IsWaitingForHelp = Convert.ToBoolean(reader["IsWaitingForHelp"]),
+                            QuestionType = reader["QuestionType"].ToString(),
+                            InstructionText = reader["instructiontext"].ToString()
                         };
                     }
                 }
@@ -539,12 +546,13 @@ WHERE s.StudentId = @StudentId
 
 
 
-    public async Task<(ExerciseModel? exercise, string? difficultyUpdate, string? changeType)> GetNextUnassignedExercise(int studentId, int? lastDays = null)
+    public async Task<(ExerciseModel? exercise, string? difficultyUpdate, string? changeType, string? instructionText)> GetNextUnassignedExercise(int studentId, int? lastDays = null)
     {
         try
         {
             string? difficultyUpdate = null;
             string? changeType = null;
+            string? instructionText = null;
 
             using (MySqlConnection connection = GetConnection())
             {
@@ -564,25 +572,26 @@ WHERE s.StudentId = @StudentId
 
                 // Updated query with proper integration of the createdAtCondition
                 string query = $@"
-    SELECT e.id, e.exercise, e.correctAnswer, e.DifficultyLevel, e.*
-    FROM exercises e
-    INNER JOIN students s ON e.classId = s.ClassId
-    WHERE s.StudentId = @StudentId
-      AND e.id NOT IN (
-          SELECT sp.ExerciseId
-          FROM studentprogress sp
-          WHERE sp.StudentId = @StudentId
-            AND (sp.IsCorrect = 1 OR sp.IsSkipped = 1)
-      )
-      AND e.status = 1
-      AND e.DifficultyLevel = (
-          SELECT PreferredDifficultyLevel
-          FROM students
-          WHERE StudentId = @StudentId
-      )
-      {createdAtCondition}
-    ORDER BY RAND()
-    LIMIT 1;";
+SELECT e.id, e.exercise, e.correctAnswer, e.DifficultyLevel, i.InstructionText
+FROM exercises e
+INNER JOIN students s ON e.classId = s.ClassId
+LEFT JOIN instructions i ON e.InstructionId = i.InstructionId
+WHERE s.StudentId = @StudentId
+  AND e.id NOT IN (
+      SELECT sp.ExerciseId
+      FROM studentprogress sp
+      WHERE sp.StudentId = @StudentId
+        AND (sp.IsCorrect = 1 OR sp.IsSkipped = 1)
+  )
+  AND e.status = 1
+  AND e.DifficultyLevel = (
+      SELECT PreferredDifficultyLevel
+      FROM students
+      WHERE StudentId = @StudentId
+  )
+  {createdAtCondition}
+ORDER BY RAND()
+LIMIT 1;";
 
 
                 using (MySqlCommand command = new MySqlCommand(query, connection))
@@ -606,23 +615,47 @@ WHERE s.StudentId = @StudentId
                                 DifficultyLevel = reader["DifficultyLevel"].ToString()
                             };
 
+                            instructionText = reader["InstructionText"]?.ToString();
                             // Return both the exercise and any difficulty update info
-                            return (exercise, difficultyUpdate, changeType);
+                            return (exercise, difficultyUpdate, changeType, instructionText);
                         }
                     }
                 }
             }
 
             // If no exercise is found, return null along with any difficulty update info
-            return (null, difficultyUpdate, changeType);
+            return (null, difficultyUpdate, changeType,null);
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error in GetNextUnassignedExercise: {ex.Message}");
-            return (null, null, null);
+            return (null, null, null,null);
         }
     }
 
+
+
+    public async Task<string> GetInstructionFromDatabase(int instructionId)
+    {
+        if (instructionId <= 0)
+            return null;
+
+        using (MySqlConnection connection = GetConnection())
+        {
+            await connection.OpenAsync();
+
+            string query = "SELECT InstructionText FROM instructions WHERE InstructionId = @InstructionId";
+
+            using (MySqlCommand command = new MySqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@InstructionId", instructionId);
+
+                var result = await command.ExecuteScalarAsync();
+
+                return result?.ToString();
+            }
+        }
+    }
 
 
 
@@ -1317,9 +1350,9 @@ WHERE streakBreak = 0;
                             {
                                 string insertQuery = @"
                             INSERT INTO exercises 
-                                (CreatedByUserId, CreatedByRole, exercise, correctAnswer, HelpContent, CreatedAt, classId, DifficultyLevel) 
+                                (CreatedByUserId, CreatedByRole, exercise, correctAnswer, HelpContent, CreatedAt, classId, DifficultyLevel, QuestionType) 
                             VALUES 
-                                (@CreatedByUserId, @CreatedByRole, @Exercise, @CorrectAnswer, @HelpContent, @CreatedAt, @ClassId, @DifficultyLevel)";
+                                (@CreatedByUserId, @CreatedByRole, @Exercise, @CorrectAnswer, @HelpContent, @CreatedAt, @ClassId, @DifficultyLevel, @QuestionType)";
 
                                 using (MySqlCommand command = new MySqlCommand(insertQuery, connection, transaction))
                                 {
@@ -1331,6 +1364,8 @@ WHERE streakBreak = 0;
                                     command.Parameters.AddWithValue("@CreatedAt", DateTime.UtcNow);
                                     command.Parameters.AddWithValue("@ClassId", classId);
                                     command.Parameters.AddWithValue("@DifficultyLevel", exercise.DifficultyLevel ?? "Easy");
+                                    command.Parameters.AddWithValue("@QuestionType", exercise.QuestionType ?? "OpenAnswer");
+
 
                                     await command.ExecuteNonQueryAsync();
                                 }

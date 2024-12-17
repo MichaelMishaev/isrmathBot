@@ -33,56 +33,96 @@ namespace BLL.Services
             _commonFunctions = commonFunctions;
         }
 
-        public async Task<string> GetExercisesFromGPT(string example, int teacherId, string creatorRole, int classId, string instructions,int? creatorUserId, string classInstruction = "")
+        public async Task<string> GetExercisesFromGPT(string example, int teacherId, string creatorRole, int classId, string instructions,int? creatorUserId,bool isMultipleChoise, string classInstruction = "")
         {
 
-            string gptQuery = "Please create 25 unique math exercises " + instructions + " using the **same mathematical operation and format** as the given example. Example: " + example + ".\n\n" +
+            string gptQuery = "Please create 25 unique math exercises " + instructions + " using the ** mathematical operation and format** as the given example. Example: " + example + ".\n\n" +
 
-"**Requirements:**\n" +
-"- Each generated exercise **must use the same operation** (e.g., multiplication, division, addition, subtraction) as the given example and must have the same level of complexity. recheck the answers you send\n" +
-"- Ensure each exercise has **only two operands**, if that is the case for the example. Maintain similar operand sizes to ensure the difficulty level is consistent. recheck the answers you send\n" +
-"- **Ensure that the exercises are different from each other and from the example provided.**\n" +
-"- Use **random numbers** for operands. The exercises must not use sequential patterns like 1 × 1, 1 × 2, 1 × 3, etc.\n" +
-"- Randomize the numbers in a way that no clear pattern (e.g., incremental, decremental) can be observed across the exercises.\n" +
-"- Limit the numbers to reasonable ranges if necessary but ensure diversity and randomness.\n" +
-"- Very importent to follow the example: "+ example + ".\n" +
-"- Provide the correct answer as a numeric value without additional text (e.g., no 'x = ...').\n+" +
-" -  recheck the answers you send! \n" +
+  "**Additional Requirements for Comparison Questions:**\n" +
+  "- If the exercise involves determining which side is greater, smaller, or equal, you must provide a comparison in a way that the final answer is a numeric choice from 1 to 3.\n" +
+  "- Do not use symbols like '<', '>', or '=' in the 'answer' field. Instead, follow these rules:\n" +
+  "  1: if the left side is larger than the right side\n" +   //#### UPDATED
+  "  2: if the left side is smaller than the right side\n" +  //#### UPDATED
+  "  3: if both sides are equal\n" +                          //#### UNCHANGED
+  "- Always perform the calculation first and then determine which of the three numeric answers (1, 2, or 3) is correct.\n" +
+  "- The exercise should present a question in Hebrew like: 'מה יותר גדול:' followed by the two sides, and instructions to choose 1, 2, or 3 according to the above rules.\n" +
+  "- Ensure that the final 'answer' field in the JSON is just '1', '2', or '3', with no additional symbols.\n\n" +
 
-"**Hints Requirements:**\n" +
-"- For each exercise, provide a hint that explains how to solve the problem in a step-by-step manner suitable for an 8-10-year-old child.\n" +
-"- Hints should be in simple Hebrew and should include common mistakes that children might make, explained in a friendly way.\n" +
-"- Add playful encouragement and relatable errors to keep young students engaged.\n" +
-"- **Do not provide the answer in the hint**. Focus only on explaining the method.\n" +
-"- Make the hint short and clear (2-3 sentences maximum).\n" +
-"- **Avoid using double quotation marks (\") inside the hints to prevent JSON formatting issues. Use single quotes (') if necessary.**\n\n" +
+  "**Requirements:**\n" +
+  "Important: If left side > right side => answer='1'. If left side < right side => answer='2'. If left side == right side => answer='3'. Use numeric strings '1', '2', or '3' only.\n" +
+  "- **Accuracy is critical**: Incorrect answers are not acceptable. Ensure all answers are correct and consistent with the calculations.\r\n" +
+  "- Each generated exercise **must use the same operation** (e.g., multiplication, division, addition, subtraction) as the given example and must have the same level of complexity. Recheck the answers you send.\n" +
+  "- Ensure each exercise has **only two operands**, if that is the case for the example. Maintain similar operand sizes to ensure the difficulty level is consistent.\n" +
+  "- **Ensure that the exercises are different from each other and from the example provided.**\n" +
+  "- Use **random numbers** for operands. The exercises must not use sequential patterns like 1 × 1, 1 × 2, 1 × 3, etc.\n" +
+  "- Randomize the numbers in a way that no clear pattern (e.g., incremental, decremental) can be observed across the exercises.\n" +
+  "- Limit the numbers to reasonable ranges if necessary but ensure diversity and randomness.\n" +
+  "- Very important to follow the example: " + example + ".\n" +
+  "- Provide the correct answer as a numeric value (1, 2, or 3) without additional text.\n" +
+  "- Before writing the JSON answer, list your internal step-by-step reasoning for each exercise to ensure correctness. Then produce the final JSON array without revealing your reasoning. Recheck all math.\r\n" +
+  "- For each exercise, provide an internal explanation of how you arrived at the comparison result. This explanation will not be included in the final JSON but must be part of your internal process to ensure accuracy.\r\n"+
+  "**Hints Requirements:**\n" +
+  "- For each exercise, provide a hint that explains how to solve the problem in a step-by-step manner suitable for an 8-10-year-old child.\n" +
+  "- Hints should be in simple Hebrew and should include common mistakes that children might make, explained in a friendly way.\n" +
+  "- Add playful encouragement and relatable errors to keep young students engaged.\n" +
+  "- **Do not provide the answer in the hint.** Focus only on explaining the method.\n" +
+  "- Make the hint short and clear (2-3 sentences maximum).\n" +
+  "- **Avoid using double quotation marks (\\\") inside the hints to prevent JSON formatting issues. Use single quotes (') if necessary.**\n\n" +
+  "- **Return a valid JSON array** with double quotes for field names and string values. Do not escape double quotes in the JSON response.\r\n- Ensure the response can be parsed directly as a JSON array in C#.\r\n" +
 
-"**Example Hint:**\n" +
-"- For instance, if the exercise is *12 × 6*:\n" +
-"'🎉 תזכרו שאם קשה לחשב ישר, אפשר לחלק את ה-12 ל-10 ו-2, ואז לכפול כל חלק ב-6 ולהוסיף אותם בסוף 😊 כפלו תחילה 6 ב-2 ואז 6 ב-10, ואז חברו את התוצאות.'\n\n" +
+  "**Example Hint:**\n" +
+  "- For instance, if the exercise is *12 × 6*:\n" +
+  "'🎉 תזכרו שאם קשה לחשב ישר, אפשר לחלק את ה-12 ל-10 ו-2, ואז לכפול כל חלק ב-6 ולהוסיף אותם בסוף 😊 כפלו תחילה 6 ב-2 ואז 6 ב-10, ואז חברו את התוצאות.'\n\n" +
 
-"**Output Requirements:**\n" +
-"- Your response **must be in a valid JSON array format**.\n" +
-"- Example format:\n" +
-"[\n" +
-"  { \"exercise\": \"A × B\", \"answer\": \"C\", \"hint\": \"Your concise hint here.\", \"DifficultyLevel\": \"Easy\" },\n" +
-"  ...\n" +
-"]\n" +
-"- Ensure each object has a `DifficultyLevel` field with values: \"Easy\", \"Medium\", or \"Hard\".\n" +
-"- **Return only the JSON array**, with no additional text or characters before or after it.\n" +
-"- **Ensure all strings are properly escaped according to JSON standards, especially in the hints. Do not include unescaped special characters or quotation marks within the strings. recheck the answers you send**\n\n" +
+  "**Output Requirements:**\n" +
+  "- Your response **must be in a valid JSON array format**.\n" +
+  "- Example format:\n" +
+  "[\n" +
+  "  { \\\"exercise\\\": \\\"A × B\\\", \\\"answer\\\": \\\"C\\\", \\\"hint\\\": \\\"Your concise hint here.\\\", \\\"DifficultyLevel\\\": \\\"Easy\\\" },\n" +
+  "  ...\n" +
+  "]\n" +
+  "- Ensure each object has a `DifficultyLevel` field with values: \\\"Easy\\\", \\\"Medium\\\", or \\\"Hard\\\".\n" +
+  "- **Return only the JSON array**, with no additional text or characters before or after it.\n" +
+  "- **Ensure all strings are properly escaped according to JSON standards, especially in the hints. Do not include unescaped special characters or quotation marks within the strings. Recheck the answers you send**\n\n" +
 
-"**Remember**:\n" +
-"- Use lots of emojis to make the hints fun and engaging for kids 🎈🚀🖍️📚✨😊.\n" +
-"- Do not add any special characters or text before or after the JSON array.\n" +
-"- Return **only** the JSON array, and nothing else.\n";
+  "**Remember**:\n" +
+  "- Use lots of emojis to make the hints fun and engaging for kids 🎈🚀🖍️📚✨😊.\n" +
+  "- Do not add any special characters or text before or after the JSON array.\n" +
+  "- Return **only** the JSON array, and nothing else.";
+
+
+
 
 
 
             try
             {
+
+                bool isMultipleChoice = instructions.ToLower().Contains("multiple choice"); //TODO pass the param
+
+
                 int? grade = null;
-                var gradeMatch = System.Text.RegularExpressions.Regex.Match(classInstruction, @"GRADE=(\d+)", RegexOptions.IgnoreCase);
+                classInstruction = classInstruction.Replace(" ", "").Replace("\u00A0", "");
+
+                var gradeMatch = Regex.Match(classInstruction, @"GRADE=(\d+)", RegexOptions.IgnoreCase);
+                var isUseInstructionMatch = Regex.Match(classInstruction, @"instruc=(\d+)", RegexOptions.IgnoreCase);
+
+                //##################################
+                int instructionId = -1;
+                if (isUseInstructionMatch.Success)//instructions for explenation of exercise
+                {
+                    instructionId = int.Parse(isUseInstructionMatch.Groups[1].Value);
+                }
+                // Fetch the instruction from the database if instructionId is valid
+                string instructionText = await _exerciseRepository.GetInstructionFromDatabase(instructionId);
+
+                // Append the instruction to the main instructions if available
+                if (!string.IsNullOrEmpty(instructionText))
+                {
+                    instructions += $"\n\n{instructionText}";
+                }
+                //##################################
+
                 if (gradeMatch.Success)
                 {
                     grade = int.Parse(gradeMatch.Groups[1].Value);
@@ -94,9 +134,6 @@ namespace BLL.Services
 
                 stopwatch.Stop();
                 double elapsedSeconds = stopwatch.Elapsed.TotalSeconds;
-                // Get the responses
-                //var response1 = await task1;
-                //var response2 = await task2;
 
                 if (string.IsNullOrWhiteSpace(response)) //|| string.IsNullOrWhiteSpace(response2))
                 {
@@ -107,7 +144,21 @@ namespace BLL.Services
                 // Process and deserialize each response
                 List<ExerciseModel> exercises1 = await ProcessAssistantResponse(response);
 
-                string combinedResponse = JsonConvert.SerializeObject(response);
+                if (instructionId  == 2)
+                {
+                    foreach (var ex in exercises1)
+                    {
+                        ex.InstructionId = 2;
+                    }
+                }
+                // isMultiple choise add if
+                foreach (var ex in exercises1)
+                {
+                    ex.QuestionType = isMultipleChoice ? "MultipleChoice" : "OpenAnswer";
+                }
+
+
+                string combinedResponse = JsonConvert.SerializeObject(exercises1);
 
                 // Create a unique identifier for this pending exercise set
                 string pendingId = Guid.NewGuid().ToString();
@@ -123,9 +174,11 @@ namespace BLL.Services
                 await _exerciseRepository.SavePendingExercises(pendingId, combinedResponse, creatorUserId ?? 1, creatorRole, saveClassId, grade);
 
                 // Construct a message with the exercises and ask for confirmation
-                var exercisesMessage = $"🕒 זמן שנדרש: {elapsedSeconds:F2} שניות\n\n" +
+                var exercisesMessage = $"🕒 זמן שנדרש: {elapsedSeconds:F2} שניות\n" +
+                          $"📝 נוצרו {exercises1.Count} תרגילים\n\n" +
                           "התרגילים שנוצרו:\n" + string.Join("\n", exercises1.Select(e => e.Exercise)) +
                           "\n\nהאם התרגילים מתאימים? כתוב 'כן' כדי לאשר ולשמור, או 'לא' כדי לספק הוראות חדשות.";
+
 
 
                 return exercisesMessage;

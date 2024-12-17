@@ -41,8 +41,9 @@ namespace BLL.Services
             // Save the first question for the session
             await _exerciseRepository.SaveCurrentQuizQuestion(sessionId, exercise.exercise.ExerciseId);
 
+            var exerciseTosend = MathFunctions.FormatExerciseString(exercise.exercise.Exercise);
             // Send the first question
-            return MathFunctions.FormatExerciseString(exercise.exercise.Exercise);
+            return $"{exerciseTosend} \n {exercise.instructionText}";
         }
 
         public async Task<string> HandleQuizAnswer(int studentId, int sessionId, string phoneNumber, string studentMessage)

@@ -28,6 +28,9 @@ namespace BLL.Objects
         public DateTime UpdatedAt { get; set; } // The time when the exercise was last updated
         public int IncorrectAttempts { get; set; }
         public bool IsWaitingForHelp { get; set; }
+        public string QuestionType { get; set; } = "OpenAnswer";
+        public int? InstructionId { get; set; }
+        public string? InstructionText { get; set; }
     }
 
 

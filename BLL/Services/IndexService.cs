@@ -77,8 +77,8 @@ namespace BL.Serives
                     switch (userType.UserType)
                     {
                         case Constants.Teacher:
-                            result = await HandleTeacherMessage(numericPhoneNumber, body, userId);
-                          //  result = await HandleStudentMessage(numericPhoneNumber, body); //FOR TEST IF NEED AS STUDENT
+                           result = await HandleTeacherMessage(numericPhoneNumber, body, userId);
+                         //    result = await HandleStudentMessage(numericPhoneNumber, body); //FOR TEST IF NEED AS STUDENT
                             break;
                         case Constants.Parent:
                             result = await HandleParentMessage(numericPhoneNumber, body);
@@ -165,7 +165,7 @@ namespace BL.Serives
                 // Provide help for the current exercise
                 return await ProvideHelpForStudent(studentId, phoneNumber);
             }
-            else if (normalizedMessage == "דלג" )
+            else if (normalizedMessage == "דלג")
             {
                 if (inProgressExercise != null)
                 {
@@ -221,7 +221,14 @@ namespace BL.Serives
             {
                 await _exerciseRepository.AddExerciseToStudentProgress(studentId, nextExercise.exercise.ExerciseId, false);
 
-                return TextGeneratorFunctions.GetRandomExerciseMessage(MathFunctions.FormatExerciseString(nextExercise.exercise.Exercise));
+                string exerciseMessage = TextGeneratorFunctions.GetRandomExerciseMessage(MathFunctions.FormatExerciseString(nextExercise.exercise.Exercise));
+
+                if (!string.IsNullOrEmpty(nextExercise.instructionText))
+                {
+                    exerciseMessage += $"\n{nextExercise.instructionText}";
+                }
+
+                return exerciseMessage;
             }
             else
             {
@@ -245,9 +252,10 @@ namespace BL.Serives
 
 
                 string[] hintParts = Regex.Split(helpContent, @"(?<=[.!?])");
-
+                
                 string userFriendlyMessage = string.Join("\n", hintParts.Select(part => part.Trim()).Where(part => !string.IsNullOrWhiteSpace(part)));
-                string formattedMessage = $"\u202B טעות קטנה ❌ 😏\n*{MathFunctions.FormatExerciseString(inProgressExercise.Exercise)}*\nטיפ:\n⬇\n*{userFriendlyMessage}*";
+                string formattedMessage = $"\u202B טעות קטנה ❌ 😏\n *{MathFunctions.FormatExerciseString(inProgressExercise.Exercise)}*\n{inProgressExercise.InstructionText}\nטיפ:\n⬇\n*{userFriendlyMessage}*";
+
 
                 return formattedMessage;
 
@@ -265,6 +273,7 @@ namespace BL.Serives
 
         private async Task<string> ProcessStudentAnswer(int studentId, string phoneNumber, string studentAnswer)
         {
+            string rawAnswer = studentAnswer.Trim(); //for chosing 1 answer of a many
             // Remove commas from the studentAnswer
             studentAnswer = studentAnswer.Replace(",", "");
             studentAnswer = Regex.Replace(studentAnswer, @"\D", "");
@@ -325,15 +334,54 @@ namespace BL.Serives
                     await SendResponseToSender(phoneNumber, "📚 העזרה בדרך! אנא המתן לפני שתנסה שוב. 🕐");
                     return "";
                 }
+                bool isMultipleChoice = (inProgressExercise.QuestionType == "MultipleChoice"); //######## Check the question type
+
+                bool isCorrect;
+
+
+                if (isMultipleChoice)
+                {
+                    //######## Multiple-choice logic:
+                    // The correctAnswer should be something like "1", "2", or "3".
+                    // Validate student answer is a digit and equals correctAnswer.
+                    string correctAnswer = inProgressExercise.CorrectAnswer.Trim();
+
+                    // Check if student provided a valid numeric option
+                    if (!System.Text.RegularExpressions.Regex.IsMatch(rawAnswer, "^[0-9]+$"))
+                    {
+                        // Not a valid number
+                        isCorrect = false;
+                    }
+                    else
+                    {
+                        isCorrect = (rawAnswer == correctAnswer);
+                    }
+                }
+                else
+                {
+                    //######## Open answer (original logic):
+                    string correctAns = inProgressExercise.CorrectAnswer.Replace(",", "").Trim();
+                    isCorrect = string.Equals(studentAnswer.Trim(), correctAns, StringComparison.OrdinalIgnoreCase);
+                }
+
+
+
                 // Check if the exercise was last updated less than 5 hours ago
-                bool isCorrect = string.Equals(studentAnswer.Trim(), inProgressExercise.CorrectAnswer.Trim(), StringComparison.OrdinalIgnoreCase);
+                                            //  isCorrect = string.Equals(studentAnswer.Trim(), inProgressExercise.CorrectAnswer.Replace(",", "").Trim(), StringComparison.OrdinalIgnoreCase);
                 //if left a while ago and answered wrong
                 if ((DateTime.Now - inProgressExercise.UpdatedAt).TotalHours > 1 && !isCorrect)
                 {
                     await _exerciseRepository.UpdateStudentProgressTimestamp(inProgressExercise.ProgressId);
                     string exerciseText = MathFunctions.FormatExerciseString(inProgressExercise.Exercise);
-                    return $"👋 היי! שמתי לב שלא סיימת את התרגיל האחרון 😊. אל דאגה! ✨ הנה הוא שוב כדי לנסות שוב: ✏️💪\n\n{exerciseText}\n\n📚🚀";
+
+                    string instructionText = string.IsNullOrEmpty(inProgressExercise.InstructionText) ? "" : $"{inProgressExercise.InstructionText}\n\n";
+
+                    return $"👋 היי! שמתי לב שלא סיימת את התרגיל האחרון 😊. אל דאגה! ✨ הנה הוא שוב כדי לנסות שוב: ✏️💪\n\n{exerciseText}\n\n{instructionText}📚🚀";
+
                 }
+
+
+
 
                 // Update student progress in the database
                 if (isCorrect)
@@ -348,6 +396,7 @@ namespace BL.Serives
                     bool isFastAnswers = await _exerciseRepository.isStudentAnswerFast(studentId);//is to send congrat for fast answers
                     var lastCurrectAnswersInRow = await _exerciseRepository.GetLastCorrectAnswers(studentId);
                     var exrcisesLeft = await _exerciseRepository.GetExercisesLeftForStudent(studentId);
+                    Random random = new Random();
 
                     //#########################################
                     if (isFastAnswers)
@@ -463,14 +512,12 @@ namespace BL.Serives
 
                         string randomCorrectAnswer = TextGeneratorFunctions.GetCorrectAnswerText();
 
-                        Random random2 = new Random();
-                        bool includeAscii = random2.Next(0, 3) == 0; // 1 in 5 chance to include an ASCII drawing
 
                         string exercisesLeftText = exrcisesLeft < 10 ? $"🔥 נותרו לך עוד {exrcisesLeft} תרגילים לסיום. 💪✨\n" : "";
-                        string skipText = TextGeneratorFunctions.GetSkipPromptMessage();
-                        string response = $"{randomCorrectAnswer}\n{exercisesLeftText}\n{exerciseText}\n\n{skipText}";
 
+                        string skipText = random.Next(3) == 0 ? TextGeneratorFunctions.GetSkipPromptMessage() : string.Empty;
 
+                        string response = $"{randomCorrectAnswer}\n{exercisesLeftText}\n{exerciseText}\n{nextExercise.instructionText}\n\n{skipText}";
 
                         return response;
 
@@ -534,7 +581,7 @@ namespace BL.Serives
                     //at the first rount, give hint (its 0 on the first inccorect answer)
                     if (incorrectAttempts == 0) return await ProvideHelpForStudent(studentId, phoneNumber);
 
-                    return $"תשובה *לא* נכונה 🙁.\n{randomPhrase} 😎.\nתרגיל:\n {exerciseText}\n ";
+                    return $"תשובה *לא* נכונה 🙁.\n{randomPhrase} 😎.\nתרגיל:\n {exerciseText}\n {inProgressExercise.InstructionText}";
 
 
 
@@ -570,7 +617,7 @@ namespace BL.Serives
                         await _exerciseRepository.UpdateGptHelpUsed(studentId, inProgressExercise.ExerciseId);
 
                         string exerciseFormatted = MathFunctions.FormatExerciseString(inProgressExercise.Exercise).PadLeft(0, ' ');
-                        string response = $"תשובה לא נכונה 🙁. הנה עזרה ממני 🆘:\n{chatGptResponse}\n\n⬇️ הנה התרגיל שלך ⬇️\n\n{exerciseFormatted}\n";
+                        string response = $"תשובה לא נכונה 🙁. הנה עזרה ממני 🆘:\n{chatGptResponse}\n\n⬇️ הנה התרגיל שלך ⬇️\n\n{exerciseFormatted}\n {inProgressExercise.InstructionText}";
 
                         await SendResponseToSender(phoneNumber, response);
                     }
@@ -739,12 +786,14 @@ namespace BL.Serives
                     }
                 }
 
+                bool isMultiple = true; ///////////////////////////////////////////
+
                 string midMessage = "\u200F מחולל 💡, יש למתין...⌛✨";
 
                 await SendResponseToSender(phoneNumber, midMessage);
                 //              await _whatsAppService.SendMessageToUser(phoneNumber, midMessage);
                 //    difficultyLevel = "Easy";
-                return await _whatsAppService.GetExercisesFromGPT(exampleText, teacherId, Constants.Teacher, classId, instructionText, userId, classInstruction); //TODO: change the 1, now its for test cos same user is teacher and student
+                return await _whatsAppService.GetExercisesFromGPT(exampleText, teacherId, Constants.Teacher, classId, instructionText, userId, isMultiple, classInstruction); //TODO: change the 1, now its for test cos same user is teacher and student
             }
 
 
@@ -932,6 +981,12 @@ namespace BL.Serives
                             // Get all classes for that grade
                             var classIds = await _exerciseRepository.GetClassesByGrade(pendingExercises.Grade.Value);
 
+                            if (classIds.Count == 0)
+                            {
+                                await _exerciseRepository.DeletePendingExercises(pendingExerciseId); // Cleanup
+                                await _exerciseRepository.DeletePendingExerciseIdForUser(userId.Value); // Cleanup
+                                return $"אין כיתות משובצות לשכבה {pendingExercises.Grade.Value}";
+                            }
                             // Save exercises for all classes in one transaction
                             bool gradeInsertionSuccess = await _exerciseRepository.SaveExercisesForAllClassesInGrade(
                                 pendingExercises.Response,
@@ -942,6 +997,8 @@ namespace BL.Serives
 
                             if (!gradeInsertionSuccess)
                             {
+                                await _exerciseRepository.DeletePendingExercises(pendingExerciseId);
+                                await _exerciseRepository.DeletePendingExerciseIdForUser(userId.Value);
                                 return "שגיאה ביצירת תרגילים עבור הכיתות בדרגה המבוקשת.";
                             }
 
@@ -961,8 +1018,11 @@ namespace BL.Serives
                             );
 
                             if (!res)
+                            {
+                                await _exerciseRepository.DeletePendingExercises(pendingExerciseId);
+                                await _exerciseRepository.DeletePendingExerciseIdForUser(userId.Value);
                                 return "שגיאה ביצירת תרגילים";
-
+                            }
                             // Remove pending exercises
                             await _exerciseRepository.DeletePendingExercises(pendingExerciseId);
                             await _exerciseRepository.DeletePendingExerciseIdForUser(userId.Value);
