@@ -77,8 +77,8 @@ namespace BL.Serives
                     switch (userType.UserType)
                     {
                         case Constants.Teacher:
-                           result = await HandleTeacherMessage(numericPhoneNumber, body, userId);
-                         //    result = await HandleStudentMessage(numericPhoneNumber, body); //FOR TEST IF NEED AS STUDENT
+                            result = await HandleTeacherMessage(numericPhoneNumber, body, userId);
+                        //    result = await HandleStudentMessage(numericPhoneNumber, body); //FOR TEST IF NEED AS STUDENT
                             break;
                         case Constants.Parent:
                             result = await HandleParentMessage(numericPhoneNumber, body);
@@ -252,7 +252,7 @@ namespace BL.Serives
 
 
                 string[] hintParts = Regex.Split(helpContent, @"(?<=[.!?])");
-                
+
                 string userFriendlyMessage = string.Join("\n", hintParts.Select(part => part.Trim()).Where(part => !string.IsNullOrWhiteSpace(part)));
                 string formattedMessage = $"\u202B טעות קטנה ❌ 😏\n *{MathFunctions.FormatExerciseString(inProgressExercise.Exercise)}*\n{inProgressExercise.InstructionText}\nטיפ:\n⬇\n*{userFriendlyMessage}*";
 
@@ -367,7 +367,7 @@ namespace BL.Serives
 
 
                 // Check if the exercise was last updated less than 5 hours ago
-                                            //  isCorrect = string.Equals(studentAnswer.Trim(), inProgressExercise.CorrectAnswer.Replace(",", "").Trim(), StringComparison.OrdinalIgnoreCase);
+                //  isCorrect = string.Equals(studentAnswer.Trim(), inProgressExercise.CorrectAnswer.Replace(",", "").Trim(), StringComparison.OrdinalIgnoreCase);
                 //if left a while ago and answered wrong
                 if ((DateTime.Now - inProgressExercise.UpdatedAt).TotalHours > 1 && !isCorrect)
                 {
@@ -398,6 +398,12 @@ namespace BL.Serives
                     var exrcisesLeft = await _exerciseRepository.GetExercisesLeftForStudent(studentId);
                     Random random = new Random();
 
+
+                    int nextMilestone = ((exercisesSolvedToday - 1) / 10 + 1) * 10 + 1;
+
+                    // Calculate how many exercises are left until the next milestone
+                    int exercisesLeftForMilestone = nextMilestone - exercisesSolvedToday;
+
                     //#########################################
                     if (isFastAnswers)
                     {
@@ -423,16 +429,21 @@ namespace BL.Serives
                         await SendResponseToSender(phoneNumber, congratulatoryMessage);
                     }
 
+                    //##################################
+                    // QUIZ LOGIc
+                    if (((exercisesSolvedToday - 11) % 10 == 0) && exrcisesLeft > 10)
+                    {
+                        await SendImageToSender(phoneNumber, "quiz_", "");
+                        Thread.Sleep(2000);
+                        var res = await _quizService.StartQuiz(studentId, phoneNumber);
+                        return res;
+                    }
+
+
+
+
                     else if (exercisesSolvedToday % 10 == 0 && (lastCurrectAnswersInRow > 0 && lastCurrectAnswersInRow % 10 != 0))
                     {
-                        if (exercisesSolvedToday == 10 && exrcisesLeft > 10)
-                        {
-
-                            await SendImageToSender(phoneNumber, "quiz_", "");
-                            Thread.Sleep(2000);
-                            var res = await _quizService.StartQuiz(studentId, phoneNumber);
-                            return res;
-                        }
 
                         await SendImageToSender(phoneNumber, "final_", "");
                         string congratulatoryMessage = $"כל הכבוד על פתרון {exercisesSolvedToday} תרגילים היום! 💪✨ בואו נמשיך?";
@@ -510,12 +521,16 @@ namespace BL.Serives
 
 
 
-                        string randomCorrectAnswer = TextGeneratorFunctions.GetCorrectAnswerText();
+                        string randomCorrectAnswer = TextGeneratorFunctions.GetCorrectAnswerText(studentName);
 
+
+                        string milestoneText = (exercisesLeftForMilestone > 11 && exercisesLeftForMilestone % 2 == 0 && exrcisesLeft > 15)
+                                                 ? TextGeneratorFunctions.GetMilestonePromptMessage(exercisesLeftForMilestone)
+                                                 : "";
 
                         string exercisesLeftText = exrcisesLeft < 10 ? $"🔥 נותרו לך עוד {exrcisesLeft} תרגילים לסיום. 💪✨\n" : "";
 
-                        string skipText = random.Next(3) == 0 ? TextGeneratorFunctions.GetSkipPromptMessage() : string.Empty;
+                        string skipText = random.Next(3) == 0 ? TextGeneratorFunctions.GetSkipPromptMessage() : milestoneText;
 
                         string response = $"{randomCorrectAnswer}\n{exercisesLeftText}\n{exerciseText}\n{nextExercise.instructionText}\n\n{skipText}";
 

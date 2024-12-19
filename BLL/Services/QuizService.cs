@@ -70,7 +70,10 @@ namespace BLL.Services
                 return "⚠️ No active question found. Please try again.";
             }
 
-            bool isCorrect = currentQuestion.CorrectAnswer?.Trim() == studentMessage.Trim();
+            string correctAns = currentQuestion.CorrectAnswer.Replace(",", "").Trim();
+            bool isCorrect = string.Equals(studentMessage.Replace(",", "").Trim(), correctAns, StringComparison.OrdinalIgnoreCase);
+
+         //   bool isCorrect = currentQuestion.CorrectAnswer?.Trim() == studentMessage.Trim();
             //return TextGeneratorFunctions.GetRandomExerciseMessage(MathFunctions.FormatExerciseString(nextExercise.exercise.Exercise));
             string feedback = TextGeneratorFunctions.GetRandomCorrectOrIncorrectMessage(isCorrect);
                 
