@@ -36,16 +36,17 @@ namespace BLL.Services
             string gptQuery = "Please create 25 unique math exercises " + instructions + " using the **same mathematical operation and format** as the given example. Example: " + example + ".\n\n" +
 
 "**Additional Requirements for Comparison Questions:**\n" +
-"- If the exercise involves determining which side is greater, smaller, or equal, you must provide a comparison in a way that the final answer is a numeric choice from 1 to 3.\n" +
-"- Do not use symbols like '<', '>', or '=' in the 'answer' field. Instead, follow these rules:\n" +
-"  1: if the left side is larger than the right side\n" +
-"  2: if the left side is smaller than the right side\n" +
-"  3: if both sides are equal\n" +
-"- **Do not perform any comparisons or provide a numeric answer unless explicitly asked to compare.**\n" +
-"- Always perform the calculation first and then determine which of the three numeric answers (1, 2, or 3) is correct, but only if requested.\n" +
-"- The exercise should present a question in Hebrew like: 'מה יותר גדול:' followed by the two sides, and instructions to choose 1, 2, or 3 according to the above rules.\n" +
-"- Ensure that the final 'answer' field in the JSON is just '1', '2', or '3', with no additional symbols.\n" +
-"- **When asked to compare numbers, use the logic specified above for determining the correct numeric answer (1, 2, or 3).**\n\n" +
+//"- If the exercise involves determining which side is greater, smaller, or equal, you must provide a comparison in a way that the final answer is a numeric choice from 1 to 3.\n" +
+//"- Do not use symbols like '<', '>', or '=' in the 'answer' field. Instead, follow these rules:\n" +
+//"  1: if the left side is larger than the right side\n" +
+//"  2: if the left side is smaller than the right side\n" +
+//"  3: if both sides are equal\n" +
+//"- **Do not perform any comparisons  unless explicitly asked to compare.**\n" +
+//" **provide a numeric answer** unless asked anoter answer to be provided" +
+//"- Always perform the calculation first and then determine which of the three numeric answers (1, 2, or 3) is correct, but only if requested.\n" +
+//"- The exercise should present a question in Hebrew like: 'מה יותר גדול:' followed by the two sides, and instructions to choose 1, 2, or 3 according to the above rules.\n" +
+//"- Ensure that the final 'answer' field in the JSON is just '1', '2', or '3', with no additional symbols.\n" +
+//"- **When asked to compare numbers, use the logic specified above for determining the correct numeric answer (1, 2, or 3).**\n\n" +
 
 "**Requirements:**\n" +
 "- **Accuracy is critical**: Incorrect answers are not acceptable. Ensure all answers are correct and consistent with the calculations.\n" +
@@ -56,7 +57,7 @@ namespace BLL.Services
 "- Randomize the numbers in a way that no clear pattern (e.g., incremental, decremental) can be observed across the exercises.\n" +
 "- Limit the numbers to reasonable ranges if necessary but ensure diversity and randomness.\n" +
 "- Very important to follow the example: " + example + ".\n" +
-"- Provide the correct answer as a numeric value (1, 2, or 3) without additional text **only when explicitly asked to compare**.\n" +
+"- Provide the correct answer as a numeric value (1, 2, or 3 etc) without additional text **only when explicitly asked to compare**.\n" +
 "- Recheck the answers you send!\n\n" +
 "- For each exercise, provide an internal explanation of how you arrived at the comparison result. This explanation will not be included in the final JSON but must be part of your internal process to ensure accuracy.\n\n" +
 

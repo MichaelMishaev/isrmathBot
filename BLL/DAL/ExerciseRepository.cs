@@ -506,6 +506,46 @@ WHERE s.StudentId = @StudentId
         }
     }
 
+    public async Task<(string FullName, string ClassName)?> GetUserFullNameAndClassNameByStudentIdAsync(int studentId)
+    {
+        try
+        {
+            using (MySqlConnection connection = GetConnection())
+            {
+                await connection.OpenAsync();
+
+                string query = @"
+            SELECT u.fullName, cl.ClassName
+            FROM students AS s
+                    INNER JOIN users AS u ON s.UserId = u.UserId
+                    INNER JOIN classes as cl ON cl.classId = s.ClassId
+            WHERE s.StudentId = @StudentId AND u.Status = 1;";
+
+                using (MySqlCommand command = new MySqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@StudentId", studentId);
+
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            string fullName = reader["FullName"].ToString();
+                            string className = reader["ClassName"].ToString();
+                            return (fullName, className);
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            // Log or handle the exception as necessary
+            Console.WriteLine($"Error fetching data: {e.Message}");
+        }
+
+        return null; // Return null if not found or in case of an error
+    }
+
 
     public async Task<string> GetUserFullNameByStudentIdAsync(int studentId)
     {
@@ -516,9 +556,10 @@ WHERE s.StudentId = @StudentId
                 await connection.OpenAsync();
 
                 string query = @"
-                SELECT u.FullName
+                SELECT u.fullName, cl.ClassName
                 FROM students AS s
-                INNER JOIN users AS u ON s.UserId = u.UserId
+                        INNER JOIN users AS u ON s.UserId = u.UserId
+                        INNER JOIN classes as cl ON cl.classId = s.ClassId
                 WHERE s.StudentId = @StudentId AND u.Status = 1;";
 
                 using (MySqlCommand command = new MySqlCommand(query, connection))
@@ -1334,8 +1375,8 @@ WHERE streakBreak = 0;
         try
         {
             // Double-deserialize to get actual exercise list
-            string innerJson = JsonConvert.DeserializeObject<string>(jsonResponse);
-            List<ExerciseModel> exercises = JsonConvert.DeserializeObject<List<ExerciseModel>>(innerJson);
+            //string innerJson = JsonConvert.DeserializeObject<string>(jsonResponse);
+            List<ExerciseModel> exercises = JsonConvert.DeserializeObject<List<ExerciseModel>>(jsonResponse);
 
             using (MySqlConnection connection = GetConnection())
             {

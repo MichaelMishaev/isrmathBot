@@ -77,8 +77,8 @@ namespace BL.Serives
                     switch (userType.UserType)
                     {
                         case Constants.Teacher:
-                            result = await HandleTeacherMessage(numericPhoneNumber, body, userId);
-                        //    result = await HandleStudentMessage(numericPhoneNumber, body); //FOR TEST IF NEED AS STUDENT
+                        //    result = await HandleTeacherMessage(numericPhoneNumber, body, userId);
+                            result = await HandleStudentMessage(numericPhoneNumber, body); //FOR TEST IF NEED AS STUDENT
                             break;
                         case Constants.Parent:
                             result = await HandleParentMessage(numericPhoneNumber, body);
@@ -233,6 +233,8 @@ namespace BL.Serives
             else
             {
                 await SendImageToSender(phoneNumber, "noExerciseLeft_", "");
+                var NameAndClass = await _exerciseRepository.GetUserFullNameAndClassNameByStudentIdAsync(studentId);
+                await SendResponseToSender("972544345287", $"Exercises Done for{NameAndClass.Value.FullName} from class: {NameAndClass.Value.ClassName}");
                 return TextGeneratorFunctions.GetFinishedExercisesMessage();
 
             }
@@ -263,6 +265,8 @@ namespace BL.Serives
             else
             {
                 await SendImageToSender(phoneNumber, "noExerciseLeft_", "");
+                var NameAndClass = await _exerciseRepository.GetUserFullNameAndClassNameByStudentIdAsync(studentId);
+                await SendResponseToSender("972544345287", $"Exercises Done for{NameAndClass.Value.FullName} from class: {NameAndClass.Value.ClassName}");
                 return TextGeneratorFunctions.GetFinishedExercisesMessage();
 
             }
@@ -278,7 +282,8 @@ namespace BL.Serives
             studentAnswer = studentAnswer.Replace(",", "");
             studentAnswer = Regex.Replace(studentAnswer, @"\D", "");
             var hasStarted = await _exerciseRepository.CheckIfStudentStarted(studentId);
-            string studentName = await _exerciseRepository.GetUserFullNameByStudentIdAsync(studentId);
+            var NameAndClass = await _exerciseRepository.GetUserFullNameAndClassNameByStudentIdAsync(studentId);
+            string studentName = NameAndClass.Value.FullName;
 
             if (!hasStarted)
             {
@@ -541,6 +546,7 @@ namespace BL.Serives
                     {
                         //
                         await SendImageToSender(phoneNumber, "noExerciseLeft_", "");
+                        await SendResponseToSender("972544345287", $"Exercises Done for{NameAndClass.Value.FullName} from class: {NameAndClass.Value.ClassName}");
                         return TextGeneratorFunctions.GetFinishedExercisesMessage();
                     }
                 }
