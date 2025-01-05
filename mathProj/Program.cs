@@ -2,6 +2,7 @@
 using BL.Serives;
 using BLL.Functions;
 using BLL.Services;
+using Serilog;
 
 namespace mathProj
 {
@@ -11,8 +12,29 @@ namespace mathProj
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            var logFilePath = Path.Combine(AppContext.BaseDirectory, "Logs", "log-.txt");
+            var logsDirectory = Path.Combine(AppContext.BaseDirectory, "Logs");
+            Console.WriteLine($"Log file path: {logFilePath}");
+            if (!Directory.Exists(logsDirectory))
+            {
+                Directory.CreateDirectory(logsDirectory);
+            }
+            Log.Logger = new LoggerConfiguration()
+           //.MinimumLevel.Debug()
+           .WriteTo.Console() // Optional: Logs to the console
+           .WriteTo.File(logFilePath, rollingInterval: RollingInterval.Day)
+           .CreateLogger();
+
+            builder.Host.UseSerilog();
+            //Log.Information("This is an informational message.");
+            //Log.Warning("This is a warning.");
+            //Log.Error("This is an error message.");
+            //Log.Fatal("This is a critical error.");
+
+
             // Add services to the container.
 
+            builder.Services.AddSingleton(Log.Logger);
             builder.Services.AddControllers();
             builder.Services.AddScoped<IndexService>();
             builder.Services.AddHttpClient<ChatGPTService>();
