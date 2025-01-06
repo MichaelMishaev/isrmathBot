@@ -28,9 +28,20 @@ namespace BLL.Objects
         public DateTime UpdatedAt { get; set; } // The time when the exercise was last updated
         public int IncorrectAttempts { get; set; }
         public bool IsWaitingForHelp { get; set; }
-        public string QuestionType { get; set; } = "OpenAnswer";
+        public string QuestionType { get; set; }
         public int? InstructionId { get; set; }
         public string? InstructionText { get; set; }
+        [JsonProperty("answerOptions")]
+        public List<AnswerOption> AnswerOptions { get; set; } // Holds multiple-choice options
+    }
+
+    public class AnswerOption
+    {
+        [JsonProperty("text")]
+        public string Text { get; set; }
+
+        [JsonProperty("isCorrect")]
+        public bool IsCorrect { get; set; }
     }
 
 

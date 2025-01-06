@@ -2,6 +2,7 @@
 using BLL.Functions;
 using BLL.Objects;
 using BLL.Services;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Mysqlx.Session;
 using MySqlX.XDevAPI.Common;
@@ -26,15 +27,17 @@ namespace BL.Serives
         private readonly ImgFunctions _imgFunctions;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly QuizService _quizService;
+        private readonly ILogger<IndexService> _logger;
 
-
-        public IndexService(ExerciseRepository exerciseRepository, WhatsAppService whatsAppService, ImgFunctions imgFunctions, IHttpClientFactory httpClientFactory, QuizService quizService)
+        public IndexService(ExerciseRepository exerciseRepository, WhatsAppService whatsAppService, ImgFunctions imgFunctions, IHttpClientFactory httpClientFactory, QuizService quizService, ILogger<IndexService> logger)
         {
             _exerciseRepository = exerciseRepository;
             _whatsAppService = whatsAppService;
             _imgFunctions = imgFunctions;
             _httpClientFactory = httpClientFactory;
             _quizService = quizService;
+            _logger = logger;
+
         }
         public async Task<string> UserBalancer(string phoneNumber, string? body, List<string>? MediaUrl0, List<string>? MediaContentType0)
         {
@@ -77,8 +80,8 @@ namespace BL.Serives
                     switch (userType.UserType)
                     {
                         case Constants.Teacher:
-                        //    result = await HandleTeacherMessage(numericPhoneNumber, body, userId);
-                            result = await HandleStudentMessage(numericPhoneNumber, body); //FOR TEST IF NEED AS STUDENT
+                            result = await HandleTeacherMessage(numericPhoneNumber, body, userId);
+                        //    result = await HandleStudentMessage(numericPhoneNumber, body); //FOR TEST IF NEED AS STUDENT
                             break;
                         case Constants.Parent:
                             result = await HandleParentMessage(numericPhoneNumber, body);
@@ -119,6 +122,7 @@ namespace BL.Serives
 
         private async Task<string> HandleStudentMessage(string phoneNumber, string studentMessage)
         {
+
             // Get the student ID based on the phone number
             int studentId = await _exerciseRepository.GetStudentIdByPhoneNumber(phoneNumber);
             var inProgressExercise = await _exerciseRepository.GetInProgressExercise(studentId);
@@ -221,7 +225,21 @@ namespace BL.Serives
             {
                 await _exerciseRepository.AddExerciseToStudentProgress(studentId, nextExercise.exercise.ExerciseId, false);
 
-                string exerciseMessage = TextGeneratorFunctions.GetRandomExerciseMessage(MathFunctions.FormatExerciseString(nextExercise.exercise.Exercise));
+                string exerciseMessage;
+
+                if (nextExercise.exercise.QuestionType == "MultipleChoice" && nextExercise.exercise?.AnswerOptions != null)
+                {
+                    exerciseMessage = TextGeneratorFunctions.GetMultipleChoiceExerciseMessage(
+                        MathFunctions.FormatExerciseString(nextExercise.exercise.Exercise),
+                        nextExercise.exercise.AnswerOptions
+                    );
+                }
+                else
+                {
+                    exerciseMessage = TextGeneratorFunctions.GetRandomExerciseMessage(
+                        MathFunctions.FormatExerciseString(nextExercise.exercise.Exercise)
+                    );
+                }
 
                 if (!string.IsNullOrEmpty(nextExercise.instructionText))
                 {
@@ -249,7 +267,7 @@ namespace BL.Serives
                 string helpContent = await _exerciseRepository.GetHelpForExercise(inProgressExercise.ExerciseId, studentId);
                 if (string.IsNullOrEmpty(helpContent))
                 {
-                    helpContent = "No help is available for this exercise.";
+                    helpContent = "אין לי טיפ להביא, אוףףף.....";
                 }
 
 
@@ -283,7 +301,8 @@ namespace BL.Serives
             studentAnswer = Regex.Replace(studentAnswer, @"\D", "");
             var hasStarted = await _exerciseRepository.CheckIfStudentStarted(studentId);
             var NameAndClass = await _exerciseRepository.GetUserFullNameAndClassNameByStudentIdAsync(studentId);
-            string studentName = NameAndClass.Value.FullName;
+
+            string studentName = NameAndClass.HasValue ? NameAndClass.Value.FullName : "noName";
 
             if (!hasStarted)
             {
@@ -344,7 +363,7 @@ namespace BL.Serives
                 bool isCorrect;
 
 
-                if (isMultipleChoice)
+                if (false)
                 {
                     //######## Multiple-choice logic:
                     // The correctAnswer should be something like "1", "2", or "3".
@@ -413,7 +432,7 @@ namespace BL.Serives
                     if (isFastAnswers)
                     {
                         await SendImageToSender(phoneNumber, "fastSolve_", "");
-                        await SendResponseToSender(phoneNumber, "🔥 וואו! 10 תרגילים בדקה! לא יאומן! 🏆🎈");
+                        await SendResponseToSender(phoneNumber, "🔥 ווווואו! 8 תרגילים בדקה! לא יאומן! 🏆🎈");
                         Thread.Sleep(1000);
                     }
 
@@ -514,6 +533,7 @@ namespace BL.Serives
 
                     if (nextExercise.exercise != null)
                     {
+                        bool isMultiple= nextExercise.exercise.AnswerOptions == null ? false : true;
                         // Assign the exercise to the student
                         await _exerciseRepository.AddExerciseToStudentProgress(studentId, nextExercise.exercise.ExerciseId, false);
 
@@ -522,9 +542,8 @@ namespace BL.Serives
 
                         exerciseText = MathFunctions.FormatExerciseString(nextExercise.exercise.Exercise);
 
-                        // Remove any asterisks if they were added accidentally or for formatting
 
-
+                        exerciseText = isMultiple == true? TextGeneratorFunctions.GetMultipleChoiceExerciseMessage(exerciseText, nextExercise.exercise.AnswerOptions): exerciseText;
 
                         string randomCorrectAnswer = TextGeneratorFunctions.GetCorrectAnswerText(studentName);
 
@@ -535,9 +554,28 @@ namespace BL.Serives
 
                         string exercisesLeftText = exrcisesLeft < 10 ? $"🔥 נותרו לך עוד {exrcisesLeft} תרגילים לסיום. 💪✨\n" : "";
 
-                        string skipText = random.Next(3) == 0 ? TextGeneratorFunctions.GetSkipPromptMessage() : milestoneText;
+                        TimeSpan timeDifference = DateTime.UtcNow - inProgressExercise.UpdatedAt.ToUniversalTime();
 
-                        string response = $"{randomCorrectAnswer}\n{exercisesLeftText}\n{exerciseText}\n{nextExercise.instructionText}\n\n{skipText}";
+                        // Initialize an optional text for time difference
+                        string timeDifferenceText = string.Empty;
+
+                        // Only include the time difference text if less than 1 minute has passed
+                        if (timeDifference.TotalMinutes < 1 ) // if more then minute so do not show - well done, 225 seconds
+                        {
+                            timeDifferenceText = TextGeneratorFunctions.GetShortTimeResponse(Math.Floor(timeDifference.TotalSeconds));
+                        }
+
+                        string randomOrTimeText = random.Next(2) == 0
+                                                ? randomCorrectAnswer
+                                                : (!string.IsNullOrEmpty(timeDifferenceText) ? timeDifferenceText : randomCorrectAnswer); // Fallback to randomCorrectAnswer if timeDifferenceText is empty
+
+
+                        // Generate the response
+                        string skipText = random.Next(3) == 0 ? TextGeneratorFunctions.GetSkipPromptMessage() : milestoneText;
+                        skipText = skipText == string.Empty ? TextGeneratorFunctions.AddEmojiIfEmpty() : skipText;
+
+                        string response = $"{randomOrTimeText}\n{exercisesLeftText}\n{exerciseText}\n{nextExercise.instructionText}\n\n{skipText}";
+
 
                         return response;
 
@@ -572,7 +610,7 @@ namespace BL.Serives
                         await SendImageToSender(phoneNumber, "helpOnTheWay_", "");
                         //Thread.Sleep(10000);
                         //##################
-                        _ = GenerateAndSendHelpAsync(studentId, phoneNumber, inProgressExercise);
+                        _ = GenerateAndSendHelpAsync(studentId, phoneNumber, inProgressExercise, isMultipleChoice);
 
                         //##################
                         //  string chatGptResponse = await _whatsAppService.GetHelpForStudent(inProgressExercise.Exercise);
@@ -595,7 +633,7 @@ namespace BL.Serives
                     //################
                     string exerciseText;
                     exerciseText = MathFunctions.FormatExerciseString(inProgressExercise.Exercise);
-
+                    //exerciseText = isMultiple == true ? TextGeneratorFunctions.GetMultipleChoiceExerciseMessage(exerciseText, nextExercise.exercise.AnswerOptions) : exerciseText;
 
 
                     var randomPhrase = TextGeneratorFunctions.GetMotivated();
@@ -618,7 +656,7 @@ namespace BL.Serives
 
 
 
-        private async Task GenerateAndSendHelpAsync(int studentId, string phoneNumber, ExerciseModel inProgressExercise)
+        private async Task GenerateAndSendHelpAsync(int studentId, string phoneNumber, ExerciseModel inProgressExercise, bool isMultipleChoice)
         {
             try
             {
@@ -638,6 +676,7 @@ namespace BL.Serives
                         await _exerciseRepository.UpdateGptHelpUsed(studentId, inProgressExercise.ExerciseId);
 
                         string exerciseFormatted = MathFunctions.FormatExerciseString(inProgressExercise.Exercise).PadLeft(0, ' ');
+                        //exerciseFormatted = isMultipleChoice == true ?TextGeneratorFunctions.GetMultipleChoiceExerciseMessage(inProgressExercise.Exercise, inProgressExercise.AnswerOptions) : exerciseFormatted;
                         string response = $"תשובה לא נכונה 🙁. הנה עזרה ממני 🆘:\n{chatGptResponse}\n\n⬇️ הנה התרגיל שלך ⬇️\n\n{exerciseFormatted}\n {inProgressExercise.InstructionText}";
 
                         await SendResponseToSender(phoneNumber, response);
@@ -738,13 +777,6 @@ namespace BL.Serives
 
                 return sb.ToString();
             }
-
-
-
-
-
-
-
             else if (normalizedMessage.StartsWith("#update"))
             {
                 // Parse the normalizedMessage to extract the className
@@ -807,7 +839,7 @@ namespace BL.Serives
                     }
                 }
 
-                bool isMultiple = true; ///////////////////////////////////////////
+                bool isMultiple = false; ///////////////////////////////////////////
 
                 string midMessage = "\u200F מחולל 💡, יש למתין...⌛✨";
 
@@ -821,6 +853,7 @@ namespace BL.Serives
             //remind students
             else if (normalizedMessage.Contains("reminder"))
             {
+                _logger.LogInformation("*****Reminder Scope");
 
                 normalizedMessage = normalizedMessage.Normalize(NormalizationForm.FormC);
                 string[] parts = normalizedMessage.Split(',');
@@ -832,22 +865,64 @@ namespace BL.Serives
                 string textToSend = parts[2].Trim();
 
                 var studentsList = await _exerciseRepository.GetUsersByClassAsync(classText);
-
+                _logger.LogInformation($"*****Reminder: studentsList:  {studentsList.Count()} count");
                 foreach (var item in studentsList)
                 {
                     //  textToSend = $"{item.FullName}\n איפה נעלמת?? \n {textToSend}";
                     string constructedTextToSend = @$"
-🎉🥷✨ נינג'אדו כאן! ✨🥷🎉
-{item.FullName}, בואו נצא לדרך! 🚀
-{textToSend}
-🎉🥷✨ בואו נראה מה אתם יודעים! ✨🥷🎉
-";
+🎉🥷✨ נינג'אדו כאן! ✨🥷🎉  
+{item.FullName}, בואו נצא לדרך! 🚀  
+{textToSend}  
 
+🛑 *להסרה יש לשלוח 000 בהודעה חוזרת* ✉️";
+
+                    _logger.LogInformation($"*****Reminder:Sent to:   {item.PhoneNumber}  Message: {constructedTextToSend}");
                     await SendResponseToSender(item.PhoneNumber, constructedTextToSend);
 
                 }
                 return string.Empty;
             }
+
+            else if (normalizedMessage.Contains("#classes"))
+            {
+                var classData = await _exerciseRepository.GetAllClassData();
+
+                if (classData == null || !classData.Any())
+                {
+                    Console.WriteLine("No class data found.");
+                    return "No class data found.";
+                }
+
+                StringBuilder replyBuilder = new StringBuilder();
+                replyBuilder.AppendLine("📚 *Class Information* 📚");
+                replyBuilder.AppendLine("Here are the details of all classes:");
+
+                foreach (var data in classData)
+                {
+                    replyBuilder.AppendLine($"--------------------------------");
+                    replyBuilder.AppendLine($"🏫 *Class Name:* {data.ClassName}");
+                    replyBuilder.AppendLine($"🎓 *Grade:* {data.Grade ?? 0}");
+                    replyBuilder.AppendLine($"🏠 *School Name:* {data.SchoolName}");
+                    replyBuilder.AppendLine($"📍 *Address:* {data.Address ?? "N/A"}");
+                    replyBuilder.AppendLine($"👨‍🎓 *Number of Students:* {data.StudCount ?? 0}");
+                }
+
+                replyBuilder.AppendLine($"--------------------------------");
+                replyBuilder.AppendLine("✅ End of class list.");
+
+                string replyMessage = replyBuilder.ToString();
+
+                // Output the formatted reply to the console
+                Console.WriteLine(replyMessage);
+
+                // Return the formatted reply message
+                return replyMessage;
+            }
+
+
+
+
+
 
             else if (normalizedMessage.Contains("intro"))
             {
@@ -878,6 +953,39 @@ namespace BL.Serives
 
                 }
                 return string.Empty;
+            }
+            else if (normalizedMessage.Contains("admin"))
+            {
+                string exerciseText = "\u202A" + "*** 12 + _ = 14";
+                string exerciseText2 = "\u202A" + "*** 12 * 6";
+                string exerciseText3 = "\u202A" + "*** 15 - 7";
+
+                return "\u200F *פקודה לא מוכרת.* \n" +
+                       "\u200Fהנה הפקודות הזמינות שתוכל לשלוח כמורה:\n\n" +
+
+                       "1. *lead*: \n" +
+                       "\u200Fקבל את לוח התוצאות של הכיתה שלך.\n\n" +
+
+                       "2. *status*: \n" +
+                       "\u200Fקבל דו\"ח התקדמות מפורט של התלמידים ב-7 ימים האחרונים.\n\n" +
+
+                       "3. *<הודעה עם ***>*:\n" +
+                       "\u200Fצור 10 תרגילים חדשים. דוגמאות:\n" +
+                       $"{exerciseText}\n" +
+                       $"{exerciseText2}\n" +
+                       $"{exerciseText3}\n" +
+                       "כדי להביא דוגמה יש להשתמש ב-`//` ואז לכתוב דוגמה. לדוגמה: `// 2+2, 5+4`\n" +
+                       "ניתן להוסיף: `###GRADE=5` כדי ליצור תרגילים לשכבה ספציפית. ציין את מספר השכבה, לדוגמה: `###GRADE=5`.\n\n" +
+
+                       "4. *#update, [ClassName]*:\n" +
+                       "\u200Fעדכן את הכיתה המשויכת אליך. לדוגמה: `#update, ה1`\n\n" +
+
+                       "5. *reminder, ClassName, Message*:\n" +
+                       "\u200Fשליחת תזכורת לתלמידי כיתה ספציפית. לדוגמה: `reminder, ה1, אל תשכחו לפתור תרגילים!`\n\n" +
+                             "6. *#classes*:\n" +
+                            "\u200Fקבל פרטים על כל הכיתות שלך.\n\n" +
+
+                       "שיהיה בהצלחה! 💪";
             }
             else
             {

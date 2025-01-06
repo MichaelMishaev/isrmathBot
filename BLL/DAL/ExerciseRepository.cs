@@ -25,7 +25,7 @@ public class ExerciseRepository : DatabaseService
         try
         {
             // Step 1: Handle double-serialized JSON
-       //     string innerJson = JsonConvert.DeserializeObject<string>(jsonResponse);
+            //     string innerJson = JsonConvert.DeserializeObject<string>(jsonResponse);
             List<ExerciseModel> exercises = JsonConvert.DeserializeObject<List<ExerciseModel>>(jsonResponse);
 
             using (MySqlConnection connection = GetConnection())
@@ -34,9 +34,12 @@ public class ExerciseRepository : DatabaseService
 
                 foreach (var exercise in exercises)
                 {
-                    string insertQuery = @"INSERT INTO exercises 
-                (CreatedByUserId, CreatedByRole, exercise, correctAnswer, HelpContent, CreatedAt, classId, DifficultyLevel,questionType,instructionId) 
-                VALUES (@CreatedByUserId, @CreatedByRole, @Exercise, @CorrectAnswer, @HelpContent, @CreatedAt, @ClassId, @DifficultyLevel, @QuestionType,@InstructionId)";
+                    string insertQuery = @"
+                INSERT INTO exercises 
+                (CreatedByUserId, CreatedByRole, exercise, correctAnswer, HelpContent, CreatedAt, classId, DifficultyLevel, QuestionType, InstructionId, AnswerOptions) 
+                VALUES 
+                (@CreatedByUserId, @CreatedByRole, @Exercise, @CorrectAnswer, @HelpContent, @CreatedAt, @ClassId, @DifficultyLevel, @QuestionType, @InstructionId, @AnswerOptions)";
+
 
                     using (MySqlCommand command = new MySqlCommand(insertQuery, connection))
                     {
@@ -50,7 +53,14 @@ public class ExerciseRepository : DatabaseService
                         command.Parameters.AddWithValue("@DifficultyLevel", exercise.DifficultyLevel ?? "Easy");
                         command.Parameters.AddWithValue("@QuestionType", exercise.QuestionType ?? "OpenAnswer");
                         command.Parameters.AddWithValue("@InstructionId", exercise.InstructionId);
-
+                        if (exercise.AnswerOptions != null && exercise.AnswerOptions.Any())
+                        {
+                            command.Parameters.AddWithValue("@AnswerOptions", JsonConvert.SerializeObject(exercise.AnswerOptions));
+                        }
+                        else
+                        {
+                            command.Parameters.AddWithValue("@AnswerOptions", DBNull.Value);
+                        }
 
                         await command.ExecuteNonQueryAsync();
                     }
@@ -72,7 +82,7 @@ public class ExerciseRepository : DatabaseService
 
     //********************
     // DAL/ExerciseRepository.cs
-    public async Task<UserTypeAndUserIdDTO> GetUserRoleByPhoneNumber(string phoneNumber)
+    public async Task<UserTypeAndUserIdDTO?> GetUserRoleByPhoneNumber(string phoneNumber)
     {
         try
         {
@@ -374,7 +384,7 @@ public class ExerciseRepository : DatabaseService
             await connection.OpenAsync();
 
             string query = @"
-           SELECT e.id, e.exercise, e.correctAnswer, sp.updatedAt,sp.incorrectAttempts,sp.ProgressId,IsWaitingForHelp,e.QuestionType,ins.instructiontext
+           SELECT e.id, e.exercise, e.correctAnswer, sp.updatedAt,sp.incorrectAttempts,sp.ProgressId,IsWaitingForHelp,e.QuestionType,ins.instructiontext,sp.UpdatedAt,e.answerOptions
            FROM exercises e
            LEFT JOIN Instructions as ins
 	            ON ins.instructionId = e.instructionId
@@ -403,7 +413,10 @@ public class ExerciseRepository : DatabaseService
                             ProgressId = Convert.ToInt32(reader["ProgressId"]),
                             IsWaitingForHelp = Convert.ToBoolean(reader["IsWaitingForHelp"]),
                             QuestionType = reader["QuestionType"].ToString(),
-                            InstructionText = reader["instructiontext"].ToString()
+                            InstructionText = reader["instructiontext"].ToString(),
+                            AnswerOptions = reader["answerOptions"] != DBNull.Value
+                                                ? JsonConvert.DeserializeObject<List<AnswerOption>>(reader["answerOptions"].ToString())
+                                                : null,
                         };
                     }
                 }
@@ -480,7 +493,8 @@ WHERE s.StudentId = @StudentId
             FROM students AS s
             INNER JOIN classes AS c ON c.classid = s.classId
             INNER JOIN users AS u ON u.UserId = s.UserId
-            WHERE  u.Status = 1 AND c.ClassName = @ClassName;";
+            WHERE  u.Status = 1 AND c.ClassName = @ClassName
+                                AND s.isToSendReminder = 1;";
 
                 using (MySqlCommand command = new MySqlCommand(query, connection))
                 {
@@ -613,7 +627,7 @@ WHERE s.StudentId = @StudentId
 
                 // Updated query with proper integration of the createdAtCondition
                 string query = $@"
-SELECT e.id, e.exercise, e.correctAnswer, e.DifficultyLevel, i.InstructionText
+SELECT e.id, e.exercise, e.correctAnswer, e.DifficultyLevel, i.InstructionText,e.answerOptions,e.questionType
 FROM exercises e
 INNER JOIN students s ON e.classId = s.ClassId
 LEFT JOIN instructions i ON e.InstructionId = i.InstructionId
@@ -625,14 +639,19 @@ WHERE s.StudentId = @StudentId
         AND (sp.IsCorrect = 1 OR sp.IsSkipped = 1)
   )
   AND e.status = 1
-  AND e.DifficultyLevel = (
-      SELECT PreferredDifficultyLevel
-      FROM students
-      WHERE StudentId = @StudentId
-  )
+
+
   {createdAtCondition}
 ORDER BY RAND()
 LIMIT 1;";
+
+                //if need to use diffLevel add :
+                //AND e.DifficultyLevel = (
+                //    SELECT PreferredDifficultyLevel
+                //    FROM students
+                //    WHERE StudentId = @StudentId
+                //)
+                //WHERE IS THE SPACE
 
 
                 using (MySqlCommand command = new MySqlCommand(query, connection))
@@ -653,7 +672,12 @@ LIMIT 1;";
                                 ExerciseId = Convert.ToInt32(reader["id"]),
                                 Exercise = reader["exercise"].ToString(),
                                 CorrectAnswer = reader["correctAnswer"].ToString(),
-                                DifficultyLevel = reader["DifficultyLevel"].ToString()
+                                DifficultyLevel = reader["DifficultyLevel"].ToString(),
+                                AnswerOptions = reader["answerOptions"] != DBNull.Value
+                                                ? JsonConvert.DeserializeObject<List<AnswerOption>>(reader["answerOptions"].ToString())
+                                                : null,
+                                QuestionType = reader["questionType"].ToString(),
+                                 
                             };
 
                             instructionText = reader["InstructionText"]?.ToString();
@@ -665,12 +689,12 @@ LIMIT 1;";
             }
 
             // If no exercise is found, return null along with any difficulty update info
-            return (null, difficultyUpdate, changeType,null);
+            return (null, difficultyUpdate, changeType, null);
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error in GetNextUnassignedExercise: {ex.Message}");
-            return (null, null, null,null);
+            return (null, null, null, null);
         }
     }
 
@@ -866,7 +890,7 @@ WHERE streakBreak = 0;
     }
 
 
-    public async Task<bool> isStudentAnswerFast(int studentId, int limit = 10)
+    public async Task<bool> isStudentAnswerFast(int studentId, int limit = 8)
     {
         using (MySqlConnection connection = GetConnection())
         {
@@ -1857,6 +1881,58 @@ WHERE streakBreak = 0;
                 return Math.Max(60 - elapsedTime, 0); // Ensure non-negative remaining time
             }
         }
+    }
+
+
+    public async Task<List<ClassAndSchoolDTO>> GetAllClassData()
+    {
+        var classDataList = new List<ClassAndSchoolDTO>();
+
+        using (MySqlConnection connection = GetConnection())
+        {
+            await connection.OpenAsync();
+
+            string query = @"
+           SELECT 
+    c.ClassId,
+    c.ClassName,
+    c.Grade,
+    sch.SchoolName,
+    sch.Address,
+    COUNT(s.StudentId) AS StudentCount
+FROM 
+    classes c
+LEFT JOIN 
+    students s ON c.ClassId = s.ClassId
+LEFT JOIN 
+    schools sch ON c.SchoolId = sch.SchoolId
+GROUP BY 
+    c.ClassId, c.ClassName, c.Grade, sch.SchoolName, sch.Address
+ORDER BY 
+    c.ClassName;";
+
+            using (MySqlCommand command = new MySqlCommand(query, connection))
+            {
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        var classData = new ClassAndSchoolDTO
+                        {
+                            ClassId = reader.GetInt32("ClassId"),
+                            ClassName = reader.GetString("ClassName"),
+                            Grade = reader.IsDBNull(reader.GetOrdinal("Grade")) ? null : (int?)reader.GetInt32("Grade"),
+                            SchoolName = reader.GetString("SchoolName"),
+                            Address = reader.IsDBNull(reader.GetOrdinal("Address")) ? null : reader.GetString("Address"),
+                            StudCount = reader.IsDBNull(reader.GetOrdinal("StudentCount")) ? null : (int?)reader.GetInt32("StudentCount")
+                        };
+                        classDataList.Add(classData);
+                    }
+                }
+            }
+        }
+
+        return classDataList;
     }
 
 

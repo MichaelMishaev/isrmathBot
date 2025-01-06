@@ -29,24 +29,36 @@ namespace BLL.Services
             _configuration = configuration;
             _commonFunctions = commonFunctions;
         }
-
+        //"**Additional Requirements for Comparison Questions:**\n" +
+        //"- If the exercise involves determining which side is greater, smaller, or equal, you must provide a comparison in a way that the final answer is a numeric choice from 1 to 3.\n" +
+        //"- Do not use symbols like '<', '>', or '=' in the 'answer' field. Instead, follow these rules:\n" +
+        //"  1: if the left side is larger than the right side\n" +
+        //"  2: if the left side is smaller than the right side\n" +
+        //"  3: if both sides are equal\n" +
+        //"- **Do not perform any comparisons  unless explicitly asked to compare.**\n" +
+        //" **provide a numeric answer** unless asked anoter answer to be provided" +
+        //"- Always perform the calculation first and then determine which of the three numeric answers (1, 2, or 3) is correct, but only if requested.\n" +
+        //"- The exercise should present a question in Hebrew like: 'מה יותר גדול:' followed by the two sides, and instructions to choose 1, 2, or 3 according to the above rules.\n" +
+        //"- Ensure that the final 'answer' field in the JSON is just '1', '2', or '3', with no additional symbols.\n" +
+        //"- **When asked to compare numbers, use the logic specified above for determining the correct numeric answer (1, 2, or 3).**\n\n" +
         public async Task<string> GetExercisesFromGPT(string example, int teacherId, string creatorRole, int classId, string instructions,int? creatorUserId,bool isMultipleChoise, string classInstruction = "")
         {
+            int numberOfExercises = 0;
 
-            string gptQuery = "Please create 25 unique math exercises " + instructions + " using the **same mathematical operation and format** as the given example. Example: " + example + ".\n\n" +
+         
+            switch (classInstruction)
+            {
+                case "instruc=3":
+                    numberOfExercises = 5;
+                    isMultipleChoise = true;
+                    break;
+                default:
+                    numberOfExercises = 25;
+                    break;
+            }
 
-"**Additional Requirements for Comparison Questions:**\n" +
-//"- If the exercise involves determining which side is greater, smaller, or equal, you must provide a comparison in a way that the final answer is a numeric choice from 1 to 3.\n" +
-//"- Do not use symbols like '<', '>', or '=' in the 'answer' field. Instead, follow these rules:\n" +
-//"  1: if the left side is larger than the right side\n" +
-//"  2: if the left side is smaller than the right side\n" +
-//"  3: if both sides are equal\n" +
-//"- **Do not perform any comparisons  unless explicitly asked to compare.**\n" +
-//" **provide a numeric answer** unless asked anoter answer to be provided" +
-//"- Always perform the calculation first and then determine which of the three numeric answers (1, 2, or 3) is correct, but only if requested.\n" +
-//"- The exercise should present a question in Hebrew like: 'מה יותר גדול:' followed by the two sides, and instructions to choose 1, 2, or 3 according to the above rules.\n" +
-//"- Ensure that the final 'answer' field in the JSON is just '1', '2', or '3', with no additional symbols.\n" +
-//"- **When asked to compare numbers, use the logic specified above for determining the correct numeric answer (1, 2, or 3).**\n\n" +
+
+            string gptQuery = $"Please create {numberOfExercises} unique math exercises " + instructions + " using the **same mathematical operation and format** as the given example. Example: " + example + ".\n\n" +
 
 "**Requirements:**\n" +
 "- **Accuracy is critical**: Incorrect answers are not acceptable. Ensure all answers are correct and consistent with the calculations.\n" +
@@ -59,14 +71,42 @@ namespace BLL.Services
 "- Very important to follow the example: " + example + ".\n" +
 "- Provide the correct answer as a numeric value (1, 2, or 3 etc) without additional text **only when explicitly asked to compare**.\n" +
 "- Recheck the answers you send!\n\n" +
-"- For each exercise, provide an internal explanation of how you arrived at the comparison result. This explanation will not be included in the final JSON but must be part of your internal process to ensure accuracy.\n\n" +
+"- For each exercise, provide an internal explanation of how you arrived at the comparison result. This explanation will not be included in the final JSON but must be part of your internal process to ensure accuracy.\n\n";
+            if (isMultipleChoise)
+            {
+                gptQuery +=
+                    "- For each exercise, create four answer options:\n" +
+                    "  - One correct answer.\n" +
+                    "  - Three plausible but incorrect distractors.\n" +
+                    "- Ensure the options are realistic, avoiding obvious or repetitive incorrect choices.\n" +
+                    "- Randomize the position of the correct answer across the options before returning the response.\n" +
+                    "- Include an `answerOptions` field with an array of options. Each `option` should have the following structure:\n" +
+                    "  - `text`: The option's text.\n" +
+                    "  - `isCorrect`: A boolean indicating whether the option is correct.\n" +
+                    "- Example JSON structure:\n" +
+                    "  [\n" +
+                    "    { \"exercise\": \"9 × 7\", \"answerOptions\": [\n" +
+                    "        { \"text\": \"63\", \"isCorrect\": true },\n" +
+                    "        { \"text\": \"56\", \"isCorrect\": false },\n" +
+                    "        { \"text\": \"65\", \"isCorrect\": false },\n" +
+                    "        { \"text\": \"49\", \"isCorrect\": false }\n" +
+                    "      ],\n" +
+                    "      \"hint\": \"Helpful hint for solving the exercise.\",\n" +
+                    "      \"DifficultyLevel\": \"Medium\"\n" +
+                    "    }\n" +
+                    "  ]\n\n";
+            }
 
+            gptQuery +=
 "**Hints Requirements:**\n" +
 "- For each exercise, provide a hint that explains how to solve the problem in a step-by-step manner suitable for an 8-10-year-old child.\n" +
 "- Hints should be in simple Hebrew and should include common mistakes that children might make, explained in a friendly way.\n" +
 "- Add playful encouragement and relatable errors to keep young students engaged.\n" +
+"- include **an illustrative numerical example** relevant to the problem, but **do not solve the specific exercise.** For example:\n" +
+"  - If the exercise is *7 × 9*, the hint should guide the student like this:\n" +
+"    '🌟 כשאתם חושבים על 7 × 9, חשבו על 7 × 10 ואז הורידו את ה-7 הנוסף. דוגמה: 70 - 7.'\n" +
 "- **Do not provide the answer in the hint.** Focus only on explaining the method.\n" +
-"- Make the hint short and clear (2-3 sentences maximum).\n" +
+"- Make the hint short and clear (3-6 sentences maximum).\n" +
 "- **Avoid using double quotation marks (\\\") inside the hints to prevent JSON formatting issues. Use single quotes (') if necessary.**\n\n" +
 
 "- **Return a valid JSON array** with double quotes for field names and string values. Do not escape double quotes in the JSON response.\n" +
@@ -92,17 +132,10 @@ namespace BLL.Services
 "- Do not add any special characters or text before or after the JSON array.\n" +
 "- Return **only** the JSON array, and nothing else.";
 
-
-
-
-
-
-
-
             try
             {
 
-                bool isMultipleChoice = instructions.ToLower().Contains("multiple choice"); //TODO pass the param
+                bool isMultipleChoice = isMultipleChoise;//instructions.ToLower().Contains("multiple choice"); //TODO pass the param
 
 
                 int? grade = null;
@@ -146,7 +179,7 @@ namespace BLL.Services
                 }
 
                 // Process and deserialize each response
-                List<ExerciseModel> exercises1 = await ProcessAssistantResponse(response);
+                List<ExerciseModel> exercises1 = await ProcessAssistantResponse(response, isMultipleChoice);
 
                 if (instructionId  == 2)
                 {
@@ -179,11 +212,24 @@ namespace BLL.Services
 
 
                 // Construct a message with the exercises and ask for confirmation
+                //var exercisesMessage = $"🕒 זמן שנדרש: {elapsedSeconds:F2} שניות\n" +
+                //           $"📝 נוצרו {exercises1.Count} תרגילים\n\n" +
+                //           "התרגילים שנוצרו:\n" +
+                //           string.Join("\n", exercises1.Select(e => $"{e.Exercise} = תשובה נכונה: {e.CorrectAnswer}")) +
+                //           "\n\nהאם התרגילים מתאימים? כתוב 'כן' כדי לאשר ולשמור, או 'לא' כדי לספק הוראות חדשות.";
+
                 var exercisesMessage = $"🕒 זמן שנדרש: {elapsedSeconds:F2} שניות\n" +
-                           $"📝 נוצרו {exercises1.Count} תרגילים\n\n" +
-                           "התרגילים שנוצרו:\n" +
-                           string.Join("\n", exercises1.Select(e => $"{e.Exercise} - תשובה נכונה: {e.CorrectAnswer}")) +
-                           "\n\nהאם התרגילים מתאימים? כתוב 'כן' כדי לאשר ולשמור, או 'לא' כדי לספק הוראות חדשות.";
+                                         $"📝 נוצרו {exercises1.Count} תרגילים\n\n" +
+                                         "התרגילים שנוצרו:\n" +
+                                         string.Join("\n", exercises1.Select(e =>
+                                         {
+                                             var optionsText = e.AnswerOptions != null
+                                                 ? string.Join("\n", e.AnswerOptions.Select((opt, idx) =>
+                                                     $"{(char)('א' + idx)}. {opt.Text} {(opt.IsCorrect ? "(תשובה נכונה)" : "")}"))
+                                                 : $"תשובה נכונה: {e.CorrectAnswer}";
+                                             return $"{e.Exercise}\n{optionsText}";
+                                         })) +
+                                         "\n\nהאם התרגילים מתאימים? כתוב 'כן' כדי לאשר ולשמור, או 'לא' כדי לספק הוראות חדשות.";
 
 
 
@@ -251,7 +297,7 @@ namespace BLL.Services
 
         }
 
-        private async Task<List<ExerciseModel>> ProcessAssistantResponse(string response)
+        private async Task<List<ExerciseModel>> ProcessAssistantResponse(string response, bool isMultipleChoice)
         {
             if (string.IsNullOrWhiteSpace(response))
             {
@@ -261,10 +307,10 @@ namespace BLL.Services
             // Validate that the response is a JSON array
             if (!response.TrimStart().StartsWith("["))
             {
-                throw new Exception("שגיאה: התוכן שהתקבל אינו במבנה JSON המתאים.");
+                throw new Exception("Error: The received content is not in the correct JSON format.");
             }
 
-            // Optionally, you can sanitize the response to remove any text before the JSON array
+            // Optionally, sanitize the response to remove any text before the JSON array
             int jsonStartIndex = response.IndexOf('[');
             if (jsonStartIndex > 0)
             {
@@ -275,6 +321,23 @@ namespace BLL.Services
             try
             {
                 List<ExerciseModel> exercises = JsonConvert.DeserializeObject<List<ExerciseModel>>(response);
+
+                // Handle missing CorrectAnswer for multiple-choice questions
+                foreach (var exercise in exercises)
+                {
+                    if (isMultipleChoice && exercise.AnswerOptions != null)
+                    {
+                        // Extract the correct answer from the options
+                        var correctOption = exercise.AnswerOptions.FirstOrDefault(opt => opt.IsCorrect);
+                        exercise.CorrectAnswer = correctOption?.Text; // Set CorrectAnswer for consistency
+                    }
+                    else if (exercise.QuestionType == "OpenAnswer" && string.IsNullOrEmpty(exercise.CorrectAnswer))
+                    {
+                        // Validate that open-answer questions have a CorrectAnswer
+                        Console.WriteLine($"Warning: OpenAnswer question is missing CorrectAnswer for exercise {exercise.Exercise}");
+                    }
+                }
+
                 return exercises;
             }
             catch (JsonException ex)
@@ -282,9 +345,10 @@ namespace BLL.Services
                 // Log the error and response for debugging
                 Console.WriteLine("JSON parsing error: " + ex.Message);
                 Console.WriteLine("Response content: " + response);
-                throw new Exception("שגיאה בעיבוד הנתונים שהתקבלו. אנא נסה שוב.");
+                throw new Exception("Error processing the received data. Please try again.");
             }
         }
+
 
 
 

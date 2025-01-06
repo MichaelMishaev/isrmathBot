@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BLL.Objects;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -71,6 +72,72 @@ namespace BLL.Functions
             var random = new Random();
             var randomCorrectAnswer = correctAnswers[random.Next(correctAnswers.Length)];
             return randomCorrectAnswer;
+        }
+
+
+        public static string GetShortTimeResponse(double totalSeconds)
+        {
+            var shortResponses = new[]
+        {
+$"😲 רק {Math.Floor(totalSeconds)} שניות! מטורף! כל הכבוד! 👏",
+$"🔥 {Math.Floor(totalSeconds)} שניות! שיא מהירות! תמשיך להפגיז! 💪",
+$"⚡ {Math.Floor(totalSeconds)} שניות! אין עליך! פשוט מעורר השראה! 🌟",
+$"👏 {Math.Floor(totalSeconds)} שניות! אלופי המהירות! לא עוצרים כאן! 🚀",
+$"✨ {Math.Floor(totalSeconds)} שניות! מדהים! ממשיכים לשיאים חדשים! 💫",
+$"🚀 {Math.Floor(totalSeconds)} שניות! אליפות! כל הכבוד על המאמץ! 🌈",
+$"💪 {Math.Floor(totalSeconds)} שניות! הצלחה מסחררת! תמשיך בדרך הזו! 🔥",
+$"⭐ {Math.Floor(totalSeconds)} שניות! שיחוק אמיתי! הדרך להצלחה ברורה! 🎯",
+$"🎉 {Math.Floor(totalSeconds)} שניות! הישג יוצא דופן! תמשיך להתקדם! 🌟",
+$"🎯 {Math.Floor(totalSeconds)} שניות! בול פגיעה! הכל אפשרי! 💥",
+$"🌈 {Math.Floor(totalSeconds)} שניות! פשוט מושלם! כל הכבוד! ✨",
+$"🎖️ {Math.Floor(totalSeconds)} שניות! הישג מרשים! השמיים הם הגבול! 🚀",
+$"🌟 {Math.Floor(totalSeconds)} שניות! תוצאה מעולה! תמשיך בשיא הכוח! 💪",
+$"🔥 {Math.Floor(totalSeconds)} שניות! מדהים! כל רגע נוסף מביא אותך קדימה! 🌠",
+$"😊 {Math.Floor(totalSeconds)} שניות! תענוג לראות את ההצלחה! 👏",
+$"🚀 {Math.Floor(totalSeconds)} שניות! מדהים! כל הכבוד על הדרך! ✨",
+$"🎉 {Math.Floor(totalSeconds)} שניות! הישג מדהים! הדרך שלך להצלחה ברורה! 🌟",
+$"💫 {Math.Floor(totalSeconds)} שניות! כישרון יוצא דופן! המשך לשבור שיאים! 🌈",
+$"🦸 {Math.Floor(totalSeconds)} שניות! אלוף אמיתי! כל הכבוד על המאמץ! 💥"
+
+        };
+
+            var random = new Random();
+            var randomResponse = shortResponses[random.Next(shortResponses.Length)];
+            return randomResponse;
+        }
+
+
+        public static string AddEmojiIfEmpty()
+        {
+                // Define a set of emojis to choose from
+                var emojiStories = new[]
+                {
+            new[] { "🎉", "🥳", "🎂" }, // Celebration
+            new[] { "🚀", "🌕", "✨" }, // Space adventure
+            new[] { "🔥", "💪", "🏆" }, // Intense workout or winning
+            new[] { "🌟", "📚", "🎓" }, // Learning and achievement
+            new[] { "🎯", "🏹", "🥇" }, // Hitting a target or goal
+            new[] { "🍎", "📘", "🧠" }, // School or knowledge
+            new[] { "🏖️", "🌴", "🌊" }, // Beach or vacation vibes
+            new[] { "🎨", "🖌️", "✨" }, // Creativity or art
+            new[] { "🦸", "⚡", "🌈" }, // Superhero or empowerment
+            new[] { "🎵", "🎸", "🎤" }, // Music or concert mood
+            new[] { "⏱️", "🏃", "💨" }, // Speed or race
+            new[] { "🌈", "🌤️", "🍀" }, // Bright day or luck
+            new[] { "🍕", "🍔", "🍟" }, // Fun meal or gathering
+            new[] { "🎁", "🎈", "🎊" }, // Surprise or gift-giving
+            new[] { "🌍", "🌳", "🐾" }, // Nature and environment
+            new[] { "🛡️", "⚔️", "🐉" }, // Adventure or fantasy
+            new[] { "🧗", "🏞️", "⛰️" }, // Outdoor adventure
+            new[] { "💡", "📈", "🚀" }, // Innovation and progress
+            new[] { "🛏️", "🌙", "💤" }  // Rest or sleep
+        };
+
+                var random = new Random();
+                var selectedStory = emojiStories[random.Next(emojiStories.Length)];
+
+                // Combine the emojis in the selected story into a single string
+                return string.Join(" ", selectedStory);
         }
 
 
@@ -315,6 +382,34 @@ namespace BLL.Functions
             // Return the chosen message
             return randomExerciseMessage;
         }
+
+        public static string GetMultipleChoiceExerciseMessage(string exercise, List<AnswerOption> answerOptions)
+        {
+            // Shuffle the answer options
+            var randomizedOptions = answerOptions.OrderBy(_ => Guid.NewGuid()).ToList();
+
+            // Calculate the maximum length of the options
+            int maxOptionLength = randomizedOptions.Max(opt => opt.Text.Length);
+
+            // Format the exercise and answer options
+            StringBuilder messageBuilder = new StringBuilder();
+            messageBuilder.AppendLine($"🎯 שאלה חדשה לפניכם! בחרו את התשובה הנכונה ✨\n\n🔢 {exercise}\n");
+
+            // Format the options in the requested layout
+            messageBuilder.AppendLine("📚 האפשרויות שלכם הן:");
+            for (int i = 0; i < randomizedOptions.Count; i += 2)
+            {
+                var option1 = randomizedOptions[i].Text.PadRight(maxOptionLength);
+                var option2 = i + 1 < randomizedOptions.Count ? randomizedOptions[i + 1].Text.PadRight(maxOptionLength) : string.Empty;
+
+                // Add the options in a row format with emojis between them
+                messageBuilder.AppendLine($"{option1}  ✨✨  {option2}".Trim());
+            }
+
+            return messageBuilder.ToString();
+        }
+
+
 
 
         public static string GetQuizStartMessage()
