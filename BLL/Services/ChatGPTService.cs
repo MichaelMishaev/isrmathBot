@@ -35,7 +35,7 @@ namespace BL.Serives
                 {
             new { role = "user", content = prompt }
         },
-                max_tokens = 2000 // Adjust as needed
+                max_tokens = 4000 // Adjust as needed
             };
 
             var jsonRequestBody = JsonConvert.SerializeObject(requestBody);

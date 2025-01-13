@@ -393,7 +393,7 @@ $"🦸 {Math.Floor(totalSeconds)} שניות! אלוף אמיתי! כל הכבו
 
             // Format the exercise and answer options
             StringBuilder messageBuilder = new StringBuilder();
-            messageBuilder.AppendLine($"🎯 שאלה חדשה לפניכם! בחרו את התשובה הנכונה ✨\n\n🔢 {exercise}\n");
+            messageBuilder.AppendLine($"🎯 בחרו את התשובה הנכונה ✨\n\n🔢 {exercise}\n");
 
             // Format the options in the requested layout
             messageBuilder.AppendLine("📚 האפשרויות שלכם הן:");

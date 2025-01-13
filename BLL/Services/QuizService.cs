@@ -67,7 +67,7 @@ namespace BLL.Services
             var currentQuestion = await _exerciseRepository.GetCurrentQuizQuestion(sessionId);
             if (currentQuestion == null)
             {
-                return "⚠️ No active question found. Please try again.";
+                return "⚠️ רגע כבר שולח את התרגיל";
             }
 
             string correctAns = currentQuestion.CorrectAnswer.Replace(",", "").Trim();

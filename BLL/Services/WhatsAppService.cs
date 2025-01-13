@@ -41,15 +41,15 @@ namespace BLL.Services
         //"- The exercise should present a question in Hebrew like: 'מה יותר גדול:' followed by the two sides, and instructions to choose 1, 2, or 3 according to the above rules.\n" +
         //"- Ensure that the final 'answer' field in the JSON is just '1', '2', or '3', with no additional symbols.\n" +
         //"- **When asked to compare numbers, use the logic specified above for determining the correct numeric answer (1, 2, or 3).**\n\n" +
-        public async Task<string> GetExercisesFromGPT(string example, int teacherId, string creatorRole, int classId, string instructions,int? creatorUserId,bool isMultipleChoise, string classInstruction = "")
+        public async Task<string> GetExercisesFromGPT(string example, int teacherId, string creatorRole, int classId, string instructions,int? creatorUserId,bool isMultipleChoise, string classInstruction = "",string additionalInstruction="")
         {
             int numberOfExercises = 0;
 
          
-            switch (classInstruction)
+            switch (additionalInstruction)
             {
                 case "instruc=3":
-                    numberOfExercises = 5;
+                    numberOfExercises = 10;
                     isMultipleChoise = true;
                     break;
                 default:
@@ -102,9 +102,13 @@ namespace BLL.Services
 "- For each exercise, provide a hint that explains how to solve the problem in a step-by-step manner suitable for an 8-10-year-old child.\n" +
 "- Hints should be in simple Hebrew and should include common mistakes that children might make, explained in a friendly way.\n" +
 "- Add playful encouragement and relatable errors to keep young students engaged.\n" +
+"- Use the exact numbers and operation from the exercise when crafting the hint.\n" +
+"- The hint must not introduce any unrelated narrative, numbers, or operations.\n" +
+"- Validate that the hint aligns with the exercise before generating the JSON response.\n" +
 "- include **an illustrative numerical example** relevant to the problem, but **do not solve the specific exercise.** For example:\n" +
-"  - If the exercise is *7 × 9*, the hint should guide the student like this:\n" +
-"    '🌟 כשאתם חושבים על 7 × 9, חשבו על 7 × 10 ואז הורידו את ה-7 הנוסף. דוגמה: 70 - 7.'\n" +
+"-Valid: Exercise: 8 × 7.Hint: 🌟 תזכרו ש-8 × 7 זה כמו 8 × 10 ואז להוריד 16.\n" +
+" - Invalid: Exercise: 8 × 7.Hint: יוסי אוסף 9 בולים וכל אחד שווה 8 שקלים.\n" +
+"- Ensure the hint is concise, fun, and engaging for children(3 - 6 sentences).\n" +
 "- **Do not provide the answer in the hint.** Focus only on explaining the method.\n" +
 "- Make the hint short and clear (3-6 sentences maximum).\n" +
 "- **Avoid using double quotation marks (\\\") inside the hints to prevent JSON formatting issues. Use single quotes (') if necessary.**\n\n" +

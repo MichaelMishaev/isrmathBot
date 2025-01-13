@@ -20,61 +20,7 @@ public class ExerciseRepository : DatabaseService
 
     //********************
     // DAL/ExerciseRepository.cs
-    public async Task<bool> SaveExercisesToDatabase(string jsonResponse, int creatorUserId, string creatorRole, int classId)
-    {
-        try
-        {
-            // Step 1: Handle double-serialized JSON
-            //     string innerJson = JsonConvert.DeserializeObject<string>(jsonResponse);
-            List<ExerciseModel> exercises = JsonConvert.DeserializeObject<List<ExerciseModel>>(jsonResponse);
-
-            using (MySqlConnection connection = GetConnection())
-            {
-                await connection.OpenAsync();
-
-                foreach (var exercise in exercises)
-                {
-                    string insertQuery = @"
-                INSERT INTO exercises 
-                (CreatedByUserId, CreatedByRole, exercise, correctAnswer, HelpContent, CreatedAt, classId, DifficultyLevel, QuestionType, InstructionId, AnswerOptions) 
-                VALUES 
-                (@CreatedByUserId, @CreatedByRole, @Exercise, @CorrectAnswer, @HelpContent, @CreatedAt, @ClassId, @DifficultyLevel, @QuestionType, @InstructionId, @AnswerOptions)";
-
-
-                    using (MySqlCommand command = new MySqlCommand(insertQuery, connection))
-                    {
-                        command.Parameters.AddWithValue("@CreatedByUserId", creatorUserId);
-                        command.Parameters.AddWithValue("@CreatedByRole", creatorRole);
-                        command.Parameters.AddWithValue("@Exercise", exercise.Exercise);
-                        command.Parameters.AddWithValue("@CorrectAnswer", exercise.CorrectAnswer);
-                        command.Parameters.AddWithValue("@HelpContent", exercise.Hint);
-                        command.Parameters.AddWithValue("@CreatedAt", DateTime.UtcNow);
-                        command.Parameters.AddWithValue("@ClassId", classId);
-                        command.Parameters.AddWithValue("@DifficultyLevel", exercise.DifficultyLevel ?? "Easy");
-                        command.Parameters.AddWithValue("@QuestionType", exercise.QuestionType ?? "OpenAnswer");
-                        command.Parameters.AddWithValue("@InstructionId", exercise.InstructionId);
-                        if (exercise.AnswerOptions != null && exercise.AnswerOptions.Any())
-                        {
-                            command.Parameters.AddWithValue("@AnswerOptions", JsonConvert.SerializeObject(exercise.AnswerOptions));
-                        }
-                        else
-                        {
-                            command.Parameters.AddWithValue("@AnswerOptions", DBNull.Value);
-                        }
-
-                        await command.ExecuteNonQueryAsync();
-                    }
-                }
-            }
-            return true;
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine($"Error: {e.Message}");
-            await _commonFunctions.SendResponseToSender("972544345287", $"error in SaveExercisesToDatabase {e.Message}");
-            return false;
-        }
-    }
+    
 
 
 
@@ -519,6 +465,60 @@ WHERE s.StudentId = @StudentId
             return null;
         }
     }
+
+    public async Task<List<(string PhoneNumber, string FullName)>> GetUsersByGradeAsync(string inputParamClass)
+    {
+        try
+        {
+            using (MySqlConnection connection = GetConnection())
+            {
+                await connection.OpenAsync();
+
+                // Fetch the grade for the given class
+                string gradeQuery = @"SELECT Grade FROM classes WHERE ClassName = @ClassName LIMIT 1;";
+                using (MySqlCommand gradeCommand = new MySqlCommand(gradeQuery, connection))
+                {
+                    gradeCommand.Parameters.AddWithValue("@ClassName", inputParamClass);
+                    object gradeResult = await gradeCommand.ExecuteScalarAsync();
+
+                    if (gradeResult == null)
+                        return new List<(string PhoneNumber, string FullName)>();
+
+                    int grade = Convert.ToInt32(gradeResult);
+
+                    // Fetch all students in the grade
+                    string query = @"
+                SELECT DISTINCT u.PhoneNumber, u.FullName
+                FROM students AS s
+                INNER JOIN classes AS c ON c.classid = s.classId
+                INNER JOIN users AS u ON u.UserId = s.UserId
+                WHERE u.Status = 1 AND c.Grade = @Grade
+                      AND s.isToSendReminder = 1;";
+
+                    using (MySqlCommand command = new MySqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@Grade", grade);
+
+                        List<(string PhoneNumber, string FullName)> users = new List<(string PhoneNumber, string FullName)>();
+                        using (var reader = await command.ExecuteReaderAsync())
+                        {
+                            while (await reader.ReadAsync())
+                            {
+                                users.Add((reader["PhoneNumber"].ToString(), reader["FullName"].ToString()));
+                            }
+                        }
+
+                        return users;
+                    }
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            return new List<(string PhoneNumber, string FullName)>();
+        }
+    }
+
 
     public async Task<(string FullName, string ClassName)?> GetUserFullNameAndClassNameByStudentIdAsync(int studentId)
     {
@@ -1393,6 +1393,61 @@ WHERE streakBreak = 0;
         }
     }
 
+    public async Task<bool> SaveExercisesToDatabase(string jsonResponse, int creatorUserId, string creatorRole, int classId)
+    {
+        try
+        {
+            // Step 1: Handle double-serialized JSON
+            //     string innerJson = JsonConvert.DeserializeObject<string>(jsonResponse);
+            List<ExerciseModel> exercises = JsonConvert.DeserializeObject<List<ExerciseModel>>(jsonResponse);
+
+            using (MySqlConnection connection = GetConnection())
+            {
+                await connection.OpenAsync();
+
+                foreach (var exercise in exercises)
+                {
+                    string insertQuery = @"
+                INSERT INTO exercises 
+                (CreatedByUserId, CreatedByRole, exercise, correctAnswer, HelpContent, CreatedAt, classId, DifficultyLevel, QuestionType, InstructionId, AnswerOptions) 
+                VALUES 
+                (@CreatedByUserId, @CreatedByRole, @Exercise, @CorrectAnswer, @HelpContent, @CreatedAt, @ClassId, @DifficultyLevel, @QuestionType, @InstructionId, @AnswerOptions)";
+
+
+                    using (MySqlCommand command = new MySqlCommand(insertQuery, connection))
+                    {
+                        command.Parameters.AddWithValue("@CreatedByUserId", creatorUserId);
+                        command.Parameters.AddWithValue("@CreatedByRole", creatorRole);
+                        command.Parameters.AddWithValue("@Exercise", exercise.Exercise);
+                        command.Parameters.AddWithValue("@CorrectAnswer", exercise.CorrectAnswer);
+                        command.Parameters.AddWithValue("@HelpContent", exercise.Hint);
+                        command.Parameters.AddWithValue("@CreatedAt", DateTime.UtcNow);
+                        command.Parameters.AddWithValue("@ClassId", classId);
+                        command.Parameters.AddWithValue("@DifficultyLevel", exercise.DifficultyLevel ?? "Easy");
+                        command.Parameters.AddWithValue("@QuestionType", exercise.QuestionType ?? "OpenAnswer");
+                        command.Parameters.AddWithValue("@InstructionId", exercise.InstructionId);
+                        if (exercise.AnswerOptions != null && exercise.AnswerOptions.Any())
+                        {
+                            command.Parameters.AddWithValue("@AnswerOptions", JsonConvert.SerializeObject(exercise.AnswerOptions));
+                        }
+                        else
+                        {
+                            command.Parameters.AddWithValue("@AnswerOptions", DBNull.Value);
+                        }
+
+                        await command.ExecuteNonQueryAsync();
+                    }
+                }
+            }
+            return true;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Error: {e.Message}");
+            await _commonFunctions.SendResponseToSender("972544345287", $"error in SaveExercisesToDatabase {e.Message}");
+            return false;
+        }
+    }
 
     public async Task<bool> SaveExercisesForAllClassesInGrade(string jsonResponse, int creatorUserId, string creatorRole, List<int> classIds)
     {
@@ -1415,9 +1470,9 @@ WHERE streakBreak = 0;
                             {
                                 string insertQuery = @"
                             INSERT INTO exercises 
-                                (CreatedByUserId, CreatedByRole, exercise, correctAnswer, HelpContent, CreatedAt, classId, DifficultyLevel, QuestionType) 
+                                (CreatedByUserId, CreatedByRole, exercise, correctAnswer, HelpContent, CreatedAt, classId, DifficultyLevel, QuestionType,AnswerOptions) 
                             VALUES 
-                                (@CreatedByUserId, @CreatedByRole, @Exercise, @CorrectAnswer, @HelpContent, @CreatedAt, @ClassId, @DifficultyLevel, @QuestionType)";
+                                (@CreatedByUserId, @CreatedByRole, @Exercise, @CorrectAnswer, @HelpContent, @CreatedAt, @ClassId, @DifficultyLevel, @QuestionType,@AnswerOptions)";
 
                                 using (MySqlCommand command = new MySqlCommand(insertQuery, connection, transaction))
                                 {
@@ -1430,7 +1485,14 @@ WHERE streakBreak = 0;
                                     command.Parameters.AddWithValue("@ClassId", classId);
                                     command.Parameters.AddWithValue("@DifficultyLevel", exercise.DifficultyLevel ?? "Easy");
                                     command.Parameters.AddWithValue("@QuestionType", exercise.QuestionType ?? "OpenAnswer");
-
+                                    if (exercise.AnswerOptions != null && exercise.AnswerOptions.Any())
+                                    {
+                                        command.Parameters.AddWithValue("@AnswerOptions", JsonConvert.SerializeObject(exercise.AnswerOptions));
+                                    }
+                                    else
+                                    {
+                                        command.Parameters.AddWithValue("@AnswerOptions", DBNull.Value);
+                                    }
 
                                     await command.ExecuteNonQueryAsync();
                                 }

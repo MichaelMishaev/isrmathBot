@@ -122,6 +122,10 @@ namespace BL.Serives
 
         private async Task<string> HandleStudentMessage(string phoneNumber, string studentMessage)
         {
+            if (string.IsNullOrEmpty(studentMessage))
+            {
+                return "יש לשלוח הודעות טקסט בלבד 📚 אז מה רצית לומר? 🤔";
+            }
 
             // Get the student ID based on the phone number
             int studentId = await _exerciseRepository.GetStudentIdByPhoneNumber(phoneNumber);
@@ -559,8 +563,8 @@ namespace BL.Serives
                         // Initialize an optional text for time difference
                         string timeDifferenceText = string.Empty;
 
-                        // Only include the time difference text if less than 1 minute has passed
-                        if (timeDifference.TotalMinutes < 1 ) // if more then minute so do not show - well done, 225 seconds
+                        
+                        if (timeDifference.TotalSeconds < 10 ) // if more then 10 secs so do not show - well done.
                         {
                             timeDifferenceText = TextGeneratorFunctions.GetShortTimeResponse(Math.Floor(timeDifference.TotalSeconds));
                         }
@@ -716,6 +720,10 @@ namespace BL.Serives
         // Services/IndexService.cs
         private async Task<string> HandleTeacherMessage(string phoneNumber, string teacherMessage, int? userId)
         {
+            if (string.IsNullOrEmpty(teacherMessage))
+            {
+                return "יש לשלוח הודעות טקסט בלבד";
+            }
             var resTecherUpdate = await TecherExercisesCreationHandle(userId, teacherMessage);
 
             if (!string.IsNullOrEmpty(resTecherUpdate))
@@ -810,65 +818,120 @@ namespace BL.Serives
                 string instructionText = string.Empty;
                 string exampleText = string.Empty;
                 string classInstruction = string.Empty;
+                string additionalInstruction = string.Empty;
 
+                // Split by "***"
                 var messageParts = normalizedMessage.Split("***", StringSplitOptions.RemoveEmptyEntries);
                 if (messageParts.Length > 0)
                 {
-                    var instructionAndExample = messageParts[0].Split("//", StringSplitOptions.RemoveEmptyEntries);
+                    // Split out instructionText and (potential) exampleText by "///"
+                    var instructionAndExample = messageParts[0].Split("///", StringSplitOptions.RemoveEmptyEntries);
+
                     instructionText = instructionAndExample.ElementAtOrDefault(0)?.Trim() ?? string.Empty;
-                    exampleText = instructionAndExample.ElementAtOrDefault(1)?.Trim() ?? string.Empty;
 
-                    // Check if instructionText contains "###"
-                    if (instructionText.Contains("###"))
+                    // This is the raw chunk that *might* contain '###' and '!!!'
+                    var exampleTextRaw = instructionAndExample.ElementAtOrDefault(1)?.Trim() ?? string.Empty;
+
+                    // Check if exampleTextRaw contains "###"
+                    if (exampleTextRaw.Contains("###"))
                     {
-                        var splitInstruction = instructionText.Split("###", StringSplitOptions.RemoveEmptyEntries);
-                        instructionText = splitInstruction.ElementAtOrDefault(0)?.Trim() ?? string.Empty;
-                        classInstruction = splitInstruction.ElementAtOrDefault(1)?.Trim() ?? string.Empty;
+                        // Split out the part before "###" (the real 'exampleText')
+                        var splitAtClass = exampleTextRaw.Split("###", StringSplitOptions.RemoveEmptyEntries);
+
+                        // Everything before '###' is your example text
+                        exampleText = splitAtClass.ElementAtOrDefault(0)?.Trim() ?? string.Empty;
+
+                        // Everything after '###' could contain '!!!'
+                        var classAndAdditional = splitAtClass.ElementAtOrDefault(1)?.Trim() ?? string.Empty;
+
+                        // If there's a '!!!' in classAndAdditional, split again
+                        if (classAndAdditional.Contains("!!!"))
+                        {
+                            var splitAtAdditional = classAndAdditional.Split("!!!", StringSplitOptions.RemoveEmptyEntries);
+
+                            // Everything before '!!!' is classInstruction
+                            classInstruction = splitAtAdditional.ElementAtOrDefault(0)?.Trim() ?? string.Empty;
+                            // Everything after '!!!' is additionalInstruction
+                            additionalInstruction = splitAtAdditional.ElementAtOrDefault(1)?.Trim() ?? string.Empty;
+                        }
+                        else
+                        {
+                            // No '!!!', so treat everything after '###' as classInstruction
+                            classInstruction = classAndAdditional;
+                        }
+                    }
+                    else
+                    {
+                        // No '###' in the second chunk; treat it all as example text
+                        exampleText = exampleTextRaw;
                     }
 
-                    // Check if exampleText contains "###"
-                    if (exampleText.Contains("###"))
-                    {
-                        var splitExample = exampleText.Split("###", StringSplitOptions.RemoveEmptyEntries);
-                        exampleText = splitExample.ElementAtOrDefault(0)?.Trim() ?? string.Empty;
-                        classInstruction = splitExample.ElementAtOrDefault(1)?.Trim() ?? string.Empty;
-                    }
-                    else if (string.IsNullOrEmpty(classInstruction) && messageParts.Length > 1) // Handle difficultyLevel from messageParts[1]
-                    {
-                        classInstruction = messageParts[1].Trim();
-                    }
+                    // If there was more than one '***' (unlikely in this scenario),
+                    // we could parse classInstruction from messageParts[1], etc.
+                    // else if (messageParts.Length > 1)
+                    // {
+                    //     classInstruction = messageParts[1].Trim();
+                    // }
                 }
 
-                bool isMultiple = false; ///////////////////////////////////////////
+                bool isMultiple = false; // existing logic
 
                 string midMessage = "\u200F מחולל 💡, יש למתין...⌛✨";
-
                 await SendResponseToSender(phoneNumber, midMessage);
-                //              await _whatsAppService.SendMessageToUser(phoneNumber, midMessage);
-                //    difficultyLevel = "Easy";
-                return await _whatsAppService.GetExercisesFromGPT(exampleText, teacherId, Constants.Teacher, classId, instructionText, userId, isMultiple, classInstruction); //TODO: change the 1, now its for test cos same user is teacher and student
+
+                // Pass all extracted parts to the service
+                return await _whatsAppService.GetExercisesFromGPT(
+                    exampleText,
+                    teacherId,
+                    Constants.Teacher,
+                    classId,
+                    instructionText,
+                    userId,
+                    isMultiple,
+                    classInstruction,
+                    additionalInstruction // Added parameter
+                );
             }
 
 
+
+
+
             //remind students
-            else if (normalizedMessage.Contains("reminder"))
+            else if (normalizedMessage.Contains("#reminder"))
             {
                 _logger.LogInformation("*****Reminder Scope");
 
                 normalizedMessage = normalizedMessage.Normalize(NormalizationForm.FormC);
                 string[] parts = normalizedMessage.Split(',');
-                if (parts.Length != 3) return "The format should be:\nReminder, ClassName, Message to send";
 
-
+                // Check if the format is valid
+                if (parts.Length < 3)
+                    return "The format should be:\nReminder, ClassName, Message to send[,**]";
 
                 var classText = parts[1].Trim();
                 string textToSend = parts[2].Trim();
+                bool sendToGrade = parts.Length > 3 && parts[3].Trim() == "**"; // Check for the grade flag
 
-                var studentsList = await _exerciseRepository.GetUsersByClassAsync(classText);
-                _logger.LogInformation($"*****Reminder: studentsList:  {studentsList.Count()} count");
+                // Fetch students based on class or grade
+                List<(string PhoneNumber, string FullName)> studentsList;
+                if (sendToGrade)
+                {
+                    _logger.LogInformation($"*****Reminder: Fetching for the whole grade of class {classText}");
+
+                    studentsList = await _exerciseRepository.GetUsersByGradeAsync(classText);
+                }
+                else
+                {
+                    _logger.LogInformation($"*****Reminder: Fetching for class {classText}");
+
+                    studentsList = await _exerciseRepository.GetUsersByClassAsync(classText);
+                }
+
+                _logger.LogInformation($"*****Reminder: studentsList: {studentsList.Count()} count");
+
                 foreach (var item in studentsList)
                 {
-                    //  textToSend = $"{item.FullName}\n איפה נעלמת?? \n {textToSend}";
                     string constructedTextToSend = @$"
 🎉🥷✨ נינג'אדו כאן! ✨🥷🎉  
 {item.FullName}, בואו נצא לדרך! 🚀  
@@ -876,12 +939,13 @@ namespace BL.Serives
 
 🛑 *להסרה יש לשלוח 000 בהודעה חוזרת* ✉️";
 
-                    _logger.LogInformation($"*****Reminder:Sent to:   {item.PhoneNumber}  Message: {constructedTextToSend}");
+                    _logger.LogInformation($"*****Reminder: Sent to: {item.PhoneNumber} Message: {constructedTextToSend}");
                     await SendResponseToSender(item.PhoneNumber, constructedTextToSend);
-
                 }
+
                 return string.Empty;
             }
+
 
             else if (normalizedMessage.Contains("#classes"))
             {
@@ -959,6 +1023,7 @@ namespace BL.Serives
                 string exerciseText = "\u202A" + "*** 12 + _ = 14";
                 string exerciseText2 = "\u202A" + "*** 12 * 6";
                 string exerciseText3 = "\u202A" + "*** 15 - 7";
+                string exerciseText4 = "\u202A" + "*** צור תרגילי כפל\n///\n2*5\n###\ngrade=5\n!!!\ninstruc=3";
 
                 return "\u200F *פקודה לא מוכרת.* \n" +
                        "\u200Fהנה הפקודות הזמינות שתוכל לשלוח כמורה:\n\n" +
@@ -974,19 +1039,35 @@ namespace BL.Serives
                        $"{exerciseText}\n" +
                        $"{exerciseText2}\n" +
                        $"{exerciseText3}\n" +
-                       "כדי להביא דוגמה יש להשתמש ב-`//` ואז לכתוב דוגמה. לדוגמה: `// 2+2, 5+4`\n" +
-                       "ניתן להוסיף: `###GRADE=5` כדי ליצור תרגילים לשכבה ספציפית. ציין את מספר השכבה, לדוגמה: `###GRADE=5`.\n\n" +
+                       "כדי להביא דוגמה יש להשתמש ב-`///` ואז לכתוב דוגמה. לדוגמה: \n" +
+                       $"{exerciseText4}\n\n" +
+                       "ניתן להוסיף: `###GRADE=5` כדי ליצור תרגילים לשכבה ספציפית. ציין את מספר השכבה, לדוגמה: `###GRADE=5`.\n" +
+                       "אפשר גם להוסיף `!!!` כדי להוסיף הוראות נוספות. אחרי `!!!` יש להוסיף `instruc=X`, כאשר:\n" +
+                       "- `X=3` מיועד לשאלות עם אפשרויות תשובה מרובות.\n" +
+                       "לדוגמה:\n" +
+                       "***\n" +
+                       "צור תרגילי כפל\n" +
+                       "///\n" +
+                       "2*5\n" +
+                       "###\n" +
+                       "grade =5\n" +
+                       "!!!\n" +
+                       "instruc=3.\n\n" +
 
                        "4. *#update, [ClassName]*:\n" +
                        "\u200Fעדכן את הכיתה המשויכת אליך. לדוגמה: `#update, ה1`\n\n" +
 
                        "5. *reminder, ClassName, Message*:\n" +
-                       "\u200Fשליחת תזכורת לתלמידי כיתה ספציפית. לדוגמה: `reminder, ה1, אל תשכחו לפתור תרגילים!`\n\n" +
-                             "6. *#classes*:\n" +
-                            "\u200Fקבל פרטים על כל הכיתות שלך.\n\n" +
+                       "\u200Fשליחת תזכורת לתלמידי כיתה ספציפית. לדוגמה: `reminder, ה1, אל תשכחו לפתור תרגילים!`\n" +
+                       "ניתן גם להוסיף `,**` בסוף, למשל `reminder, ה1, אל תשכחו לפתור תרגילים!,**` כדי לשלוח תזכורת לכל שכבת הכיתה.\n\n" +
+
+                       "6. *#classes*:\n" +
+                       "\u200Fקבל פרטים על כל הכיתות שלך.\n\n" +
 
                        "שיהיה בהצלחה! 💪";
             }
+
+
             else
             {
                 string exerciseText = "\u202A" + "*** 12 + _ = 14";
