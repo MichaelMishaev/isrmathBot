@@ -10,6 +10,10 @@
 bin/
 obj/
 
+# But track specific files
+!bin/Debug/net8.0/BLL.dll
+!obj/Debug/net8.0/BLL.AssemblyInfo.cs
+
 # Ignore other common files
 *.log
 *.vsidx
