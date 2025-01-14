@@ -81,7 +81,7 @@ namespace BL.Serives
                     {
                         case Constants.Teacher:
                             result = await HandleTeacherMessage(numericPhoneNumber, body, userId);
-                        //    result = await HandleStudentMessage(numericPhoneNumber, body); //FOR TEST IF NEED AS STUDENT
+                        //   result = await HandleStudentMessage(numericPhoneNumber, body); //FOR TEST IF NEED AS STUDENT
                             break;
                         case Constants.Parent:
                             result = await HandleParentMessage(numericPhoneNumber, body);
@@ -118,7 +118,49 @@ namespace BL.Serives
             return $"{result}";
         }
 
+        #region fructions
 
+
+    //    string GetMixedFractionWithUnicode(int wholeNumber, int numerator, int denominator)
+    //    {
+    //        // Unicode mappings for superscript and subscript digits
+    //        var superscripts = new Dictionary<char, char>
+    //{
+    //    { '0', '⁰' }, { '1', '¹' }, { '2', '²' }, { '3', '³' },
+    //    { '4', '⁴' }, { '5', '⁵' }, { '6', '⁶' }, { '7', '⁷' },
+    //    { '8', '⁸' }, { '9', '⁹' }
+    //};
+
+    //        var subscripts = new Dictionary<char, char>
+    //{
+    //    { '0', '₀' }, { '1', '₁' }, { '2', '₂' }, { '3', '₃' },
+    //    { '4', '₄' }, { '5', '₅' }, { '6', '₆' }, { '7', '₇' },
+    //    { '8', '₈' }, { '9', '₉' }
+    //};
+
+    //        // Convert numerator and denominator to superscripts and subscripts
+    //        string numeratorUnicode = ConvertToUnicode(numerator.ToString(), superscripts);
+    //        string denominatorUnicode = ConvertToUnicode(denominator.ToString(), subscripts);
+
+    //        // Combine into fraction format
+    //        string fraction = $"{numeratorUnicode}/{denominatorUnicode}";
+
+    //        // Return mixed number with fraction
+    //        return $"{wholeNumber} {fraction}";
+    //    }
+
+    //    // Helper method to convert a number string into Unicode characters
+    //    string ConvertToUnicode(string number, Dictionary<char, char> unicodeMapping)
+    //    {
+    //        var result = "";
+    //        foreach (char c in number)
+    //        {
+    //            result += unicodeMapping.ContainsKey(c) ? unicodeMapping[c] : c;
+    //        }
+    //        return result;
+    //    }
+
+        #endregion
 
         private async Task<string> HandleStudentMessage(string phoneNumber, string studentMessage)
         {
@@ -126,6 +168,10 @@ namespace BL.Serives
             {
                 return "יש לשלוח הודעות טקסט בלבד 📚 אז מה רצית לומר? 🤔";
             }
+           // string message = GetMixedFractionWithUnicode(2, 40, 133);
+           // //string message = $"The mixed number is {mixedFraction}.";
+           //return  message;
+
 
             // Get the student ID based on the phone number
             int studentId = await _exerciseRepository.GetStudentIdByPhoneNumber(phoneNumber);
@@ -302,7 +348,47 @@ namespace BL.Serives
             string rawAnswer = studentAnswer.Trim(); //for chosing 1 answer of a many
             // Remove commas from the studentAnswer
             studentAnswer = studentAnswer.Replace(",", "");
-            studentAnswer = Regex.Replace(studentAnswer, @"\D", "");
+
+            //if (studentAnswer.Contains("/"))
+            //{
+            //    // Check for mixed fraction (e.g., "2 2/3")
+            //    var mixedFractionParts = studentAnswer.Split(' ');
+
+            //    if (mixedFractionParts.Length == 2) // Mixed fraction detected
+            //    {
+            //        if (int.TryParse(mixedFractionParts[0], out int wholeNumber)) // Parse whole number
+            //        {
+            //            var fractionParts = mixedFractionParts[1].Split('/');
+            //            if (fractionParts.Length == 2 &&
+            //                int.TryParse(fractionParts[0], out int numerator) &&
+            //                int.TryParse(fractionParts[1], out int denominator))
+            //            {
+            //                // Convert to Unicode representation
+            //                studentAnswer = MathFunctions.GetMixedFractionWithUnicode(wholeNumber, numerator, denominator);
+            //            }
+            //        }
+            //    }
+            //    else // Simple fraction (e.g., "2/3")
+            //    {
+            //        var fractionParts = studentAnswer.Split('/');
+            //        if (fractionParts.Length == 2 &&
+            //            int.TryParse(fractionParts[0], out int numerator) &&
+            //            int.TryParse(fractionParts[1], out int denominator))
+            //        {
+            //            // Convert to Unicode representation
+            //            studentAnswer = MathFunctions.GetMixedFractionWithUnicode(0, numerator, denominator);
+            //        }
+            //    }
+            //}
+            //else
+            //{
+            //    // Handle cases without fractions
+            //    studentAnswer = Regex.Replace(studentAnswer, @"\D", "");
+            //}
+
+
+
+
             var hasStarted = await _exerciseRepository.CheckIfStudentStarted(studentId);
             var NameAndClass = await _exerciseRepository.GetUserFullNameAndClassNameByStudentIdAsync(studentId);
 
@@ -542,7 +628,16 @@ namespace BL.Serives
                         await _exerciseRepository.AddExerciseToStudentProgress(studentId, nextExercise.exercise.ExerciseId, false);
 
                         // Return message with next exercise
-                        string exerciseText;
+                        //string exerciseText;
+
+
+                        string formattedExerciseText = MathFunctions.FormatExerciseString(nextExercise.exercise.Exercise);
+
+                        string exerciseText = TextGeneratorFunctions.GetMultipleChoiceExerciseMessage(
+                            formattedExerciseText,
+                            nextExercise.exercise.AnswerOptions);
+
+
 
                         exerciseText = MathFunctions.FormatExerciseString(nextExercise.exercise.Exercise);
 
@@ -829,10 +924,10 @@ namespace BL.Serives
 
                     instructionText = instructionAndExample.ElementAtOrDefault(0)?.Trim() ?? string.Empty;
 
-                    // This is the raw chunk that *might* contain '###' and '!!!'
+                    // This is the raw chunk that might contain '###' or '!!!'
                     var exampleTextRaw = instructionAndExample.ElementAtOrDefault(1)?.Trim() ?? string.Empty;
 
-                    // Check if exampleTextRaw contains "###"
+                    // Check if exampleTextRaw contains "###" or "!!!"
                     if (exampleTextRaw.Contains("###"))
                     {
                         // Split out the part before "###" (the real 'exampleText')
@@ -860,18 +955,20 @@ namespace BL.Serives
                             classInstruction = classAndAdditional;
                         }
                     }
+                    else if (exampleTextRaw.Contains("!!!")) // Check for '!!!' if no '###'
+                    {
+                        var splitAtAdditional = exampleTextRaw.Split("!!!", StringSplitOptions.RemoveEmptyEntries);
+
+                        // Everything before '!!!' is exampleText
+                        exampleText = splitAtAdditional.ElementAtOrDefault(0)?.Trim() ?? string.Empty;
+                        // Everything after '!!!' is additionalInstruction
+                        additionalInstruction = splitAtAdditional.ElementAtOrDefault(1)?.Trim() ?? string.Empty;
+                    }
                     else
                     {
-                        // No '###' in the second chunk; treat it all as example text
+                        // No '###' or '!!!' in the second chunk; treat it all as example text
                         exampleText = exampleTextRaw;
                     }
-
-                    // If there was more than one '***' (unlikely in this scenario),
-                    // we could parse classInstruction from messageParts[1], etc.
-                    // else if (messageParts.Length > 1)
-                    // {
-                    //     classInstruction = messageParts[1].Trim();
-                    // }
                 }
 
                 bool isMultiple = false; // existing logic
@@ -892,6 +989,7 @@ namespace BL.Serives
                     additionalInstruction // Added parameter
                 );
             }
+
 
 
 

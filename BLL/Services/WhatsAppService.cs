@@ -1,17 +1,29 @@
 ﻿using BL.Serives;
 using BLL.Functions;
 using BLL.Objects;
+using Google.Protobuf.Collections;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Org.BouncyCastle.Pqc.Crypto.Lms;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
+using System.IO;
 using System.Linq;
+using System.Runtime.Intrinsics.X86;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Twilio.Http;
+using Twilio.TwiML.Voice;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace BLL.Services
 {
@@ -21,13 +33,15 @@ namespace BLL.Services
         private readonly ExerciseRepository _exerciseRepository;
         private readonly IConfiguration _configuration;
         private readonly CommonFunctions _commonFunctions;
+        private readonly ILogger<WhatsAppService> _logger;
         // Inject ChatGPTService through the constructor
-        public WhatsAppService(ChatGPTService chatGPTService, ExerciseRepository exerciseRepository, IConfiguration configuration, CommonFunctions commonFunctions)
+        public WhatsAppService(ChatGPTService chatGPTService, ExerciseRepository exerciseRepository, IConfiguration configuration, CommonFunctions commonFunctions, ILogger<WhatsAppService> logger)
         {
             _chatGPTService = chatGPTService;
             _exerciseRepository = exerciseRepository;
             _configuration = configuration;
             _commonFunctions = commonFunctions;
+            _logger = logger;
         }
         //"**Additional Requirements for Comparison Questions:**\n" +
         //"- If the exercise involves determining which side is greater, smaller, or equal, you must provide a comparison in a way that the final answer is a numeric choice from 1 to 3.\n" +
@@ -58,7 +72,7 @@ namespace BLL.Services
             }
 
 
-            string gptQuery = $"Please create {numberOfExercises} unique math exercises " + instructions + " using the **same mathematical operation and format** as the given example. Example: " + example + ".\n\n" +
+            string gptQuery = $"Please create {numberOfExercises} unique math exercises " + instructions + " using the **same mathematical operation and format** as the given example, create diifrente variations of Example: " + example + ".\n\n" +
 
 "**Requirements:**\n" +
 "- **Accuracy is critical**: Incorrect answers are not acceptable. Ensure all answers are correct and consistent with the calculations.\n" +
@@ -129,12 +143,17 @@ namespace BLL.Services
 "]\n" +
 "- Ensure each object has a DifficultyLevel field with values: \\\"Easy\\\", \\\"Medium\\\", or \\\"Hard\\\".\n" +
 "- **Return only the JSON array**, with no additional text or characters before or after it.\n" +
-"- **Ensure all strings are properly escaped according to JSON standards, especially in the hints. Do not include unescaped special characters or quotation marks within the strings. Recheck the answers you send.**\n\n" +
+"- **Ensure all strings are properly escaped according to JSON standards, especially in the hints. Do not include unescaped special characters or quotation marks within the strings. Recheck the answers you send.**\n\n";
+ gptQuery += @"
+**Remember**:
+- Use lots of emojis to make the hints fun and engaging for kids 🎈🚀🖍️📚✨😊.
+- Do not add any special characters or text before or after the JSON array.
+- Return **only** the JSON array, and nothing else.
+- Ensure all strings in the JSON response are properly escaped:
+    - **Double quotes (\""\"") inside strings must be escaped as (\\\"").**
+    - Validate the JSON to ensure it can be parsed directly into a C# object.";
 
-"**Remember**:\n" +
-"- Use lots of emojis to make the hints fun and engaging for kids 🎈🚀🖍️📚✨😊.\n" +
-"- Do not add any special characters or text before or after the JSON array.\n" +
-"- Return **only** the JSON array, and nothing else.";
+
 
             try
             {
@@ -181,10 +200,15 @@ namespace BLL.Services
                     await _commonFunctions.SendResponseToSender("972544345287", $"{response}");
                     return "שגיאה ביצירת תרגילים. אנא נסה שוב.";
                 }
-
+                string unescapedJson = response.Replace("\\\"", "\"");
                 // Process and deserialize each response
-                List<ExerciseModel> exercises1 = await ProcessAssistantResponse(response, isMultipleChoice);
+                List<ExerciseModel> exercises1 = await ProcessAssistantResponse(unescapedJson, isMultipleChoice);
 
+                if (exercises1==null)
+                {
+                    _logger.LogInformation("*****Reminder Scope");
+                    await _commonFunctions.SendResponseToSender("972544345287", $"The  List<ExerciseModel> exercises1 is null, Desirilization Failed");
+                }
                 if (instructionId  == 2)
                 {
                     foreach (var ex in exercises1)
@@ -305,13 +329,13 @@ namespace BLL.Services
         {
             if (string.IsNullOrWhiteSpace(response))
             {
-                throw new Exception("The assistant's response is empty or null.");
+                await _commonFunctions.SendResponseToSender("972544345287", $"error in DAL, rpcessAssistantsRespone: The assistant's response is empty or null");
             }
 
             // Validate that the response is a JSON array
             if (!response.TrimStart().StartsWith("["))
             {
-                throw new Exception("Error: The received content is not in the correct JSON format.");
+                await _commonFunctions.SendResponseToSender("972544345287", $"error in DAL, rpcessAssistantsRespone: Error: The received content is not in the correct JSON format");
             }
 
             // Optionally, sanitize the response to remove any text before the JSON array
@@ -349,7 +373,8 @@ namespace BLL.Services
                 // Log the error and response for debugging
                 Console.WriteLine("JSON parsing error: " + ex.Message);
                 Console.WriteLine("Response content: " + response);
-                throw new Exception("Error processing the received data. Please try again.");
+                await _commonFunctions.SendResponseToSender("972544345287", $"error in DAL, rpcessAssistantsRespone:: Error processing the received data.");
+               return null;
             }
         }
 

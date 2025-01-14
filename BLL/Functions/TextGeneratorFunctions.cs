@@ -395,12 +395,17 @@ $"🦸 {Math.Floor(totalSeconds)} שניות! אלוף אמיתי! כל הכבו
             StringBuilder messageBuilder = new StringBuilder();
             messageBuilder.AppendLine($"🎯 בחרו את התשובה הנכונה ✨\n\n🔢 {exercise}\n");
 
-            // Format the options in the requested layout
+            // Add a title for the options
             messageBuilder.AppendLine("📚 האפשרויות שלכם הן:");
+
+            // Format the options in the requested layout
             for (int i = 0; i < randomizedOptions.Count; i += 2)
             {
-                var option1 = randomizedOptions[i].Text.PadRight(maxOptionLength);
-                var option2 = i + 1 < randomizedOptions.Count ? randomizedOptions[i + 1].Text.PadRight(maxOptionLength) : string.Empty;
+                // Use Unicode LTR marks (\u200E) for fractions and numbers
+                string option1 = AddLTRSupport(randomizedOptions[i].Text).PadRight(maxOptionLength);
+                string option2 = i + 1 < randomizedOptions.Count
+                    ? AddLTRSupport(randomizedOptions[i + 1].Text).PadRight(maxOptionLength)
+                    : string.Empty;
 
                 // Add the options in a row format with emojis between them
                 messageBuilder.AppendLine($"{option1}  ✨✨  {option2}".Trim());
@@ -408,6 +413,19 @@ $"🦸 {Math.Floor(totalSeconds)} שניות! אלוף אמיתי! כל הכבו
 
             return messageBuilder.ToString();
         }
+
+        // Helper function to add LTR control for numbers and fractions
+        private static string AddLTRSupport(string text)
+        {
+            if (text.Any(char.IsDigit) || text.Contains("/"))
+            {
+                return $"\u200E{text}\u200E";
+            }
+
+            // Return the original text if no LTR elements are detected
+            return text;
+        }
+
 
 
 

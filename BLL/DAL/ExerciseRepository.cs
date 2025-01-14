@@ -385,12 +385,12 @@ INNER JOIN students s ON e.classId = s.ClassId
 LEFT JOIN studentprogress sp ON sp.ExerciseId = e.id AND sp.StudentId = s.StudentId
 WHERE s.StudentId = @StudentId
   AND e.status = 1                  -- Active exercises
-  AND e.DifficultyLevel = s.PreferredDifficultyLevel -- Match the preferred difficulty level
+ 
   AND (sp.IsCorrect IS NULL         -- Exclude completed or skipped exercises
        OR sp.IsCorrect = 0)
   AND (sp.IsSkipped IS NULL OR sp.IsSkipped = 0);";
 
-
+            // AND e.DifficultyLevel = s.PreferredDifficultyLevel -- Match the preferred difficulty level
             using (MySqlCommand command = new MySqlCommand(remainingExercisesQuery, connection))
             {
                 command.Parameters.AddWithValue("@StudentId", studentId);
