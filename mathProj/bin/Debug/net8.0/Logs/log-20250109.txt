@@ -1,0 +1,381 @@
+2025-01-09 17:22:13.960 +02:00 [INF] Now listening on: http://localhost:5179
+2025-01-09 17:22:14.336 +02:00 [INF] Application started. Press Ctrl+C to shut down.
+2025-01-09 17:22:14.339 +02:00 [INF] Hosting environment: Development
+2025-01-09 17:22:14.346 +02:00 [INF] Content root path: C:\Users\34528\source\repos\mathProj\mathProj
+2025-01-09 17:22:15.755 +02:00 [INF] Request starting HTTP/1.1 GET http://localhost:5179/swagger/index.html - null null
+2025-01-09 17:22:16.173 +02:00 [INF] Request finished HTTP/1.1 GET http://localhost:5179/swagger/index.html - 200 null text/html;charset=utf-8 445.926ms
+2025-01-09 17:22:16.308 +02:00 [INF] Request starting HTTP/1.1 GET http://localhost:5179/_framework/aspnetcore-browser-refresh.js - null null
+2025-01-09 17:22:16.309 +02:00 [INF] Request starting HTTP/1.1 GET http://localhost:5179/_vs/browserLink - null null
+2025-01-09 17:22:16.317 +02:00 [INF] Request finished HTTP/1.1 GET http://localhost:5179/_framework/aspnetcore-browser-refresh.js - 200 13768 application/javascript; charset=utf-8 9.3717ms
+2025-01-09 17:22:16.366 +02:00 [INF] Request finished HTTP/1.1 GET http://localhost:5179/_vs/browserLink - 200 null text/javascript; charset=UTF-8 58.1214ms
+2025-01-09 17:22:16.793 +02:00 [INF] Request starting HTTP/1.1 GET http://localhost:5179/swagger/v1/swagger.json - null null
+2025-01-09 17:22:16.804 +02:00 [INF] Request finished HTTP/1.1 GET http://localhost:5179/swagger/v1/swagger.json - 200 null application/json;charset=utf-8 10.8552ms
+2025-01-09 17:23:17.921 +02:00 [INF] Request starting HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - application/x-www-form-urlencoded 193
+2025-01-09 17:23:17.936 +02:00 [WRN] Failed to determine the https port for redirect.
+2025-01-09 17:23:17.940 +02:00 [INF] Executing endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:23:17.969 +02:00 [INF] Route matched with {action = "ReceiveMessage", controller = "WhatsApp"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] ReceiveMessage(System.String, System.String) on controller mathProj.Controllers.WhatsAppController (mathProj).
+2025-01-09 17:23:22.140 +02:00 [INF] Start processing HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:23:22.145 +02:00 [INF] Sending HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:23:22.615 +02:00 [INF] Received HTTP response headers after 467.0342ms - 200
+2025-01-09 17:23:22.618 +02:00 [INF] End processing HTTP request after 481.0535ms - 200
+2025-01-09 17:23:26.653 +02:00 [INF] Start processing HTTP request POST https://api.openai.com/v1/chat/completions
+2025-01-09 17:23:26.655 +02:00 [INF] Sending HTTP request POST https://api.openai.com/v1/chat/completions
+2025-01-09 17:23:53.980 +02:00 [INF] Received HTTP response headers after 27323.7483ms - 200
+2025-01-09 17:23:53.982 +02:00 [INF] End processing HTTP request after 27329.2378ms - 200
+2025-01-09 17:24:08.853 +02:00 [INF] Start processing HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:24:08.856 +02:00 [INF] Sending HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:24:08.872 +02:00 [INF] Received HTTP response headers after 14.9286ms - 200
+2025-01-09 17:24:08.874 +02:00 [INF] End processing HTTP request after 21.0813ms - 200
+2025-01-09 17:24:08.884 +02:00 [INF] Executing OkObjectResult, writing value of type 'System.String'.
+2025-01-09 17:24:08.892 +02:00 [INF] Executed action mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj) in 50916.6625ms
+2025-01-09 17:24:08.895 +02:00 [INF] Executed endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:24:08.899 +02:00 [INF] Request finished HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - 200 null text/plain; charset=utf-8 50979.9827ms
+2025-01-09 17:24:22.225 +02:00 [INF] Request starting HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - application/x-www-form-urlencoded 42
+2025-01-09 17:24:22.229 +02:00 [INF] Executing endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:24:22.231 +02:00 [INF] Route matched with {action = "ReceiveMessage", controller = "WhatsApp"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] ReceiveMessage(System.String, System.String) on controller mathProj.Controllers.WhatsAppController (mathProj).
+2025-01-09 17:24:25.789 +02:00 [INF] Start processing HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:24:25.790 +02:00 [INF] Sending HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:24:26.126 +02:00 [INF] Received HTTP response headers after 334.382ms - 200
+2025-01-09 17:24:26.129 +02:00 [INF] End processing HTTP request after 340.2826ms - 200
+2025-01-09 17:24:26.133 +02:00 [INF] Executing OkObjectResult, writing value of type 'System.String'.
+2025-01-09 17:24:26.135 +02:00 [INF] Executed action mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj) in 3901.8508ms
+2025-01-09 17:24:26.137 +02:00 [INF] Executed endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:24:26.138 +02:00 [INF] Request finished HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - 200 null text/plain; charset=utf-8 3913.5248ms
+2025-01-09 17:24:32.585 +02:00 [INF] Request starting HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - application/x-www-form-urlencoded 32
+2025-01-09 17:24:32.589 +02:00 [INF] Executing endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:24:32.590 +02:00 [INF] Route matched with {action = "ReceiveMessage", controller = "WhatsApp"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] ReceiveMessage(System.String, System.String) on controller mathProj.Controllers.WhatsAppController (mathProj).
+2025-01-09 17:24:38.730 +02:00 [INF] Start processing HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:24:38.732 +02:00 [INF] Sending HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:24:39.050 +02:00 [INF] Received HTTP response headers after 315.4502ms - 200
+2025-01-09 17:24:39.052 +02:00 [INF] End processing HTTP request after 321.9196ms - 200
+2025-01-09 17:24:39.054 +02:00 [INF] Executing OkObjectResult, writing value of type 'System.String'.
+2025-01-09 17:24:39.056 +02:00 [INF] Executed action mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj) in 6464.6196ms
+2025-01-09 17:24:39.058 +02:00 [INF] Executed endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:24:39.061 +02:00 [INF] Request finished HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - 200 null text/plain; charset=utf-8 6475.4338ms
+2025-01-09 17:24:46.815 +02:00 [INF] Request starting HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - application/x-www-form-urlencoded 42
+2025-01-09 17:24:46.820 +02:00 [INF] Executing endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:24:46.826 +02:00 [INF] Route matched with {action = "ReceiveMessage", controller = "WhatsApp"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] ReceiveMessage(System.String, System.String) on controller mathProj.Controllers.WhatsAppController (mathProj).
+2025-01-09 17:24:49.946 +02:00 [INF] Start processing HTTP request POST http://localhost:3000/send-image
+2025-01-09 17:24:49.948 +02:00 [INF] Sending HTTP request POST http://localhost:3000/send-image
+2025-01-09 17:25:01.010 +02:00 [INF] Request starting HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - application/x-www-form-urlencoded 42
+2025-01-09 17:25:01.015 +02:00 [INF] Executing endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:25:01.017 +02:00 [INF] Route matched with {action = "ReceiveMessage", controller = "WhatsApp"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] ReceiveMessage(System.String, System.String) on controller mathProj.Controllers.WhatsAppController (mathProj).
+2025-01-09 17:25:02.301 +02:00 [INF] Received HTTP response headers after 12350.2578ms - 200
+2025-01-09 17:25:02.323 +02:00 [INF] End processing HTTP request after 12377.3939ms - 200
+2025-01-09 17:25:02.846 +02:00 [INF] Executing OkObjectResult, writing value of type 'System.String'.
+2025-01-09 17:25:02.909 +02:00 [INF] Executed action mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj) in 16078.6645ms
+2025-01-09 17:25:05.661 +02:00 [INF] Executed endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:25:09.357 +02:00 [INF] Request finished HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - 200 0 text/plain; charset=utf-8 22542.0115ms
+2025-01-09 17:25:09.374 +02:00 [INF] Start processing HTTP request POST http://localhost:3000/send-image
+2025-01-09 17:25:09.375 +02:00 [INF] Sending HTTP request POST http://localhost:3000/send-image
+2025-01-09 17:25:09.971 +02:00 [INF] Received HTTP response headers after 595.1503ms - 200
+2025-01-09 17:25:09.974 +02:00 [INF] End processing HTTP request after 600.8401ms - 200
+2025-01-09 17:25:09.977 +02:00 [INF] Executing OkObjectResult, writing value of type 'System.String'.
+2025-01-09 17:25:09.979 +02:00 [INF] Executed action mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj) in 8957.7876ms
+2025-01-09 17:25:09.981 +02:00 [INF] Executed endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:25:09.982 +02:00 [INF] Request finished HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - 200 0 text/plain; charset=utf-8 8972.0361ms
+2025-01-09 17:25:17.625 +02:00 [INF] Request starting HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - application/x-www-form-urlencoded 57
+2025-01-09 17:25:17.632 +02:00 [INF] Executing endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:25:17.633 +02:00 [INF] Route matched with {action = "ReceiveMessage", controller = "WhatsApp"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] ReceiveMessage(System.String, System.String) on controller mathProj.Controllers.WhatsAppController (mathProj).
+2025-01-09 17:25:23.947 +02:00 [INF] Start processing HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:25:23.950 +02:00 [INF] Sending HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:25:24.258 +02:00 [INF] Received HTTP response headers after 306.303ms - 200
+2025-01-09 17:25:24.261 +02:00 [INF] End processing HTTP request after 313.3746ms - 200
+2025-01-09 17:25:24.262 +02:00 [INF] Executing OkObjectResult, writing value of type 'System.String'.
+2025-01-09 17:25:24.264 +02:00 [INF] Executed action mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj) in 6628.2895ms
+2025-01-09 17:25:24.266 +02:00 [INF] Executed endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:25:24.267 +02:00 [INF] Request finished HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - 200 null text/plain; charset=utf-8 6642.2347ms
+2025-01-09 17:25:29.295 +02:00 [INF] Request starting HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - application/x-www-form-urlencoded 33
+2025-01-09 17:25:29.298 +02:00 [INF] Executing endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:25:29.299 +02:00 [INF] Route matched with {action = "ReceiveMessage", controller = "WhatsApp"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] ReceiveMessage(System.String, System.String) on controller mathProj.Controllers.WhatsAppController (mathProj).
+2025-01-09 17:25:32.617 +02:00 [INF] Start processing HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:25:32.618 +02:00 [INF] Sending HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:25:32.886 +02:00 [INF] Received HTTP response headers after 266.5151ms - 200
+2025-01-09 17:25:32.888 +02:00 [INF] End processing HTTP request after 271.0609ms - 200
+2025-01-09 17:25:32.891 +02:00 [INF] Executing OkObjectResult, writing value of type 'System.String'.
+2025-01-09 17:25:32.893 +02:00 [INF] Executed action mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj) in 3591.5267ms
+2025-01-09 17:25:32.895 +02:00 [INF] Executed endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:25:32.896 +02:00 [INF] Request finished HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - 200 null text/plain; charset=utf-8 3600.7725ms
+2025-01-09 17:25:41.064 +02:00 [INF] Request starting HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - application/x-www-form-urlencoded 48
+2025-01-09 17:25:41.068 +02:00 [INF] Executing endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:25:41.070 +02:00 [INF] Route matched with {action = "ReceiveMessage", controller = "WhatsApp"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] ReceiveMessage(System.String, System.String) on controller mathProj.Controllers.WhatsAppController (mathProj).
+2025-01-09 17:25:41.114 +02:00 [INF] Start processing HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:25:41.116 +02:00 [INF] Sending HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:25:41.384 +02:00 [INF] Received HTTP response headers after 267.3922ms - 200
+2025-01-09 17:25:41.386 +02:00 [INF] End processing HTTP request after 272.2865ms - 200
+2025-01-09 17:25:41.388 +02:00 [INF] Executing OkObjectResult, writing value of type 'System.String'.
+2025-01-09 17:25:41.390 +02:00 [INF] Executed action mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj) in 318.5941ms
+2025-01-09 17:25:41.393 +02:00 [INF] Executed endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:25:41.394 +02:00 [INF] Request finished HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - 200 null text/plain; charset=utf-8 329.768ms
+2025-01-09 17:25:46.419 +02:00 [INF] Request starting HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - application/x-www-form-urlencoded 48
+2025-01-09 17:25:46.424 +02:00 [INF] Executing endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:25:46.425 +02:00 [INF] Route matched with {action = "ReceiveMessage", controller = "WhatsApp"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] ReceiveMessage(System.String, System.String) on controller mathProj.Controllers.WhatsAppController (mathProj).
+2025-01-09 17:25:46.464 +02:00 [INF] Start processing HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:25:46.465 +02:00 [INF] Sending HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:25:46.709 +02:00 [INF] Received HTTP response headers after 242.1299ms - 200
+2025-01-09 17:25:46.711 +02:00 [INF] End processing HTTP request after 246.9483ms - 200
+2025-01-09 17:25:46.714 +02:00 [INF] Executing OkObjectResult, writing value of type 'System.String'.
+2025-01-09 17:25:46.716 +02:00 [INF] Executed action mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj) in 288.3456ms
+2025-01-09 17:25:46.718 +02:00 [INF] Executed endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:25:46.720 +02:00 [INF] Request finished HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - 200 null text/plain; charset=utf-8 300.5659ms
+2025-01-09 17:25:50.288 +02:00 [INF] Request starting HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - application/x-www-form-urlencoded 48
+2025-01-09 17:25:50.292 +02:00 [INF] Executing endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:25:50.293 +02:00 [INF] Route matched with {action = "ReceiveMessage", controller = "WhatsApp"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] ReceiveMessage(System.String, System.String) on controller mathProj.Controllers.WhatsAppController (mathProj).
+2025-01-09 17:25:50.336 +02:00 [INF] Start processing HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:25:50.337 +02:00 [INF] Sending HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:25:50.603 +02:00 [INF] Received HTTP response headers after 263.9894ms - 200
+2025-01-09 17:25:50.605 +02:00 [INF] End processing HTTP request after 268.9396ms - 200
+2025-01-09 17:25:50.608 +02:00 [INF] Executing OkObjectResult, writing value of type 'System.String'.
+2025-01-09 17:25:50.609 +02:00 [INF] Executed action mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj) in 314.7365ms
+2025-01-09 17:25:50.611 +02:00 [INF] Executed endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:25:50.612 +02:00 [INF] Request finished HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - 200 null text/plain; charset=utf-8 324.4188ms
+2025-01-09 17:25:54.185 +02:00 [INF] Request starting HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - application/x-www-form-urlencoded 32
+2025-01-09 17:25:54.190 +02:00 [INF] Executing endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:25:54.191 +02:00 [INF] Route matched with {action = "ReceiveMessage", controller = "WhatsApp"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] ReceiveMessage(System.String, System.String) on controller mathProj.Controllers.WhatsAppController (mathProj).
+2025-01-09 17:25:58.567 +02:00 [INF] Start processing HTTP request POST http://localhost:3000/send-image
+2025-01-09 17:25:58.569 +02:00 [INF] Sending HTTP request POST http://localhost:3000/send-image
+2025-01-09 17:26:08.945 +02:00 [INF] Received HTTP response headers after 10374.9031ms - 200
+2025-01-09 17:26:08.949 +02:00 [INF] End processing HTTP request after 10381.9041ms - 200
+2025-01-09 17:26:10.974 +02:00 [INF] Start processing HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:26:10.975 +02:00 [INF] Sending HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:26:10.983 +02:00 [INF] Received HTTP response headers after 6.8006ms - 200
+2025-01-09 17:26:10.985 +02:00 [INF] End processing HTTP request after 10.9967ms - 200
+2025-01-09 17:26:37.288 +02:00 [INF] Start processing HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:26:37.312 +02:00 [INF] Sending HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:26:37.334 +02:00 [INF] Received HTTP response headers after 13.1867ms - 200
+2025-01-09 17:26:37.338 +02:00 [INF] End processing HTTP request after 49.4178ms - 200
+2025-01-09 17:26:37.341 +02:00 [INF] Executing OkObjectResult, writing value of type 'System.String'.
+2025-01-09 17:26:37.343 +02:00 [INF] Executed action mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj) in 43149.6558ms
+2025-01-09 17:26:37.346 +02:00 [INF] Executed endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:26:37.348 +02:00 [INF] Request finished HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - 200 null text/plain; charset=utf-8 43163.0089ms
+2025-01-09 17:26:43.855 +02:00 [INF] Request starting HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - application/x-www-form-urlencoded 32
+2025-01-09 17:26:43.859 +02:00 [INF] Executing endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:26:43.860 +02:00 [INF] Route matched with {action = "ReceiveMessage", controller = "WhatsApp"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] ReceiveMessage(System.String, System.String) on controller mathProj.Controllers.WhatsAppController (mathProj).
+2025-01-09 17:26:43.925 +02:00 [INF] Start processing HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:26:43.926 +02:00 [INF] Sending HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:26:44.132 +02:00 [INF] Received HTTP response headers after 205.1527ms - 200
+2025-01-09 17:26:44.135 +02:00 [INF] End processing HTTP request after 210.2027ms - 200
+2025-01-09 17:26:44.137 +02:00 [INF] Executing OkObjectResult, writing value of type 'System.String'.
+2025-01-09 17:26:44.140 +02:00 [INF] Executed action mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj) in 278.665ms
+2025-01-09 17:26:44.142 +02:00 [INF] Executed endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:26:44.144 +02:00 [INF] Request finished HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - 200 null text/plain; charset=utf-8 288.2547ms
+2025-01-09 17:26:46.939 +02:00 [INF] Request starting HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - application/x-www-form-urlencoded 32
+2025-01-09 17:26:46.942 +02:00 [INF] Executing endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:26:46.943 +02:00 [INF] Route matched with {action = "ReceiveMessage", controller = "WhatsApp"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] ReceiveMessage(System.String, System.String) on controller mathProj.Controllers.WhatsAppController (mathProj).
+2025-01-09 17:26:46.993 +02:00 [INF] Start processing HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:26:46.994 +02:00 [INF] Sending HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:26:47.230 +02:00 [INF] Received HTTP response headers after 234.6791ms - 200
+2025-01-09 17:26:47.232 +02:00 [INF] End processing HTTP request after 239.7874ms - 200
+2025-01-09 17:26:47.234 +02:00 [INF] Executing OkObjectResult, writing value of type 'System.String'.
+2025-01-09 17:26:47.237 +02:00 [INF] Executed action mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj) in 291.7303ms
+2025-01-09 17:26:47.239 +02:00 [INF] Executed endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:26:47.241 +02:00 [INF] Request finished HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - 200 null text/plain; charset=utf-8 302.2149ms
+2025-01-09 17:26:50.914 +02:00 [INF] Request starting HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - application/x-www-form-urlencoded 32
+2025-01-09 17:26:50.920 +02:00 [INF] Executing endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:26:50.922 +02:00 [INF] Route matched with {action = "ReceiveMessage", controller = "WhatsApp"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] ReceiveMessage(System.String, System.String) on controller mathProj.Controllers.WhatsAppController (mathProj).
+2025-01-09 17:26:50.975 +02:00 [INF] Start processing HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:26:50.977 +02:00 [INF] Sending HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:26:51.222 +02:00 [INF] Received HTTP response headers after 243.9817ms - 200
+2025-01-09 17:26:51.224 +02:00 [INF] End processing HTTP request after 248.94ms - 200
+2025-01-09 17:26:51.226 +02:00 [INF] Executing OkObjectResult, writing value of type 'System.String'.
+2025-01-09 17:26:51.227 +02:00 [INF] Executed action mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj) in 302.6614ms
+2025-01-09 17:26:51.230 +02:00 [INF] Executed endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:26:51.231 +02:00 [INF] Request finished HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - 200 null text/plain; charset=utf-8 317.4955ms
+2025-01-09 17:26:53.771 +02:00 [INF] Request starting HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - application/x-www-form-urlencoded 32
+2025-01-09 17:26:53.775 +02:00 [INF] Executing endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:26:53.776 +02:00 [INF] Route matched with {action = "ReceiveMessage", controller = "WhatsApp"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] ReceiveMessage(System.String, System.String) on controller mathProj.Controllers.WhatsAppController (mathProj).
+2025-01-09 17:26:53.823 +02:00 [INF] Start processing HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:26:53.824 +02:00 [INF] Sending HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:26:54.093 +02:00 [INF] Received HTTP response headers after 267.3853ms - 200
+2025-01-09 17:26:54.095 +02:00 [INF] End processing HTTP request after 272.324ms - 200
+2025-01-09 17:26:54.097 +02:00 [INF] Executing OkObjectResult, writing value of type 'System.String'.
+2025-01-09 17:26:54.098 +02:00 [INF] Executed action mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj) in 318.9402ms
+2025-01-09 17:26:54.100 +02:00 [INF] Executed endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:26:54.101 +02:00 [INF] Request finished HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - 200 null text/plain; charset=utf-8 329.5577ms
+2025-01-09 17:26:56.880 +02:00 [INF] Request starting HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - application/x-www-form-urlencoded 32
+2025-01-09 17:26:56.884 +02:00 [INF] Executing endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:26:56.885 +02:00 [INF] Route matched with {action = "ReceiveMessage", controller = "WhatsApp"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] ReceiveMessage(System.String, System.String) on controller mathProj.Controllers.WhatsAppController (mathProj).
+2025-01-09 17:26:56.933 +02:00 [INF] Start processing HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:26:56.935 +02:00 [INF] Sending HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:26:57.191 +02:00 [INF] Received HTTP response headers after 255.3217ms - 200
+2025-01-09 17:26:57.194 +02:00 [INF] End processing HTTP request after 260.8544ms - 200
+2025-01-09 17:26:57.195 +02:00 [INF] Executing OkObjectResult, writing value of type 'System.String'.
+2025-01-09 17:26:57.197 +02:00 [INF] Executed action mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj) in 310.1923ms
+2025-01-09 17:26:57.199 +02:00 [INF] Executed endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:26:57.202 +02:00 [INF] Request finished HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - 200 null text/plain; charset=utf-8 321.694ms
+2025-01-09 17:26:59.817 +02:00 [INF] Request starting HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - application/x-www-form-urlencoded 32
+2025-01-09 17:26:59.822 +02:00 [INF] Executing endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:26:59.823 +02:00 [INF] Route matched with {action = "ReceiveMessage", controller = "WhatsApp"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] ReceiveMessage(System.String, System.String) on controller mathProj.Controllers.WhatsAppController (mathProj).
+2025-01-09 17:26:59.870 +02:00 [INF] Start processing HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:26:59.872 +02:00 [INF] Sending HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:27:00.131 +02:00 [INF] Received HTTP response headers after 258.0968ms - 200
+2025-01-09 17:27:00.134 +02:00 [INF] End processing HTTP request after 263.8001ms - 200
+2025-01-09 17:27:00.135 +02:00 [INF] Executing OkObjectResult, writing value of type 'System.String'.
+2025-01-09 17:27:00.136 +02:00 [INF] Executed action mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj) in 311.6105ms
+2025-01-09 17:27:00.138 +02:00 [INF] Executed endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:27:00.140 +02:00 [INF] Request finished HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - 200 null text/plain; charset=utf-8 322.5665ms
+2025-01-09 17:27:02.583 +02:00 [INF] Request starting HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - application/x-www-form-urlencoded 32
+2025-01-09 17:27:02.586 +02:00 [INF] Executing endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:27:02.587 +02:00 [INF] Route matched with {action = "ReceiveMessage", controller = "WhatsApp"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] ReceiveMessage(System.String, System.String) on controller mathProj.Controllers.WhatsAppController (mathProj).
+2025-01-09 17:27:02.634 +02:00 [INF] Start processing HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:27:02.635 +02:00 [INF] Sending HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:27:02.897 +02:00 [INF] Received HTTP response headers after 260.6741ms - 200
+2025-01-09 17:27:02.900 +02:00 [INF] End processing HTTP request after 266.4062ms - 200
+2025-01-09 17:27:02.902 +02:00 [INF] Executing OkObjectResult, writing value of type 'System.String'.
+2025-01-09 17:27:02.904 +02:00 [INF] Executed action mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj) in 314.5332ms
+2025-01-09 17:27:02.906 +02:00 [INF] Executed endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:27:02.907 +02:00 [INF] Request finished HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - 200 null text/plain; charset=utf-8 323.7543ms
+2025-01-09 17:27:05.468 +02:00 [INF] Request starting HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - application/x-www-form-urlencoded 32
+2025-01-09 17:27:05.473 +02:00 [INF] Executing endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:27:05.474 +02:00 [INF] Route matched with {action = "ReceiveMessage", controller = "WhatsApp"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] ReceiveMessage(System.String, System.String) on controller mathProj.Controllers.WhatsAppController (mathProj).
+2025-01-09 17:27:05.523 +02:00 [INF] Start processing HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:27:05.525 +02:00 [INF] Sending HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:27:05.748 +02:00 [INF] Received HTTP response headers after 221.4937ms - 200
+2025-01-09 17:27:05.751 +02:00 [INF] End processing HTTP request after 228.173ms - 200
+2025-01-09 17:27:05.753 +02:00 [INF] Executing OkObjectResult, writing value of type 'System.String'.
+2025-01-09 17:27:05.754 +02:00 [INF] Executed action mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj) in 278.5146ms
+2025-01-09 17:27:05.756 +02:00 [INF] Executed endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:27:05.757 +02:00 [INF] Request finished HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - 200 null text/plain; charset=utf-8 289.4167ms
+2025-01-09 17:27:08.139 +02:00 [INF] Request starting HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - application/x-www-form-urlencoded 32
+2025-01-09 17:27:08.142 +02:00 [INF] Executing endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:27:08.143 +02:00 [INF] Route matched with {action = "ReceiveMessage", controller = "WhatsApp"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] ReceiveMessage(System.String, System.String) on controller mathProj.Controllers.WhatsAppController (mathProj).
+2025-01-09 17:27:08.192 +02:00 [INF] Start processing HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:27:08.193 +02:00 [INF] Sending HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:27:08.400 +02:00 [INF] Received HTTP response headers after 204.621ms - 200
+2025-01-09 17:27:08.404 +02:00 [INF] End processing HTTP request after 212.2197ms - 200
+2025-01-09 17:27:08.406 +02:00 [INF] Executing OkObjectResult, writing value of type 'System.String'.
+2025-01-09 17:27:08.408 +02:00 [INF] Executed action mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj) in 261.1019ms
+2025-01-09 17:27:08.410 +02:00 [INF] Executed endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:27:08.416 +02:00 [INF] Request finished HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - 200 null text/plain; charset=utf-8 277.2553ms
+2025-01-09 17:27:11.499 +02:00 [INF] Request starting HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - application/x-www-form-urlencoded 32
+2025-01-09 17:27:11.503 +02:00 [INF] Executing endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:27:11.504 +02:00 [INF] Route matched with {action = "ReceiveMessage", controller = "WhatsApp"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] ReceiveMessage(System.String, System.String) on controller mathProj.Controllers.WhatsAppController (mathProj).
+2025-01-09 17:27:11.565 +02:00 [INF] Start processing HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:27:11.566 +02:00 [INF] Sending HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:27:11.804 +02:00 [INF] Received HTTP response headers after 236.7728ms - 200
+2025-01-09 17:27:11.806 +02:00 [INF] End processing HTTP request after 240.9765ms - 200
+2025-01-09 17:27:11.807 +02:00 [INF] Executing OkObjectResult, writing value of type 'System.String'.
+2025-01-09 17:27:11.809 +02:00 [INF] Executed action mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj) in 301.0899ms
+2025-01-09 17:27:11.812 +02:00 [INF] Executed endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:27:11.814 +02:00 [INF] Request finished HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - 200 null text/plain; charset=utf-8 315.5982ms
+2025-01-09 17:27:15.922 +02:00 [INF] Request starting HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - application/x-www-form-urlencoded 42
+2025-01-09 17:27:15.926 +02:00 [INF] Executing endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:27:15.928 +02:00 [INF] Route matched with {action = "ReceiveMessage", controller = "WhatsApp"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] ReceiveMessage(System.String, System.String) on controller mathProj.Controllers.WhatsAppController (mathProj).
+2025-01-09 17:27:17.444 +02:00 [INF] Start processing HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:27:17.447 +02:00 [INF] Sending HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:27:17.670 +02:00 [INF] Received HTTP response headers after 221.5683ms - 200
+2025-01-09 17:27:17.672 +02:00 [INF] End processing HTTP request after 227.7171ms - 200
+2025-01-09 17:27:17.673 +02:00 [INF] Executing OkObjectResult, writing value of type 'System.String'.
+2025-01-09 17:27:17.675 +02:00 [INF] Executed action mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj) in 1744.0643ms
+2025-01-09 17:27:17.677 +02:00 [INF] Executed endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:27:17.678 +02:00 [INF] Request finished HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - 200 null text/plain; charset=utf-8 1756.4526ms
+2025-01-09 17:27:23.381 +02:00 [INF] Request starting HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - application/x-www-form-urlencoded 48
+2025-01-09 17:27:23.385 +02:00 [INF] Executing endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:27:23.386 +02:00 [INF] Route matched with {action = "ReceiveMessage", controller = "WhatsApp"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] ReceiveMessage(System.String, System.String) on controller mathProj.Controllers.WhatsAppController (mathProj).
+2025-01-09 17:27:23.427 +02:00 [INF] Start processing HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:27:23.429 +02:00 [INF] Sending HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:27:23.662 +02:00 [INF] Received HTTP response headers after 231.1055ms - 200
+2025-01-09 17:27:23.665 +02:00 [INF] End processing HTTP request after 238.2349ms - 200
+2025-01-09 17:27:23.668 +02:00 [INF] Executing OkObjectResult, writing value of type 'System.String'.
+2025-01-09 17:27:23.670 +02:00 [INF] Executed action mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj) in 281.9247ms
+2025-01-09 17:27:23.673 +02:00 [INF] Executed endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:27:23.674 +02:00 [INF] Request finished HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - 200 null text/plain; charset=utf-8 293.1096ms
+2025-01-09 17:27:25.940 +02:00 [INF] Request starting HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - application/x-www-form-urlencoded 48
+2025-01-09 17:27:25.944 +02:00 [INF] Executing endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:27:25.945 +02:00 [INF] Route matched with {action = "ReceiveMessage", controller = "WhatsApp"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] ReceiveMessage(System.String, System.String) on controller mathProj.Controllers.WhatsAppController (mathProj).
+2025-01-09 17:27:25.983 +02:00 [INF] Start processing HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:27:25.984 +02:00 [INF] Sending HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:27:26.242 +02:00 [INF] Received HTTP response headers after 256.5372ms - 200
+2025-01-09 17:27:26.245 +02:00 [INF] End processing HTTP request after 262.0718ms - 200
+2025-01-09 17:27:26.247 +02:00 [INF] Executing OkObjectResult, writing value of type 'System.String'.
+2025-01-09 17:27:26.248 +02:00 [INF] Executed action mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj) in 300.949ms
+2025-01-09 17:27:26.251 +02:00 [INF] Executed endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:27:26.252 +02:00 [INF] Request finished HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - 200 null text/plain; charset=utf-8 311.6981ms
+2025-01-09 17:27:28.283 +02:00 [INF] Request starting HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - application/x-www-form-urlencoded 48
+2025-01-09 17:27:28.286 +02:00 [INF] Executing endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:27:28.287 +02:00 [INF] Route matched with {action = "ReceiveMessage", controller = "WhatsApp"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] ReceiveMessage(System.String, System.String) on controller mathProj.Controllers.WhatsAppController (mathProj).
+2025-01-09 17:27:28.326 +02:00 [INF] Start processing HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:27:28.328 +02:00 [INF] Sending HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:27:28.599 +02:00 [INF] Received HTTP response headers after 269.7622ms - 200
+2025-01-09 17:27:28.601 +02:00 [INF] End processing HTTP request after 275.3104ms - 200
+2025-01-09 17:27:28.603 +02:00 [INF] Executing OkObjectResult, writing value of type 'System.String'.
+2025-01-09 17:27:28.605 +02:00 [INF] Executed action mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj) in 315.1039ms
+2025-01-09 17:27:28.607 +02:00 [INF] Executed endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:27:28.610 +02:00 [INF] Request finished HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - 200 null text/plain; charset=utf-8 326.5123ms
+2025-01-09 17:27:30.261 +02:00 [INF] Request starting HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - application/x-www-form-urlencoded 48
+2025-01-09 17:27:30.265 +02:00 [INF] Executing endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:27:30.266 +02:00 [INF] Route matched with {action = "ReceiveMessage", controller = "WhatsApp"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] ReceiveMessage(System.String, System.String) on controller mathProj.Controllers.WhatsAppController (mathProj).
+2025-01-09 17:27:30.307 +02:00 [INF] Start processing HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:27:30.309 +02:00 [INF] Sending HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:27:30.551 +02:00 [INF] Received HTTP response headers after 241.4055ms - 200
+2025-01-09 17:27:30.553 +02:00 [INF] End processing HTTP request after 245.8689ms - 200
+2025-01-09 17:27:30.555 +02:00 [INF] Executing OkObjectResult, writing value of type 'System.String'.
+2025-01-09 17:27:30.557 +02:00 [INF] Executed action mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj) in 288.4592ms
+2025-01-09 17:27:30.561 +02:00 [INF] Executed endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:27:30.564 +02:00 [INF] Request finished HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - 200 null text/plain; charset=utf-8 302.7696ms
+2025-01-09 17:27:31.969 +02:00 [INF] Request starting HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - application/x-www-form-urlencoded 48
+2025-01-09 17:27:31.974 +02:00 [INF] Executing endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:27:31.975 +02:00 [INF] Route matched with {action = "ReceiveMessage", controller = "WhatsApp"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] ReceiveMessage(System.String, System.String) on controller mathProj.Controllers.WhatsAppController (mathProj).
+2025-01-09 17:27:32.015 +02:00 [INF] Start processing HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:27:32.016 +02:00 [INF] Sending HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:27:32.282 +02:00 [INF] Received HTTP response headers after 264.8653ms - 200
+2025-01-09 17:27:32.284 +02:00 [INF] End processing HTTP request after 269.2805ms - 200
+2025-01-09 17:27:32.286 +02:00 [INF] Executing OkObjectResult, writing value of type 'System.String'.
+2025-01-09 17:27:32.288 +02:00 [INF] Executed action mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj) in 311.091ms
+2025-01-09 17:27:32.290 +02:00 [INF] Executed endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:27:32.292 +02:00 [INF] Request finished HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - 200 null text/plain; charset=utf-8 323.068ms
+2025-01-09 17:27:33.732 +02:00 [INF] Request starting HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - application/x-www-form-urlencoded 48
+2025-01-09 17:27:33.737 +02:00 [INF] Executing endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:27:33.738 +02:00 [INF] Route matched with {action = "ReceiveMessage", controller = "WhatsApp"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] ReceiveMessage(System.String, System.String) on controller mathProj.Controllers.WhatsAppController (mathProj).
+2025-01-09 17:27:33.775 +02:00 [INF] Start processing HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:27:33.776 +02:00 [INF] Sending HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:27:33.999 +02:00 [INF] Received HTTP response headers after 221.556ms - 200
+2025-01-09 17:27:34.001 +02:00 [INF] End processing HTTP request after 226.3261ms - 200
+2025-01-09 17:27:34.004 +02:00 [INF] Executing OkObjectResult, writing value of type 'System.String'.
+2025-01-09 17:27:34.006 +02:00 [INF] Executed action mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj) in 265.9614ms
+2025-01-09 17:27:34.008 +02:00 [INF] Executed endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:27:34.010 +02:00 [INF] Request finished HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - 200 null text/plain; charset=utf-8 277.5997ms
+2025-01-09 17:27:35.598 +02:00 [INF] Request starting HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - application/x-www-form-urlencoded 48
+2025-01-09 17:27:35.601 +02:00 [INF] Executing endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:27:35.603 +02:00 [INF] Route matched with {action = "ReceiveMessage", controller = "WhatsApp"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] ReceiveMessage(System.String, System.String) on controller mathProj.Controllers.WhatsAppController (mathProj).
+2025-01-09 17:27:35.644 +02:00 [INF] Start processing HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:27:35.645 +02:00 [INF] Sending HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:27:35.870 +02:00 [INF] Received HTTP response headers after 223.4067ms - 200
+2025-01-09 17:27:35.873 +02:00 [INF] End processing HTTP request after 228.6891ms - 200
+2025-01-09 17:27:35.875 +02:00 [INF] Executing OkObjectResult, writing value of type 'System.String'.
+2025-01-09 17:27:35.877 +02:00 [INF] Executed action mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj) in 271.8052ms
+2025-01-09 17:27:35.878 +02:00 [INF] Executed endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:27:35.880 +02:00 [INF] Request finished HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - 200 null text/plain; charset=utf-8 281.3829ms
+2025-01-09 17:27:37.394 +02:00 [INF] Request starting HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - application/x-www-form-urlencoded 48
+2025-01-09 17:27:37.397 +02:00 [INF] Executing endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:27:37.398 +02:00 [INF] Route matched with {action = "ReceiveMessage", controller = "WhatsApp"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] ReceiveMessage(System.String, System.String) on controller mathProj.Controllers.WhatsAppController (mathProj).
+2025-01-09 17:27:37.437 +02:00 [INF] Start processing HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:27:37.439 +02:00 [INF] Sending HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:27:37.684 +02:00 [INF] Received HTTP response headers after 243.7002ms - 200
+2025-01-09 17:27:37.687 +02:00 [INF] End processing HTTP request after 249.4329ms - 200
+2025-01-09 17:27:37.689 +02:00 [INF] Executing OkObjectResult, writing value of type 'System.String'.
+2025-01-09 17:27:37.691 +02:00 [INF] Executed action mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj) in 290.987ms
+2025-01-09 17:27:37.694 +02:00 [INF] Executed endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:27:37.697 +02:00 [INF] Request finished HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - 200 null text/plain; charset=utf-8 303.7891ms
+2025-01-09 17:27:39.114 +02:00 [INF] Request starting HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - application/x-www-form-urlencoded 48
+2025-01-09 17:27:39.119 +02:00 [INF] Executing endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:27:39.122 +02:00 [INF] Route matched with {action = "ReceiveMessage", controller = "WhatsApp"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] ReceiveMessage(System.String, System.String) on controller mathProj.Controllers.WhatsAppController (mathProj).
+2025-01-09 17:27:39.161 +02:00 [INF] Start processing HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:27:39.162 +02:00 [INF] Sending HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:27:39.375 +02:00 [INF] Received HTTP response headers after 211.9697ms - 200
+2025-01-09 17:27:39.378 +02:00 [INF] End processing HTTP request after 216.7173ms - 200
+2025-01-09 17:27:39.379 +02:00 [INF] Executing OkObjectResult, writing value of type 'System.String'.
+2025-01-09 17:27:39.380 +02:00 [INF] Executed action mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj) in 256.9985ms
+2025-01-09 17:27:39.382 +02:00 [INF] Executed endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:27:39.383 +02:00 [INF] Request finished HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - 200 null text/plain; charset=utf-8 269.3557ms
+2025-01-09 17:27:42.143 +02:00 [INF] Request starting HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - application/x-www-form-urlencoded 48
+2025-01-09 17:27:42.148 +02:00 [INF] Executing endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:27:42.149 +02:00 [INF] Route matched with {action = "ReceiveMessage", controller = "WhatsApp"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] ReceiveMessage(System.String, System.String) on controller mathProj.Controllers.WhatsAppController (mathProj).
+2025-01-09 17:27:42.189 +02:00 [INF] Start processing HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:27:42.190 +02:00 [INF] Sending HTTP request POST http://localhost:3000/send-message
+2025-01-09 17:27:42.420 +02:00 [INF] Received HTTP response headers after 228.7277ms - 200
+2025-01-09 17:27:42.422 +02:00 [INF] End processing HTTP request after 233.4561ms - 200
+2025-01-09 17:27:42.424 +02:00 [INF] Executing OkObjectResult, writing value of type 'System.String'.
+2025-01-09 17:27:42.427 +02:00 [INF] Executed action mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj) in 275.7006ms
+2025-01-09 17:27:42.429 +02:00 [INF] Executed endpoint 'mathProj.Controllers.WhatsAppController.ReceiveMessage (mathProj)'
+2025-01-09 17:27:42.431 +02:00 [INF] Request finished HTTP/1.1 POST http://1b1151fc83eb.ngrok.app/api/whatsapp/message - 200 null text/plain; charset=utf-8 287.454ms
