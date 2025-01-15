@@ -144,14 +144,20 @@ namespace BLL.Services
 "- Ensure each object has a DifficultyLevel field with values: \\\"Easy\\\", \\\"Medium\\\", or \\\"Hard\\\".\n" +
 "- **Return only the JSON array**, with no additional text or characters before or after it.\n" +
 "- **Ensure all strings are properly escaped according to JSON standards, especially in the hints. Do not include unescaped special characters or quotation marks within the strings. Recheck the answers you send.**\n\n";
- gptQuery += @"
-**Remember**:
-- Use lots of emojis to make the hints fun and engaging for kids 🎈🚀🖍️📚✨😊.
-- Do not add any special characters or text before or after the JSON array.
-- Return **only** the JSON array, and nothing else.
-- Ensure all strings in the JSON response are properly escaped:
-    - **Double quotes (\""\"") inside strings must be escaped as (\\\"").**
-    - Validate the JSON to ensure it can be parsed directly into a C# object.";
+            
+   gptQuery +=
+         "**Remember - very important notes**:\r\n" +
+         "- Use lots of emojis to make the hints fun and engaging for kids .\r\n" +
+         "- Do not add any special characters or text before or after the JSON array.\r\n" +
+         "- Return **only** the JSON array, and nothing else.\r\n" +
+         "- Ensure all strings in the JSON response are properly escaped:\r\n" +
+         "    - **Double quotes (\\\"\\\") inside strings must be escaped as (\\\\\\\"\\\").**\r\n" +
+         "              - **Do not use abbreviations like סה\\\"כ, ע\\\"י, etc. Always write the full words.**\r\n" +
+         "              - Validate the JSON to ensure it can be parsed directly into a C# object.";
+
+
+
+
 
 
 
@@ -327,6 +333,7 @@ namespace BLL.Services
 
         private async Task<List<ExerciseModel>> ProcessAssistantResponse(string response, bool isMultipleChoice)
         {
+
             if (string.IsNullOrWhiteSpace(response))
             {
                 await _commonFunctions.SendResponseToSender("972544345287", $"error in DAL, rpcessAssistantsRespone: The assistant's response is empty or null");
