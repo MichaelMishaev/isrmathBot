@@ -385,6 +385,10 @@ $"🦸 {Math.Floor(totalSeconds)} שניות! אלוף אמיתי! כל הכבו
 
         public static string GetMultipleChoiceExerciseMessage(string exercise, List<AnswerOption> answerOptions)
         {
+            if (answerOptions==null)
+            {
+                return "";
+            }
             // Shuffle the answer options
             var randomizedOptions = answerOptions.OrderBy(_ => Guid.NewGuid()).ToList();
 
