@@ -80,8 +80,8 @@ namespace BL.Serives
                     switch (userType.UserType)
                     {
                         case Constants.Teacher:
-                          result = await HandleTeacherMessage(numericPhoneNumber, body, userId);
-                        //  result = await HandleStudentMessage(numericPhoneNumber, body); //FOR TEST IF NEED AS STUDENT
+                        //  result = await HandleTeacherMessage(numericPhoneNumber, body, userId);
+                          result = await HandleStudentMessage(numericPhoneNumber, body); //FOR TEST IF NEED AS STUDENT
                             break;
                         case Constants.Parent:
                             result = await HandleParentMessage(numericPhoneNumber, body);
@@ -506,6 +506,7 @@ namespace BL.Serives
                     //########################################
                     await _exerciseRepository.UpdateStudentProgress(studentId, inProgressExercise.ExerciseId, studentAnswer, isCorrect);
                     int exercisesSolvedToday = await _exerciseRepository.GetExercisesSolvedToday(studentId);
+                    int correctAnswersToday = await _exerciseRepository.GetCorrectExercisesSolvedToday(studentId);
                     await _exerciseRepository.UpdateIsWaitingForHelp(studentId, inProgressExercise.ExerciseId, false);//to prevent send message while waiting gpt answer
                     bool isFastAnswers = await _exerciseRepository.isStudentAnswerFast(studentId);//is to send congrat for fast answers
                     var lastCurrectAnswersInRow = await _exerciseRepository.GetLastCorrectAnswers(studentId);
@@ -545,7 +546,7 @@ namespace BL.Serives
 
                     //##################################
                     // QUIZ LOGIc
-                    if (((exercisesSolvedToday - 11) % 10 == 0) && exrcisesLeft > 10)
+                    if ((exercisesSolvedToday > 15) &&((exercisesSolvedToday - 11) % 10 == 0) && exrcisesLeft > 10)
                     {
                         await SendImageToSender(phoneNumber, "quiz_", "");
                         Thread.Sleep(2000);
@@ -558,9 +559,11 @@ namespace BL.Serives
 
                     else if (exercisesSolvedToday % 10 == 0 && (lastCurrectAnswersInRow > 0 && lastCurrectAnswersInRow % 10 != 0))
                     {
-
+                        
                         await SendImageToSender(phoneNumber, "final_", "");
-                        string congratulatoryMessage = $"כל הכבוד על פתרון {exercisesSolvedToday} תרגילים היום! 💪✨ בואו נמשיך?";
+
+                        string greenCircles = string.Concat(Enumerable.Repeat("✅", correctAnswersToday));
+                        string congratulatoryMessage = $"כל הכבוד על פתרון {exercisesSolvedToday} תרגילים היום! 💪✨ בואו נמשיך?\n תשובות נכונות להיום: {greenCircles}";
 
 
                         await SendResponseToSender(phoneNumber, congratulatoryMessage);
@@ -633,13 +636,13 @@ namespace BL.Serives
 
                         string formattedExerciseText = MathFunctions.FormatExerciseString(nextExercise.exercise.Exercise);
 
-                        string exerciseText = TextGeneratorFunctions.GetMultipleChoiceExerciseMessage(
-                            formattedExerciseText,
-                            nextExercise.exercise.AnswerOptions);
+                        //string exerciseText = TextGeneratorFunctions.GetMultipleChoiceExerciseMessage(
+                        //    formattedExerciseText,
+                        //    nextExercise.exercise.AnswerOptions);
 
 
 
-                        exerciseText = MathFunctions.FormatExerciseString(nextExercise.exercise.Exercise);
+                        string exerciseText = MathFunctions.FormatExerciseString(nextExercise.exercise.Exercise);
 
 
                         exerciseText = isMultiple == true? TextGeneratorFunctions.GetMultipleChoiceExerciseMessage(exerciseText, nextExercise.exercise.AnswerOptions): exerciseText;

@@ -1259,6 +1259,28 @@ WHERE streakBreak = 0;
         SELECT COUNT(*) 
         FROM studentprogress 
         WHERE StudentId = @StudentId 
+        AND DATE(UpdatedAt) = CURDATE()";
+
+            using (MySqlCommand countCommand = new MySqlCommand(countQuery, connection))
+            {
+                countCommand.Parameters.AddWithValue("@StudentId", studentId);
+
+                var countResult = await countCommand.ExecuteScalarAsync();
+                return Convert.ToInt32(countResult);
+            }
+        }
+    }
+
+    public async Task<int> GetCorrectExercisesSolvedToday(int studentId)
+    {
+        using (MySqlConnection connection = GetConnection())
+        {
+            await connection.OpenAsync();
+
+            string countQuery = @"
+        SELECT COUNT(*) 
+        FROM studentprogress 
+        WHERE StudentId = @StudentId 
         AND IsCorrect = 1 
         AND DATE(UpdatedAt) = CURDATE()";
 
@@ -1271,6 +1293,7 @@ WHERE streakBreak = 0;
             }
         }
     }
+
     //********************
     // DAL/ExerciseRepository.cs
     public async Task IncrementWrongAnswerCount(int studentId)
