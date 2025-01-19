@@ -32,7 +32,7 @@ namespace BLL.Functions
         $"מעווווולה, {studentName}! 🎊 תשובה נכונה! 💯",
         $"תשובה נכונההה! 🚀 תמשיכו ככה! 🏆",
         $"נהדרררר! 🎯 בול פגיעה! 🌟",
-        $"🍀 איזה מלכה/מלך! תשובה מושלמת! 👏",
+        $"🍀 איזו שלמות! תשובה מושלמת! 👏",
         $"🌈 איזה יופי! תשובההה מצוינת! ✨",
         $"🔥 אששש! הצלחת בגדול! 💪",
         $"🎯 פיייי! תשובה מדויקת! 🎉",
@@ -383,36 +383,72 @@ $"🦸 {Math.Floor(totalSeconds)} שניות! אלוף אמיתי! כל הכבו
             return randomExerciseMessage;
         }
 
+        //public static string GetMultipleChoiceExerciseMessage(string exercise, List<AnswerOption> answerOptions)
+        //{
+        //    if (answerOptions==null)
+        //    {
+        //        return "";
+        //    }
+        //    // Shuffle the answer options
+        //    var randomizedOptions = answerOptions.OrderBy(_ => Guid.NewGuid()).ToList();
+
+        //    // Calculate the maximum length of the options
+        //    int maxOptionLength = randomizedOptions.Max(opt => opt.Text.Length);
+
+        //    // Format the exercise and answer options
+        //    StringBuilder messageBuilder = new StringBuilder();
+        //    messageBuilder.AppendLine($"🎯 בחרו את התשובה הנכונה ✨\n\n🔢 {exercise}\n");
+
+        //    // Add a title for the options
+        //    messageBuilder.AppendLine("📚 האפשרויות שלכם הן:");
+
+        //    // Format the options in the requested layout
+        //    for (int i = 0; i < randomizedOptions.Count; i += 2)
+        //    {
+        //        // Use Unicode LTR marks (\u200E) for fractions and numbers
+        //        string option1 = AddLTRSupport(randomizedOptions[i].Text).PadRight(maxOptionLength);
+        //        string option2 = i + 1 < randomizedOptions.Count
+        //            ? AddLTRSupport(randomizedOptions[i + 1].Text).PadRight(maxOptionLength)
+        //            : string.Empty;
+
+        //        // Add the options in a row format with emojis between them
+        //        messageBuilder.AppendLine($"{option1}  ✨✨  {option2}".Trim());
+        //    }
+
+        //    return messageBuilder.ToString();
+        //}
         public static string GetMultipleChoiceExerciseMessage(string exercise, List<AnswerOption> answerOptions)
         {
-            if (answerOptions==null)
+            if (answerOptions == null)
             {
                 return "";
             }
+
             // Shuffle the answer options
             var randomizedOptions = answerOptions.OrderBy(_ => Guid.NewGuid()).ToList();
 
-            // Calculate the maximum length of the options
-            int maxOptionLength = randomizedOptions.Max(opt => opt.Text.Length);
+            // Calculate the maximum length of the options (consider adding a small buffer)
+            int maxOptionLength = randomizedOptions.Max(opt => opt.Text.Length) + 2;
 
             // Format the exercise and answer options
             StringBuilder messageBuilder = new StringBuilder();
-            messageBuilder.AppendLine($"🎯 בחרו את התשובה הנכונה ✨\n\n🔢 {exercise}\n");
+
+            // Wrap the exercise with explicit RTL and LTR controls
+            messageBuilder.AppendLine($"\u202B🎯 בחרו את התשובה הנכונה ✨\u202C\n");
+            messageBuilder.AppendLine($"\u202A🔢 {exercise}\u202C\n"); // Ensure exercise is LTR
 
             // Add a title for the options
-            messageBuilder.AppendLine("📚 האפשרויות שלכם הן:");
+            messageBuilder.AppendLine("\u202B📚 האפשרויות שלכם הן:\u202C"); // Ensure title is RTL
 
             // Format the options in the requested layout
             for (int i = 0; i < randomizedOptions.Count; i += 2)
             {
-                // Use Unicode LTR marks (\u200E) for fractions and numbers
-                string option1 = AddLTRSupport(randomizedOptions[i].Text).PadRight(maxOptionLength);
-                string option2 = i + 1 < randomizedOptions.Count
-                    ? AddLTRSupport(randomizedOptions[i + 1].Text).PadRight(maxOptionLength)
-                    : string.Empty;
+                // Wrap each option with LRE and PDF for consistent LTR display
+                string option1 = $"\u202A{randomizedOptions[i].Text}\u202C";
+                string option2 = (i + 1 < randomizedOptions.Count) ? $"\u202A{randomizedOptions[i + 1].Text}\u202C" : string.Empty;
 
-                // Add the options in a row format with emojis between them
-                messageBuilder.AppendLine($"{option1}  ✨✨  {option2}".Trim());
+                // Pad and add the options in a row format with emojis between them
+                messageBuilder.AppendLine($"{option1.PadRight(maxOptionLength)} ✨✨ {option2}".Trim());
             }
 
             return messageBuilder.ToString();

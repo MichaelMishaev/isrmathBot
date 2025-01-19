@@ -1282,7 +1282,9 @@ WHERE streakBreak = 0;
         FROM studentprogress 
         WHERE StudentId = @StudentId 
         AND IsCorrect = 1 
-        AND DATE(UpdatedAt) = CURDATE()";
+        AND DATE(UpdatedAt) = CURDATE()
+        AND incorrectAttempts = 0
+        AND IsSkipped = 0";
 
             using (MySqlCommand countCommand = new MySqlCommand(countQuery, connection))
             {

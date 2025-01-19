@@ -563,7 +563,7 @@ namespace BL.Serives
                         await SendImageToSender(phoneNumber, "final_", "");
 
                         string greenCircles = string.Concat(Enumerable.Repeat("✅", correctAnswersToday));
-                        string congratulatoryMessage = $"כל הכבוד על פתרון {exercisesSolvedToday} תרגילים היום! 💪✨ בואו נמשיך?\n תשובות נכונות להיום: {greenCircles}";
+                        string congratulatoryMessage = $"\u202Bתשובות נכונות להיום: {greenCircles}\nכל הכבוד על פתרון {exercisesSolvedToday} תרגילים היום! 💪✨ בואו נמשיך?\u202C";
 
 
                         await SendResponseToSender(phoneNumber, congratulatoryMessage);
