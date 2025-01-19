@@ -46,6 +46,7 @@ namespace mathProj
             builder.Services.AddSwaggerGen();
             builder.Services.AddTransient<ExerciseRepository>();
             builder.Services.AddTransient<CommonFunctions>();
+            builder.Services.AddTransient<LeaderBoardFuncs>();
             builder.Services.AddTransient<QuizService>();
             
             builder.Services.AddSingleton<IConfiguration>(builder.Configuration);

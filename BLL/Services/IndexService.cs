@@ -28,8 +28,10 @@ namespace BL.Serives
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly QuizService _quizService;
         private readonly ILogger<IndexService> _logger;
+        private readonly LeaderBoardFuncs _leaderBoardFuncs;
 
-        public IndexService(ExerciseRepository exerciseRepository, WhatsAppService whatsAppService, ImgFunctions imgFunctions, IHttpClientFactory httpClientFactory, QuizService quizService, ILogger<IndexService> logger)
+        public IndexService(ExerciseRepository exerciseRepository, WhatsAppService whatsAppService, ImgFunctions imgFunctions, IHttpClientFactory httpClientFactory, QuizService quizService,
+            ILogger<IndexService> logger, LeaderBoardFuncs leaderBoardFuncs)
         {
             _exerciseRepository = exerciseRepository;
             _whatsAppService = whatsAppService;
@@ -37,7 +39,7 @@ namespace BL.Serives
             _httpClientFactory = httpClientFactory;
             _quizService = quizService;
             _logger = logger;
-
+            _leaderBoardFuncs = leaderBoardFuncs;
         }
         public async Task<string> UserBalancer(string phoneNumber, string? body, List<string>? MediaUrl0, List<string>? MediaContentType0)
         {
@@ -80,8 +82,8 @@ namespace BL.Serives
                     switch (userType.UserType)
                     {
                         case Constants.Teacher:
-                        //  result = await HandleTeacherMessage(numericPhoneNumber, body, userId);
-                          result = await HandleStudentMessage(numericPhoneNumber, body); //FOR TEST IF NEED AS STUDENT
+                          result = await HandleTeacherMessage(numericPhoneNumber, body, userId);
+                        //  result = await HandleStudentMessage(numericPhoneNumber, body); //FOR TEST IF NEED AS STUDENT
                             break;
                         case Constants.Parent:
                             result = await HandleParentMessage(numericPhoneNumber, body);
@@ -525,6 +527,15 @@ namespace BL.Serives
                         await SendImageToSender(phoneNumber, "fastSolve_", "");
                         await SendResponseToSender(phoneNumber, "🔥 ווווואו! 8 תרגילים בדקה! לא יאומן! 🏆🎈");
                         Thread.Sleep(1000);
+                    }
+
+
+                    if (exercisesSolvedToday == 0)
+                    {
+                        string leaderString = await _leaderBoardFuncs.GetTotalLeaderBoard();
+                        string motivationalMessage = "🚀 *האם אתם מוכנים לכבוש את הפסגה?* 🏆🎯\n\n";
+                        leaderString = motivationalMessage + leaderString;
+                        await SendResponseToSender(phoneNumber, leaderString);
                     }
 
                     else if (lastCurrectAnswersInRow > 0 && lastCurrectAnswersInRow == 5)

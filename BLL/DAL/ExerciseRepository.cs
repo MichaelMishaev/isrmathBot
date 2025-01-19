@@ -1168,6 +1168,9 @@ WHERE streakBreak = 0;
         }
     }
 
+
+
+
     public async Task<(int TeacherId, int ClassName)> GetTeacherIdByPhoneNumber(string phoneNumber)
     {
         using (MySqlConnection connection = GetConnection())
@@ -2020,6 +2023,61 @@ ORDER BY
         }
 
         return classDataList;
+    }
+
+
+    public async Task<List<studentTotalScore>> GetWeeklyLeaderboard()
+    {
+        using (MySqlConnection connection = GetConnection())
+        {
+            await connection.OpenAsync();
+
+            string query = @"
+        SELECT 
+            sp.StudentId,
+            u.FullName AS StudentName,
+            COUNT(*) AS TotalCorrectAnswers,
+            SUM(CASE 
+                    WHEN sp.IncorrectAttempts = 0 THEN 10
+                    ELSE 5
+                END) AS TotalScore,
+            MAX(sp.UpdatedAt) AS LastActivity
+        FROM 
+            studentprogress sp
+        JOIN 
+            students s ON sp.StudentId = s.StudentId
+        JOIN 
+            users u ON s.UserId = u.UserId
+        WHERE 
+            sp.IsCorrect = 1 
+            AND YEARWEEK(sp.UpdatedAt, 1) = YEARWEEK(CURDATE(), 1) -- For the current week
+        GROUP BY 
+            sp.StudentId, u.FullName
+        ORDER BY 
+            TotalScore DESC,
+            LastActivity DESC
+        LIMIT 10;";
+
+            using (MySqlCommand command = new MySqlCommand(query, connection))
+            {
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    List<studentTotalScore> leaderboard = new List<studentTotalScore>();
+                    while (await reader.ReadAsync())
+                    {
+                        leaderboard.Add(new studentTotalScore
+                        {
+                            StudentId = Convert.ToInt32(reader["StudentId"]),
+                            StudentName = reader["StudentName"].ToString(),
+                            TotalCorrectAnswers = Convert.ToInt32(reader["TotalCorrectAnswers"]),
+                            TotalScore = Convert.ToInt32(reader["TotalScore"]),
+                            LastActivity = Convert.ToDateTime(reader["LastActivity"])
+                        });
+                    }
+                    return leaderboard;
+                }
+            }
+        }
     }
 
 
