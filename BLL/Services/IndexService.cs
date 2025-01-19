@@ -304,7 +304,7 @@ namespace BL.Serives
             {
                 await SendImageToSender(phoneNumber, "noExerciseLeft_", "");
                 var NameAndClass = await _exerciseRepository.GetUserFullNameAndClassNameByStudentIdAsync(studentId);
-                await SendResponseToSender("972544345287", $"Exercises Done for{NameAndClass.Value.FullName} from class: {NameAndClass.Value.ClassName}");
+                await SendResponseToSender("972544345287", $"Exercises Done for {NameAndClass.Value.FullName} from class: {NameAndClass.Value.ClassName}");
                 return TextGeneratorFunctions.GetFinishedExercisesMessage();
 
             }
@@ -336,7 +336,7 @@ namespace BL.Serives
             {
                 await SendImageToSender(phoneNumber, "noExerciseLeft_", "");
                 var NameAndClass = await _exerciseRepository.GetUserFullNameAndClassNameByStudentIdAsync(studentId);
-                await SendResponseToSender("972544345287", $"Exercises Done for{NameAndClass.Value.FullName} from class: {NameAndClass.Value.ClassName}");
+                await SendResponseToSender("972544345287", $"Exercises Done for {NameAndClass.Value.FullName} from class: {NameAndClass.Value.ClassName}");
                 return TextGeneratorFunctions.GetFinishedExercisesMessage();
 
             }
@@ -697,7 +697,7 @@ namespace BL.Serives
                     {
                         //
                         await SendImageToSender(phoneNumber, "noExerciseLeft_", "");
-                        await SendResponseToSender("972544345287", $"Exercises Done for{NameAndClass.Value.FullName} from class: {NameAndClass.Value.ClassName}");
+                        await SendResponseToSender("972544345287", $"Exercises Done for {NameAndClass.Value.FullName} from class: {NameAndClass.Value.ClassName}");
                         return TextGeneratorFunctions.GetFinishedExercisesMessage();
                     }
                 }
@@ -921,6 +921,29 @@ namespace BL.Serives
                 }
             }
 
+            else if (normalizedMessage.StartsWith("#noexercise"))
+            {
+                var students = await _exerciseRepository.GetStudentsWithNoExercisesLeftForLast7DaysAsync();
+
+                if (students == null || !students.Any())
+                {
+                    return "📉 כל התלמידים פעילים ויש להם תרגילים להשלמה. 😊";
+                }
+
+                StringBuilder reportBuilder = new StringBuilder();
+                reportBuilder.AppendLine("📋 *דוח תלמידים ללא תרגילים זמינים (לשבוע האחרון)* ✨\n");
+                reportBuilder.AppendLine("🏫 בית ספר | 📚 כיתה | 👤 שם תלמיד | 📞 טלפון");
+                reportBuilder.AppendLine("------------------------------------------------");
+
+                foreach (var student in students)
+                {
+                    reportBuilder.AppendLine($"{student.SchoolName} | {student.ClassName} | {student.FullName} | {student.PhoneNumber}");
+                }
+
+                reportBuilder.AppendLine("\n🎯 יש להקצות תרגילים חדשים לתלמידים הנ\"ל.");
+
+                return reportBuilder.ToString();
+            }
 
             else if (normalizedMessage.Contains("***"))
             {
@@ -1019,19 +1042,19 @@ namespace BL.Serives
 
                 // Check if the format is valid
                 if (parts.Length < 3)
-                    return "The format should be:\nReminder, ClassName, Message to send[,**]";
+                    return "The format should be:\nReminder, ClassName (** for send to all users), Message to send";
 
                 var classText = parts[1].Trim();
                 string textToSend = parts[2].Trim();
-                bool sendToGrade = parts.Length > 3 && parts[3].Trim() == "**"; // Check for the grade flag
+                bool sendToAll = classText == "**";//parts.Length > 3 && parts[3].Trim() == "**"; // Check for the grade flag
 
                 // Fetch students based on class or grade
                 List<(string PhoneNumber, string FullName)> studentsList;
-                if (sendToGrade)
+                if (sendToAll)
                 {
                     _logger.LogInformation($"*****Reminder: Fetching for the whole grade of class {classText}");
 
-                    studentsList = await _exerciseRepository.GetUsersByGradeAsync(classText);
+                    studentsList = await _exerciseRepository.GetAllUsersForReminderAsync();
                 }
                 else
                 {
@@ -1130,14 +1153,14 @@ namespace BL.Serives
                 }
                 return string.Empty;
             }
-            else if (normalizedMessage.Contains("admin"))
+            else if (normalizedMessage.Contains("#admin"))
             {
                 string exerciseText = "\u202A" + "*** 12 + _ = 14";
                 string exerciseText2 = "\u202A" + "*** 12 * 6";
                 string exerciseText3 = "\u202A" + "*** 15 - 7";
                 string exerciseText4 = "\u202A" + "*** צור תרגילי כפל\n///\n2*5\n###\ngrade=5\n!!!\ninstruc=3";
 
-                return "\u200F *פקודה לא מוכרת.* \n" +
+                return 
                        "\u200Fהנה הפקודות הזמינות שתוכל לשלוח כמורה:\n\n" +
 
                        "1. *lead*: \n" +
@@ -1176,8 +1199,19 @@ namespace BL.Serives
                        "6. *#classes*:\n" +
                        "\u200Fקבל פרטים על כל הכיתות שלך.\n\n" +
 
+                       "7. *#noexercise*:\n" +
+                       "\u200Fקבל רשימה של תלמידים שסיימו את כל התרגילים בשבוע האחרון. לדוגמה:\n" +
+                       "📋 רשימת תלמידים:\n" +
+                       "👤 שם תלמיד | 🏫 בית ספר | 📚 כיתה\n" +
+                       "--------------------------------------\n" +
+                       "יוסי כהן | בית ספר הרצל | ה1\n" +
+                       "דנה לוי | בית ספר בגין | ז3\n" +
+                       "מיכל ישראלי | בית ספר רמות | ח2\n" +
+                       "\n🎯 יש להקצות תרגילים חדשים לתלמידים הנ\"ל.\n\n" +
+
                        "שיהיה בהצלחה! 💪";
             }
+
 
 
             else

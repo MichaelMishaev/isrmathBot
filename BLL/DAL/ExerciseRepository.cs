@@ -466,6 +466,46 @@ WHERE s.StudentId = @StudentId
         }
     }
 
+    public async Task<List<(string PhoneNumber, string FullName)>> GetAllUsersForReminderAsync()
+    {
+        try
+        {
+            using (MySqlConnection connection = GetConnection())
+            {
+                await connection.OpenAsync();
+
+                // Fetch all students eligible for reminders
+                string query = @"
+            SELECT DISTINCT u.PhoneNumber, u.FullName
+            FROM students AS s
+            INNER JOIN classes AS c ON c.ClassId = s.ClassId
+            INNER JOIN users AS u ON u.UserId = s.UserId
+            WHERE u.Status = 1
+                  AND s.IsToSendReminder = 1;";
+
+                using (MySqlCommand command = new MySqlCommand(query, connection))
+                {
+                    List<(string PhoneNumber, string FullName)> users = new List<(string PhoneNumber, string FullName)>();
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            users.Add((reader["PhoneNumber"].ToString(), reader["FullName"].ToString()));
+                        }
+                    }
+
+                    return users;
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            // Log the exception
+
+            return new List<(string PhoneNumber, string FullName)>();
+        }
+    }
+
     public async Task<List<(string PhoneNumber, string FullName)>> GetUsersByGradeAsync(string inputParamClass)
     {
         try
@@ -597,6 +637,68 @@ WHERE s.StudentId = @StudentId
         }
 
         return null; // Return null if not found or in case of an error
+    }
+
+
+    public async Task<List<(int StudentId, string FullName, string PhoneNumber, string ClassName, string SchoolName)>> GetStudentsWithNoExercisesLeftForLast7DaysAsync()
+    {
+        try
+        {
+            using (MySqlConnection connection = GetConnection())
+            {
+                await connection.OpenAsync();
+
+                string query = @"
+                SELECT 
+                    s.StudentId,
+                    u.FullName,
+                    u.PhoneNumber,
+                    c.ClassName,
+                    sch.SchoolName
+                FROM 
+                    students s
+                JOIN 
+                    users u ON s.UserId = u.UserId
+                JOIN 
+                    classes c ON s.ClassId = c.ClassId
+                JOIN 
+                    schools sch ON c.SchoolId = sch.SchoolId
+                LEFT JOIN 
+                    exercises e ON e.classId = s.ClassId AND e.CreatedAt >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+                LEFT JOIN 
+                    studentprogress sp ON sp.StudentId = s.StudentId AND sp.ExerciseId = e.id
+                WHERE 
+                    u.Status = 1 -- Active users
+                GROUP BY 
+                    s.StudentId
+                HAVING 
+                    COUNT(DISTINCT e.id) > 0 AND COUNT(DISTINCT e.id) = COUNT(DISTINCT sp.ExerciseId);";
+
+                using (MySqlCommand command = new MySqlCommand(query, connection))
+                {
+                    var students = new List<(int StudentId, string FullName, string PhoneNumber, string ClassName, string SchoolName)>();
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            students.Add((
+                                Convert.ToInt32(reader["StudentId"]),
+                                reader["FullName"].ToString(),
+                                reader["PhoneNumber"].ToString(),
+                                reader["ClassName"].ToString(),
+                                reader["SchoolName"].ToString()
+                            ));
+                        }
+                    }
+                    return students;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // Handle exception (e.g., log error)
+            return new List<(int StudentId, string FullName, string PhoneNumber, string ClassName, string SchoolName)>();
+        }
     }
 
 
