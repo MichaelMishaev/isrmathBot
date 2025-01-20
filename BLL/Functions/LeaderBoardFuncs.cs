@@ -25,16 +25,27 @@ namespace BLL.Functions
 
             StringBuilder messageBuilder = new StringBuilder();
             messageBuilder.AppendLine("🏆 *טבלת המובילים השבועית!* 🎯\n");
+
+            // Emojis for ranks
+            var rankEmojis = new[] { "🥇", "🥈", "🥉", "🏅", "🏅" };
+
             int rank = 1;
-            foreach (var student in leaderboard)
+
+            // Display only the top 5 students
+            foreach (var student in leaderboard.Take(5))
             {
-                messageBuilder.AppendLine(
-                    $"{rank}. {student.StudentName} - {student.TotalScore} נקודות ✨");
+                string rankEmoji = rank <= rankEmojis.Length ? rankEmojis[rank - 1] : "🏅";
+                messageBuilder.AppendLine($"*{rank}. {student.StudentName}* {rankEmoji}");
+                messageBuilder.AppendLine($"נקודות: {student.TotalScore}");
+                messageBuilder.AppendLine("--------------------------");
                 rank++;
             }
 
             messageBuilder.AppendLine("\n🎯 ממשיכים לכבוש את הפסגה? אל תוותרו! 💪");
             return messageBuilder.ToString();
         }
+
+
+
     }
 }

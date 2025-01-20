@@ -29,9 +29,10 @@ namespace BL.Serives
         private readonly QuizService _quizService;
         private readonly ILogger<IndexService> _logger;
         private readonly LeaderBoardFuncs _leaderBoardFuncs;
+        private readonly HelperService _helperService;
 
         public IndexService(ExerciseRepository exerciseRepository, WhatsAppService whatsAppService, ImgFunctions imgFunctions, IHttpClientFactory httpClientFactory, QuizService quizService,
-            ILogger<IndexService> logger, LeaderBoardFuncs leaderBoardFuncs)
+            ILogger<IndexService> logger, LeaderBoardFuncs leaderBoardFuncs, HelperService helperService)
         {
             _exerciseRepository = exerciseRepository;
             _whatsAppService = whatsAppService;
@@ -40,6 +41,7 @@ namespace BL.Serives
             _quizService = quizService;
             _logger = logger;
             _leaderBoardFuncs = leaderBoardFuncs;
+            _helperService = helperService;
         }
         public async Task<string> UserBalancer(string phoneNumber, string? body, List<string>? MediaUrl0, List<string>? MediaContentType0)
         {
@@ -82,7 +84,7 @@ namespace BL.Serives
                     switch (userType.UserType)
                     {
                         case Constants.Teacher:
-                          result = await HandleTeacherMessage(numericPhoneNumber, body, userId);
+                            result = await HandleTeacherMessage(numericPhoneNumber, body, userId);
                         //  result = await HandleStudentMessage(numericPhoneNumber, body); //FOR TEST IF NEED AS STUDENT
                             break;
                         case Constants.Parent:
@@ -179,6 +181,9 @@ namespace BL.Serives
             int studentId = await _exerciseRepository.GetStudentIdByPhoneNumber(phoneNumber);
             var inProgressExercise = await _exerciseRepository.GetInProgressExercise(studentId);
             var activeQuiz = await _exerciseRepository.GetActiveQuizSession(studentId);
+            var NameAndClass = await _exerciseRepository.GetUserFullNameAndClassNameByStudentIdAsync(studentId);
+
+            string studentName = NameAndClass.HasValue ? NameAndClass.Value.FullName : "noName";
             // Normalize the incoming message
             string normalizedMessage = studentMessage.Trim().ToLower();
 
@@ -243,6 +248,12 @@ namespace BL.Serives
                 return "";
             }
 
+            else if (normalizedMessage == "000")
+            {
+                await SendResponseToSender("972544345287",$"student {NameAndClass.Value.FullName}, class: {NameAndClass.Value.ClassName} want to be removed from reminder");
+                return "הוסרת מהשירות בהצלחה 😔 ";
+
+            }
             else
             {
                 var res = await ProcessStudentAnswer(studentId, phoneNumber, studentMessage);
@@ -351,43 +362,6 @@ namespace BL.Serives
             // Remove commas from the studentAnswer
             studentAnswer = studentAnswer.Replace(",", "");
 
-            //if (studentAnswer.Contains("/"))
-            //{
-            //    // Check for mixed fraction (e.g., "2 2/3")
-            //    var mixedFractionParts = studentAnswer.Split(' ');
-
-            //    if (mixedFractionParts.Length == 2) // Mixed fraction detected
-            //    {
-            //        if (int.TryParse(mixedFractionParts[0], out int wholeNumber)) // Parse whole number
-            //        {
-            //            var fractionParts = mixedFractionParts[1].Split('/');
-            //            if (fractionParts.Length == 2 &&
-            //                int.TryParse(fractionParts[0], out int numerator) &&
-            //                int.TryParse(fractionParts[1], out int denominator))
-            //            {
-            //                // Convert to Unicode representation
-            //                studentAnswer = MathFunctions.GetMixedFractionWithUnicode(wholeNumber, numerator, denominator);
-            //            }
-            //        }
-            //    }
-            //    else // Simple fraction (e.g., "2/3")
-            //    {
-            //        var fractionParts = studentAnswer.Split('/');
-            //        if (fractionParts.Length == 2 &&
-            //            int.TryParse(fractionParts[0], out int numerator) &&
-            //            int.TryParse(fractionParts[1], out int denominator))
-            //        {
-            //            // Convert to Unicode representation
-            //            studentAnswer = MathFunctions.GetMixedFractionWithUnicode(0, numerator, denominator);
-            //        }
-            //    }
-            //}
-            //else
-            //{
-            //    // Handle cases without fractions
-            //    studentAnswer = Regex.Replace(studentAnswer, @"\D", "");
-            //}
-
 
 
 
@@ -399,6 +373,9 @@ namespace BL.Serives
             if (!hasStarted)
             {
 
+                string leaderBoard =  await _leaderBoardFuncs.GetTotalLeaderBoard();
+                await SendResponseToSender(phoneNumber, leaderBoard);
+                Thread.Sleep(1000);
                 // This is the first time the student is sending a message
                 var firstExercise = await _exerciseRepository.GetNextUnassignedExercise(studentId);
                 if (firstExercise.changeType != null)
@@ -529,13 +506,19 @@ namespace BL.Serives
                         Thread.Sleep(1000);
                     }
 
+                    if (exercisesSolvedToday % 8 == 0)
+                    {
+
+                        string leaderBoard = await _leaderBoardFuncs.GetTotalLeaderBoard();
+                        await SendResponseToSender(phoneNumber, leaderBoard);
+                        Thread.Sleep(2000);
+                    }
 
                     if (exercisesSolvedToday == 0)
                     {
-                        string leaderString = await _leaderBoardFuncs.GetTotalLeaderBoard();
-                        string motivationalMessage = "🚀 *האם אתם מוכנים לכבוש את הפסגה?* 🏆🎯\n\n";
-                        leaderString = motivationalMessage + leaderString;
-                        await SendResponseToSender(phoneNumber, leaderString);
+                        string leaderBoard = await _leaderBoardFuncs.GetTotalLeaderBoard();
+                        await SendResponseToSender(phoneNumber, leaderBoard);
+                        Thread.Sleep(1000);
                     }
 
                     else if (lastCurrectAnswersInRow > 0 && lastCurrectAnswersInRow == 5)
@@ -555,7 +538,6 @@ namespace BL.Serives
                         await SendResponseToSender(phoneNumber, congratulatoryMessage);
                     }
 
-                    //##################################
                     // QUIZ LOGIc
                     if ((exercisesSolvedToday > 15) &&((exercisesSolvedToday - 11) % 10 == 0) && exrcisesLeft > 10)
                     {
@@ -565,46 +547,32 @@ namespace BL.Serives
                         return res;
                     }
 
-
-
-
                     else if (exercisesSolvedToday % 10 == 0 && (lastCurrectAnswersInRow > 0 && lastCurrectAnswersInRow % 10 != 0))
                     {
-                        
                         await SendImageToSender(phoneNumber, "final_", "");
-
                         string greenCircles = string.Concat(Enumerable.Repeat("✅", correctAnswersToday));
-                        string congratulatoryMessage = $"\u202Bתשובות נכונות להיום: {greenCircles}\nכל הכבוד על פתרון {exercisesSolvedToday} תרגילים היום! 💪✨ בואו נמשיך?\u202C";
-
+                        string congratulatoryMessage = $"\u202Bמספר התרגילים שענית עליהם נכון מהפעם הראשונה : {greenCircles}\nכל הכבוד על פתרון {exercisesSolvedToday} תרגילים היום! 💪✨ בואו נמשיך?\u202C";
 
                         await SendResponseToSender(phoneNumber, congratulatoryMessage);
-
-
                         return "";
                     }
-
-
                     else if (lastCurrectAnswersInRow > 0 && lastCurrectAnswersInRow == 10)
                     {
                         if (exercisesSolvedToday == 10 && exrcisesLeft > 10)
                         {
-
                             await SendImageToSender(phoneNumber, "quiz_", "");
                             Thread.Sleep(2000);
                             var res = await _quizService.StartQuiz(studentId, phoneNumber);
                             return res;
                         }
-
                         await SendImageToSender(phoneNumber, "10InRow_", "");
                         Thread.Sleep(1000);
                     }
-
                     else if (lastCurrectAnswersInRow > 0 && lastCurrectAnswersInRow == 15)
                     {
                         await SendImageToSender(phoneNumber, "15InRow_", "");
                         Thread.Sleep(1000);
                     }
-
                     else if (lastCurrectAnswersInRow > 0 && lastCurrectAnswersInRow == 20)
                     {
                         await SendImageToSender(phoneNumber, "20InRow_", "");
@@ -621,9 +589,6 @@ namespace BL.Serives
                         Thread.Sleep(1000);
                     }
 
-                    //topInRow_1.jpeg
-
-
                     // Fetch the next unassigned exercise
                     var nextExercise = await _exerciseRepository.GetNextUnassignedExercise(studentId);
                     if (nextExercise.changeType != null)
@@ -637,20 +602,20 @@ namespace BL.Serives
 
                     if (nextExercise.exercise != null)
                     {
-                        bool isMultiple= nextExercise.exercise.AnswerOptions == null ? false : true;
+
+                        // Calculate the number of correct answers for today
+                        string greenCircles = string.Concat(Enumerable.Repeat("✅", correctAnswersToday));
+                        //string congratulatoryMessage = $"\u202Bתשובות נכונות להיום: {greenCircles}\nכל הכבוד על פתרון {exercisesSolvedToday} תרגילים היום! 💪✨ בואו נמשיך?\u202C";
+                        string congratulatoryMessage = $"מספר התרגילים שענית עליהם נכון מהפעם הראשונה:\n{greenCircles}";
+
+                        //#################
+
+
+                        bool isMultiple = nextExercise.exercise.AnswerOptions == null ? false : true;
                         // Assign the exercise to the student
                         await _exerciseRepository.AddExerciseToStudentProgress(studentId, nextExercise.exercise.ExerciseId, false);
 
-                        // Return message with next exercise
-                        //string exerciseText;
-
-
                         string formattedExerciseText = MathFunctions.FormatExerciseString(nextExercise.exercise.Exercise);
-
-                        //string exerciseText = TextGeneratorFunctions.GetMultipleChoiceExerciseMessage(
-                        //    formattedExerciseText,
-                        //    nextExercise.exercise.AnswerOptions);
-
 
 
                         string exerciseText = MathFunctions.FormatExerciseString(nextExercise.exercise.Exercise);
@@ -658,7 +623,7 @@ namespace BL.Serives
 
                         exerciseText = isMultiple == true? TextGeneratorFunctions.GetMultipleChoiceExerciseMessage(exerciseText, nextExercise.exercise.AnswerOptions): exerciseText;
 
-                        string randomCorrectAnswer = TextGeneratorFunctions.GetCorrectAnswerText(studentName);
+                        string randomCorrectAnswer = exercisesSolvedToday % 8==0? string.Empty : TextGeneratorFunctions.GetCorrectAnswerText(studentName);//if leader board shown so do not show the correct answer
 
 
                         string milestoneText = (exercisesLeftForMilestone > 11 && exercisesLeftForMilestone % 2 == 0 && exrcisesLeft > 15)
@@ -682,10 +647,15 @@ namespace BL.Serives
                                                 ? randomCorrectAnswer
                                                 : (!string.IsNullOrEmpty(timeDifferenceText) ? timeDifferenceText : randomCorrectAnswer); // Fallback to randomCorrectAnswer if timeDifferenceText is empty
 
-
+                        //congratulatoryMessage
                         // Generate the response
                         string skipText = random.Next(3) == 0 ? TextGeneratorFunctions.GetSkipPromptMessage() : milestoneText;
-                        skipText = skipText == string.Empty ? TextGeneratorFunctions.AddEmojiIfEmpty() : skipText;
+                        if (skipText == string.Empty)
+                        {
+                            skipText = random.Next(2) == 0
+                                ? TextGeneratorFunctions.AddEmojiIfEmpty()
+                                : congratulatoryMessage;
+                        }
 
                         string response = $"{randomOrTimeText}\n{exercisesLeftText}\n{exerciseText}\n{nextExercise.instructionText}\n\n{skipText}";
 
@@ -1081,6 +1051,7 @@ namespace BL.Serives
                 return string.Empty;
             }
 
+          
 
             else if (normalizedMessage.Contains("#classes"))
             {
@@ -1160,7 +1131,7 @@ namespace BL.Serives
                 string exerciseText3 = "\u202A" + "*** 15 - 7";
                 string exerciseText4 = "\u202A" + "*** צור תרגילי כפל\n///\n2*5\n###\ngrade=5\n!!!\ninstruc=3";
 
-                return 
+                return
                        "\u200Fהנה הפקודות הזמינות שתוכל לשלוח כמורה:\n\n" +
 
                        "1. *lead*: \n" +

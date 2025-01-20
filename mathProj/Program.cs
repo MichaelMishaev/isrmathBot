@@ -37,6 +37,7 @@ namespace mathProj
             builder.Services.AddSingleton(Log.Logger);
             builder.Services.AddControllers();
             builder.Services.AddScoped<IndexService>();
+            builder.Services.AddScoped<HelperService>();
             builder.Services.AddHttpClient<ChatGPTService>();
             builder.Services.AddScoped<WhatsAppService>();
             builder.Services.AddScoped<ImgFunctions>();
