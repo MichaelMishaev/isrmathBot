@@ -49,6 +49,7 @@ namespace mathProj
             builder.Services.AddTransient<CommonFunctions>();
             builder.Services.AddTransient<LeaderBoardFuncs>();
             builder.Services.AddTransient<QuizService>();
+            builder.Services.AddTransient<RiddleService>();
             
             builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 

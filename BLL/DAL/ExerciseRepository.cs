@@ -330,17 +330,32 @@ public class ExerciseRepository : DatabaseService
             await connection.OpenAsync();
 
             string query = @"
-           SELECT e.id, e.exercise, e.correctAnswer, sp.updatedAt,sp.incorrectAttempts,sp.ProgressId,IsWaitingForHelp,e.QuestionType,ins.instructiontext,sp.UpdatedAt,e.answerOptions
-           FROM exercises e
-           LEFT JOIN Instructions as ins
-	            ON ins.instructionId = e.instructionId
-            INNER JOIN studentprogress sp ON sp.ExerciseId = e.id
-            WHERE sp.StudentId = @StudentId 
-            AND ((sp.StudentAnswer IS NULL OR sp.StudentAnswer = '') OR IsCorrect = 0)
-            AND IsSkipped = 0
-            AND status = 1
-           ORDER BY sp.updatedAt ASC
-            LIMIT 1";
+             SELECT 
+    e.id, 
+    e.exercise, 
+    e.correctAnswer, 
+    sp.updatedAt, 
+    sp.incorrectAttempts, 
+    sp.ProgressId, 
+    sp.IsWaitingForHelp, 
+    e.QuestionType,  
+    e.QuestionCategory, 
+    ins.instructiontext, 
+    sp.UpdatedAt, 
+    e.answerOptions
+FROM exercises e
+LEFT JOIN Instructions as ins 
+    ON ins.instructionId = e.instructionId
+INNER JOIN studentprogress sp 
+    ON sp.ExerciseId = e.id
+WHERE sp.StudentId = @StudentId
+AND ((sp.StudentAnswer IS NULL OR sp.StudentAnswer = '') OR sp.IsCorrect = 0)
+AND sp.IsSkipped = 0
+AND e.status = 1
+ORDER BY 
+    CASE WHEN e.QuestionCategory = 'Riddle' THEN 0 ELSE 1 END, 
+    sp.updatedAt ASC
+LIMIT 1;";
 
             using (MySqlCommand command = new MySqlCommand(query, connection))
             {
@@ -359,6 +374,7 @@ public class ExerciseRepository : DatabaseService
                             ProgressId = Convert.ToInt32(reader["ProgressId"]),
                             IsWaitingForHelp = Convert.ToBoolean(reader["IsWaitingForHelp"]),
                             QuestionType = reader["QuestionType"].ToString(),
+                            QuestionCategory = reader["QuestionCategory"].ToString(),
                             InstructionText = reader["instructiontext"].ToString(),
                             AnswerOptions = reader["answerOptions"] != DBNull.Value
                                                 ? JsonConvert.DeserializeObject<List<AnswerOption>>(reader["answerOptions"].ToString())
@@ -702,14 +718,19 @@ WHERE s.StudentId = @StudentId
     }
 
 
+    
+
 
     public async Task<(ExerciseModel? exercise, string? difficultyUpdate, string? changeType, string? instructionText)> GetNextUnassignedExercise(int studentId, int? lastDays = null)
     {
+
+        await SkipInProgressExercise(studentId, lastDays);
         try
         {
             string? difficultyUpdate = null;
             string? changeType = null;
             string? instructionText = null;
+
 
             using (MySqlConnection connection = GetConnection())
             {
@@ -797,6 +818,79 @@ LIMIT 1;";
         {
             Console.WriteLine($"Error in GetNextUnassignedExercise: {ex.Message}");
             return (null, null, null, null);
+        }
+    }
+
+
+
+    public async Task SkipInProgressExercise(int studentId, int? lastDays = null)
+    {
+        try
+        {
+            using (MySqlConnection connection = GetConnection())
+            {
+                await connection.OpenAsync();
+
+                // Query to find an in-progress exercise
+                string query = @"
+SELECT 
+    e.id, 
+    sp.IsSkipped,
+    e.exercise, 
+    e.correctAnswer, 
+    sp.updatedAt, 
+    sp.incorrectAttempts, 
+    sp.ProgressId, 
+    sp.IsWaitingForHelp, 
+    e.QuestionType,  
+    e.QuestionCategory, 
+    ins.instructiontext, 
+    sp.UpdatedAt, 
+    e.answerOptions,
+    sp.iscorrect
+FROM exercises e
+LEFT JOIN Instructions as ins 
+    ON ins.instructionId = e.instructionId
+INNER JOIN studentprogress sp 
+    ON sp.ExerciseId = e.id
+WHERE sp.StudentId = @StudentId
+AND ((sp.StudentAnswer IS NULL OR sp.StudentAnswer = '') OR sp.IsCorrect = 0 OR sp.IsCorrect IS NULL)
+AND (sp.IsSkipped = 0 OR sp.IsSkipped IS NULL)
+AND e.status = 1
+ORDER BY 
+    CASE WHEN e.QuestionCategory = 'Riddle' THEN 0 ELSE 1 END, 
+    sp.updatedAt ASC
+LIMIT 1;";
+
+                using (MySqlCommand command = new MySqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@StudentId", studentId);
+                    var existingExerciseId = await command.ExecuteScalarAsync();
+
+                    if (existingExerciseId != null)
+                    {
+                        // Update the status of the in-progress exercise to skipped
+                        string updateQuery = @"
+                    UPDATE studentprogress
+                    SET IsSkipped = 1, UpdatedAt = NOW()
+                    WHERE StudentId = @StudentId 
+                    AND ExerciseId = @ExerciseId 
+                    AND (IsCorrect = 0 OR IsCorrect IS NULL) 
+                    AND (IsSkipped = 0 OR IsSkipped IS NULL);";
+
+                        using (MySqlCommand updateCommand = new MySqlCommand(updateQuery, connection))
+                        {
+                            updateCommand.Parameters.AddWithValue("@StudentId", studentId);
+                            updateCommand.Parameters.AddWithValue("@ExerciseId", existingExerciseId);
+                            await updateCommand.ExecuteNonQueryAsync();
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in SkipInProgressExercise: {ex.Message}");
         }
     }
 
@@ -1384,12 +1478,15 @@ WHERE streakBreak = 0;
 
             string countQuery = @"
         SELECT COUNT(*) 
-        FROM studentprogress 
+        FROM studentprogress sp
+            INNER JOIN exercises as s
+			    ON s.id = sp.exerciseId
         WHERE StudentId = @StudentId 
         AND IsCorrect = 1 
         AND DATE(UpdatedAt) = CURDATE()
         AND incorrectAttempts = 0
-        AND IsSkipped = 0";
+        AND IsSkipped = 0
+        AND s.QuestionCategory != 'Riddle' ";
 
             using (MySqlCommand countCommand = new MySqlCommand(countQuery, connection))
             {
@@ -2182,6 +2279,126 @@ ORDER BY
         }
     }
 
+    //########################## RIDDLE #######################################
+
+    #region riddle
+    public async Task<ExerciseModel?> GetInProgressRiddle(int studentId)
+    {
+        using (var connection = GetConnection())
+        {
+            await connection.OpenAsync();
+            string query = @"
+        SELECT e.id AS ExerciseId, e.exercise AS Exercise, e.correctAnswer AS CorrectAnswer, e.DifficultyLevel
+        FROM studentprogress sp
+        INNER JOIN exercises e ON sp.ExerciseId = e.id
+        WHERE sp.StudentId = @StudentId AND sp.IsCorrect = 0 AND e.QuestionCategory = 'Riddle'";
+
+            using (var command = new MySqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@StudentId", studentId);
+
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    if (await reader.ReadAsync())
+                    {
+                        return new ExerciseModel
+                        {
+                            ExerciseId = reader.GetInt32("ExerciseId"),
+                            Exercise = reader.GetString("Exercise"),
+                            CorrectAnswer = reader.GetString("CorrectAnswer"),
+                            DifficultyLevel = reader.GetString("DifficultyLevel")
+                        };
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+
+
+
+    public async Task<ExerciseModel?> GetNextRiddleForStudent(int studentId)
+    {
+        using (var connection = GetConnection())
+        {
+            await connection.OpenAsync();
+            string query = @"
+        SELECT e.id AS ExerciseId, e.exercise AS Exercise, e.correctAnswer AS CorrectAnswer, e.DifficultyLevel
+        FROM exercises e
+        WHERE e.QuestionCategory = 'Riddle'
+        AND e.id NOT IN (SELECT ExerciseId FROM studentprogress WHERE StudentId = @StudentId)
+        ORDER BY e.DifficultyLevel ASC
+        LIMIT 1";
+
+            using (var command = new MySqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@StudentId", studentId);
+
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    if (await reader.ReadAsync())
+                    {
+                        return new ExerciseModel
+                        {
+                            ExerciseId = reader.GetInt32("ExerciseId"),
+                            Exercise = reader.GetString("Exercise"),
+                            CorrectAnswer = reader.IsDBNull(reader.GetOrdinal("CorrectAnswer")) ? null : reader.GetString("CorrectAnswer"),
+                            DifficultyLevel = reader.IsDBNull(reader.GetOrdinal("DifficultyLevel")) ? null : reader.GetString("DifficultyLevel")
+                        };
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+
+
+
+    public async Task AddRiddleToStudentProgress(int studentId, int exerciseId)
+    {
+        using (var connection = GetConnection())
+        {
+            await connection.OpenAsync();
+            string query = @"
+        INSERT INTO studentprogress (StudentId, ExerciseId, HasStarted, UpdatedAt)
+        VALUES (@StudentId, @ExerciseId, 1, NOW())
+        ON DUPLICATE KEY UPDATE HasStarted = 1, UpdatedAt = NOW()";
+
+            using (var command = new MySqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@StudentId", studentId);
+                command.Parameters.AddWithValue("@ExerciseId", exerciseId);
+                await command.ExecuteNonQueryAsync();
+            }
+        }
+    }
+
+
+
+
+    public async Task MarkRiddleAsSolved(int studentId, int exerciseId)
+    {
+        using (var connection = GetConnection())
+        {
+            await connection.OpenAsync();
+            string query = @"
+        UPDATE studentprogress
+        SET IsCorrect = 1, UpdatedAt = NOW()
+        WHERE StudentId = @StudentId AND ExerciseId = @ExerciseId";
+
+            using (var command = new MySqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@StudentId", studentId);
+                command.Parameters.AddWithValue("@ExerciseId", exerciseId);
+                await command.ExecuteNonQueryAsync();
+            }
+        }
+    }
+
+
+    #endregion Riddle
 
     ///////////////////////////////////////////////////////////////////
 

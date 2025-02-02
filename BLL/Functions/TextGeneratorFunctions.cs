@@ -434,7 +434,7 @@ $"🦸 {Math.Floor(totalSeconds)} שניות! אלוף אמיתי! כל הכבו
 
             // Wrap the exercise with explicit RTL and LTR controls
             messageBuilder.AppendLine($"\u202B🎯 בחרו את התשובה הנכונה ✨\u202C\n");
-            messageBuilder.AppendLine($"\u202A🔢 {exercise}\u202C\n"); // Ensure exercise is LTR
+            messageBuilder.AppendLine($"\u202A {exercise}\u202C\n"); // Ensure exercise is LTR
 
             // Add a title for the options
             messageBuilder.AppendLine("\u202B📚 האפשרויות שלכם הן:\u202C"); // Ensure title is RTL

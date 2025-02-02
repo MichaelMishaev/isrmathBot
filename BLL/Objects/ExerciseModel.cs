@@ -30,6 +30,7 @@ namespace BLL.Objects
         public string CreatedByRole { get; set; } // 'Teacher' or 'Parent'
         public DateTime UpdatedAt { get; set; } // The time when the exercise was last updated
         public int IncorrectAttempts { get; set; }
+        public string QuestionCategory { get; set; }
         public bool IsWaitingForHelp { get; set; }
         public string QuestionType { get; set; }
         public int? InstructionId { get; set; }

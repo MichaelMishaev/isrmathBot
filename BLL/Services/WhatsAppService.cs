@@ -331,6 +331,62 @@ namespace BLL.Services
 
         }
 
+
+        public async Task<string> RiddleAnswerByChatGpt(string riddle,string studentAnswer, CancellationToken cancellationToken, string CorrectAnswer)
+        {
+            string gptQuery = $@"
+📢🔍 **בדיקת תשובה לחידה!**  
+
+🔹 **החידה:** {riddle}  
+🔹 **מה שנאמר:** {studentAnswer}  
+🔹 **תשובה נכונה:**    {CorrectAnswer}
+
+🎯 **המשימה שלך:**  
+1️⃣ **אם התשובה נכונה או הגיונית** – תן מחמאה מצחיקה ומלאת אנרגיה! 🎉  
+2️⃣ **אם התשובה לא מתאימה**, התייחס ישירות למה שהתלמיד אמר, צחק על זה באהבה ותמיד הצג את התשובה הנכונה בצורה **ברורה ובולטת**!  
+3️⃣ **אסור לך לשכוח לספק את התשובה הנכונה!** היא חייבת להופיע ב**מודגש** (בין **).  
+4️⃣ **כל תגובה חייבת להיות שונה!** גוון בהומור ובאופן הצגת התשובה.  
+5️⃣ **התגובה צריכה להרגיש כמו שיחה טבעית**, בלי נוסח קבוע או חזרות.  
+6️⃣ **שמור על שפה קלילה ומותאמת לגיל 8-10, עם המון אימוג'ים.**  
+
+📌 **טיפים:**  
+- **התייחס ישירות למה שהתלמיד אמר!** אם התשובה יצירתית או מצחיקה – זרום עם זה.  
+- **השתמש ביצירתיות ודמיון מטורף.**  
+- **אסור להתחיל כל תגובה באותה צורה, תפתיע כל פעם!**  
+- **אל תציע חידה חדשה, רק בדוק את התשובה שניתנה.**  
+- **ודא שהתשובה הנכונה מופיעה תמיד!** לדוגמה: **'התשובה הכי טובה היא: **נר**! 🕯️'**  
+
+🎭 **כל תגובה חייבת להיות ייחודית, משעשעת ומלאת כיף!** 🎉  
+";
+
+
+
+
+
+            try
+            {
+
+                var response = await _chatGPTService.AskChatGPTReduceTokens(gptQuery, cancellationToken);
+                if (response == null)
+                {
+                    return null;// TODO, add  notification for me
+                }
+                //       List<ExerciseModel> exercises = JsonConvert.DeserializeObject<List<ExerciseModel>>(response);
+
+                // Construct a message with just the exercises
+                var exercisesMessage = response;
+
+                return exercisesMessage;
+            }
+            catch (Exception e)
+            {
+                await _commonFunctions.SendResponseToSender("972544345287", $"exception on riddle answer: {e.Message}");
+                return $"משהו פה נשבר לי, אני כבר מתקן";
+            }
+
+
+        }
+
         private async Task<List<ExerciseModel>> ProcessAssistantResponse(string response, bool isMultipleChoice)
         {
 
