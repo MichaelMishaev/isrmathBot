@@ -85,8 +85,8 @@ namespace BL.Serives
                     switch (userType.UserType)
                     {
                         case Constants.Teacher:
-                        //   result = await HandleTeacherMessage(numericPhoneNumber, body, userId);
-                           result = await HandleStudentMessage(numericPhoneNumber, body); //FOR TEST IF NEED AS STUDENT
+                           result = await HandleTeacherMessage(numericPhoneNumber, body, userId);
+                         //  result = await HandleStudentMessage(numericPhoneNumber, body); //FOR TEST IF NEED AS STUDENT
                             break;
                         case Constants.Parent:
                             result = await HandleParentMessage(numericPhoneNumber, body);
