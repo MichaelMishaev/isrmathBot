@@ -1121,6 +1121,54 @@ namespace BL.Serives
                 return replyMessage;
             }
 
+            else if (normalizedMessage.Contains("#schools"))
+            {
+                var schoolClassData = await _exerciseRepository.GetSchoolClassDataAsync();
+
+                if (schoolClassData == null || !schoolClassData.Any())
+                {
+                    Console.WriteLine("No school data found.");
+                    return "No school data found.";
+                }
+
+                StringBuilder replyBuilder = new StringBuilder();
+                replyBuilder.AppendLine("🏫 *School & Class Information* 🏫");
+                replyBuilder.AppendLine("Here are the details of schools and their classes:");
+
+                int currentSchoolId = -1;
+
+                foreach (var data in schoolClassData)
+                {
+                    // If it's a new school, add a new header
+                    if (data.SchoolId != currentSchoolId)
+                    {
+                        if (currentSchoolId != -1)
+                            replyBuilder.AppendLine(); // Add spacing between schools
+
+                        replyBuilder.AppendLine($"--------------------------------");
+                        replyBuilder.AppendLine($"🏫 *School Name:* {data.SchoolName}");
+                        replyBuilder.AppendLine($"🎒 *Total Students in School:* {data.TotalStudentsInSchool}");
+                        replyBuilder.AppendLine($"--------------------------------");
+
+                        currentSchoolId = data.SchoolId;
+                    }
+
+                    // Add class-specific details
+                    replyBuilder.AppendLine($"📚 *Class Name:* {data.ClassName}");
+                    replyBuilder.AppendLine($"👨‍🎓 *Students in Class:* {data.StudentsInClass}");
+                    replyBuilder.AppendLine("---------");
+                }
+
+                replyBuilder.AppendLine("✅ End of school list.");
+
+                string replyMessage = replyBuilder.ToString();
+
+                // Output the formatted reply to the console
+                Console.WriteLine(replyMessage);
+
+                // Return the formatted reply message
+                return replyMessage;
+            }
 
 
 

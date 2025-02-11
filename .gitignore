@@ -10,9 +10,13 @@
 bin/
 obj/
 
-# But track specific files
+# Allow only specific files inside bin/ or obj/
 !bin/Debug/net8.0/BLL.dll
 !obj/Debug/net8.0/BLL.AssemblyInfo.cs
+
+# Ignore everything else inside bin/ or obj/ (except the allowed files)
+bin/*/
+obj/*/
 
 # Ignore other common files
 *.log
@@ -20,3 +24,6 @@ obj/
 
 # Ignore appsettings.json
 appsettings.json
+
+
+

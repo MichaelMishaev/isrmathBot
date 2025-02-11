@@ -20,7 +20,7 @@ public class ExerciseRepository : DatabaseService
 
     //********************
     // DAL/ExerciseRepository.cs
-    
+
 
 
 
@@ -718,7 +718,7 @@ WHERE s.StudentId = @StudentId
     }
 
 
-    
+
 
 
     public async Task<(ExerciseModel? exercise, string? difficultyUpdate, string? changeType, string? instructionText)> GetNextUnassignedExercise(int studentId, int? lastDays = null)
@@ -800,7 +800,7 @@ LIMIT 1;";
                                                 ? JsonConvert.DeserializeObject<List<AnswerOption>>(reader["answerOptions"].ToString())
                                                 : null,
                                 QuestionType = reader["questionType"].ToString(),
-                                 
+
                             };
 
                             instructionText = reader["InstructionText"]?.ToString();
@@ -2170,6 +2170,64 @@ WHERE streakBreak = 0;
                 return Math.Max(60 - elapsedTime, 0); // Ensure non-negative remaining time
             }
         }
+    }
+
+
+    public async Task<List<SchoolClassDataDTO>> GetSchoolClassDataAsync()
+    {
+        var schoolClassDataList = new List<SchoolClassDataDTO>();
+        try
+        {
+            using (MySqlConnection connection = GetConnection()) // Assumes GetConnection() returns a valid MySqlConnection
+            {
+                await connection.OpenAsync();
+
+                string query = @"
+            SELECT 
+                s.SchoolId,
+                s.SchoolName,
+                c.ClassId,
+                c.ClassName,
+                COUNT(st.StudentId) AS StudentsInClass,
+                SUM(COUNT(st.StudentId)) OVER (PARTITION BY s.SchoolId) AS TotalStudentsInSchool
+            FROM schools s
+            LEFT JOIN classes c ON s.SchoolId = c.SchoolId
+            LEFT JOIN students st ON c.ClassId = st.ClassId
+            WHERE c.ClassId IS NOT NULL
+            GROUP BY s.SchoolId, s.SchoolName, c.ClassId, c.ClassName
+            ORDER BY s.SchoolId, c.ClassId;";
+
+                using (MySqlCommand command = new MySqlCommand(query, connection))
+                {
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            var schoolClassData = new SchoolClassDataDTO
+                            {
+                                SchoolId = reader.GetInt32("SchoolId"),
+                                SchoolName = reader.GetString("SchoolName"),
+                                ClassId = reader.GetInt32("ClassId"),
+                                ClassName = reader.GetString("ClassName"),
+                                StudentsInClass = reader.GetInt32("StudentsInClass"),
+                                TotalStudentsInSchool = reader.GetInt32("TotalStudentsInSchool")
+                            };
+                            schoolClassDataList.Add(schoolClassData);
+                        }
+                    }
+                }
+            }
+            return schoolClassDataList;
+        }
+        catch (Exception e)
+        {
+
+            Console.WriteLine($"Error: {e.Message}");
+            await _commonFunctions.SendResponseToSender("972544345287", $"error in GetSchoolClassDataAsync {e.Message}");
+            return new List<SchoolClassDataDTO>();
+        }
+
+
     }
 
 
