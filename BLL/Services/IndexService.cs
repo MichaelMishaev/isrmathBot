@@ -85,8 +85,8 @@ namespace BL.Serives
                     switch (userType.UserType)
                     {
                         case Constants.Teacher:
-                           result = await HandleTeacherMessage(numericPhoneNumber, body, userId);
-                         //  result = await HandleStudentMessage(numericPhoneNumber, body); //FOR TEST IF NEED AS STUDENT
+                         //  result = await HandleTeacherMessage(numericPhoneNumber, body, userId);
+                           result = await HandleStudentMessage(numericPhoneNumber, body); //FOR TEST IF NEED AS STUDENT
                             break;
                         case Constants.Parent:
                             result = await HandleParentMessage(numericPhoneNumber, body);
@@ -896,6 +896,44 @@ namespace BL.Serives
 
                 return sb.ToString();
             }
+            else if (normalizedMessage.StartsWith("#updateschool"))
+            {
+                var parts = normalizedMessage.Split(",", StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 2)
+                {
+                    await SendResponseToSender(phoneNumber, "❌ Format incorrect. Use: #updateschool, [SchoolId] (Use 'null' to remove school).");
+                    return "";
+                }
+
+                int? schoolId = null;
+
+                // Check if the provided school ID is "null", otherwise try to parse it as an integer
+                if (!parts[1].Trim().Equals("null", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!int.TryParse(parts[1].Trim(), out int parsedSchoolId))
+                    {
+                        await SendResponseToSender(phoneNumber, "❌ Invalid SchoolId. Please enter a valid number or 'null' to remove school.");
+                        return "";
+                    }
+                    schoolId = parsedSchoolId;
+                }
+
+                // Call the DAL method to update the teacher's school
+                bool updateSuccess = await _exerciseRepository.UpdateTeacherSchool(teacherId, schoolId);
+
+                if (updateSuccess)
+                {
+                    string schoolText = schoolId.HasValue ? $"School ID '{schoolId}'" : "no school";
+                    await SendResponseToSender(phoneNumber, $"✅ Teacher's school updated to {schoolText} successfully!");
+                }
+                else
+                {
+                    await SendResponseToSender(phoneNumber, "❌ Failed to update school. Ensure the school exists before assigning.");
+                }
+
+                return "";
+            }
+
             else if (normalizedMessage.StartsWith("#update"))
             {
                 // Parse the normalizedMessage to extract the className
@@ -918,7 +956,7 @@ namespace BL.Serives
                 }
                 else
                 {
-                    await SendResponseToSender(phoneNumber, $"❌ Failed to update class. Please check the class name and try again.");
+                    await SendResponseToSender(phoneNumber, $"❌ Failed to update class. Please check the class name and try again, if school exists and has classes.");
                     return "";
                 }
             }
@@ -1121,7 +1159,7 @@ namespace BL.Serives
                 return replyMessage;
             }
 
-            else if (normalizedMessage.Contains("#schools"))
+            else if (normalizedMessage.Contains("#schoollist"))
             {
                 var schoolClassData = await _exerciseRepository.GetSchoolClassDataAsync();
 
@@ -1146,7 +1184,7 @@ namespace BL.Serives
                             replyBuilder.AppendLine(); // Add spacing between schools
 
                         replyBuilder.AppendLine($"--------------------------------");
-                        replyBuilder.AppendLine($"🏫 *School Name:* {data.SchoolName}");
+                        replyBuilder.AppendLine($"🏫 *School Name:* {data.SchoolName}, *SchoolID*: {data.SchoolId}");
                         replyBuilder.AppendLine($"🎒 *Total Students in School:* {data.TotalStudentsInSchool}");
                         replyBuilder.AppendLine($"--------------------------------");
 
@@ -1155,6 +1193,7 @@ namespace BL.Serives
 
                     // Add class-specific details
                     replyBuilder.AppendLine($"📚 *Class Name:* {data.ClassName}");
+                    replyBuilder.AppendLine($"📚 *Class Id:* {data.ClassId}");
                     replyBuilder.AppendLine($"👨‍🎓 *Students in Class:* {data.StudentsInClass}");
                     replyBuilder.AppendLine("---------");
                 }
@@ -1170,7 +1209,32 @@ namespace BL.Serives
                 return replyMessage;
             }
 
+            else if (normalizedMessage.Contains("#me"))
+            {
+                var teacherDetails = await _exerciseRepository.GetTeacherDetailsAsync(teacherId);
+                string resultMessage = string.Empty;
 
+                if (teacherDetails != null)
+                {
+                    resultMessage = $"👨‍🏫 *פרטי המורה:*\n\n" +
+                                     $"🆔 *מזהה:* {teacherDetails.TeacherId}\n" +
+                                     $"📛 *שם:* {teacherDetails.TeacherName}\n" +
+                                     $"📞 *טלפון:* {teacherDetails.PhoneNumber ?? "לא זמין"}\n" +
+                                     $"🏫 *בית ספר:* {teacherDetails.SchoolName ?? "לא משויך"}\n" +
+                                     $"📍 *כתובת:* {teacherDetails.Address ?? "לא זמינה"}\n" +
+                                     $"📚 *כיתה:* {teacherDetails.ClassName ?? "לא משויך"}\n" +
+                                     $"🎓 *שכבה:* {teacherDetails.Grade?.ToString() ?? "לא זמינה"}";
+
+                }
+                else
+                {
+                    resultMessage = "❌ המורה לא נמצא במערכת.";
+                }
+
+                return resultMessage;
+            }
+
+            //GetTeacherDetailsAsync
 
 
 
@@ -1243,14 +1307,19 @@ namespace BL.Serives
                        "4. *#update, [ClassName]*:\n" +
                        "\u200Fעדכן את הכיתה המשויכת אליך. לדוגמה: `#update, ה1`\n\n" +
 
-                       "5. *reminder, ClassName, Message*:\n" +
+                       "5. *#updateschool, [SchoolId]*:\n" +
+                       "\u200Fעדכן את בית הספר המשויך אליך. לדוגמה: `#updateschool, 5`.\n" +
+                       "אם ברצונך למחוק את שיוך בית הספר, שלח `#updateschool, null`.\n" +
+                       "❗ שים לב: ניתן לעדכן לבית ספר קיים בלבד. אם בית הספר לא נמצא, יש להוסיף אותו תחילה.\n\n" +
+
+                       "6. *reminder, ClassName, Message*:\n" +
                        "\u200Fשליחת תזכורת לתלמידי כיתה ספציפית. לדוגמה: `reminder, ה1, אל תשכחו לפתור תרגילים!`\n" +
                        "ניתן גם להוסיף `,**` בסוף, למשל `reminder, ה1, אל תשכחו לפתור תרגילים!,**` כדי לשלוח תזכורת לכל שכבת הכיתה.\n\n" +
 
-                       "6. *#classes*:\n" +
+                       "7. *#classes*:\n" +
                        "\u200Fקבל פרטים על כל הכיתות שלך.\n\n" +
 
-                       "7. *#noexercise*:\n" +
+                       "8. *#noexercise*:\n" +
                        "\u200Fקבל רשימה של תלמידים שסיימו את כל התרגילים בשבוע האחרון. לדוגמה:\n" +
                        "📋 רשימת תלמידים:\n" +
                        "👤 שם תלמיד | 🏫 בית ספר | 📚 כיתה\n" +
@@ -1262,6 +1331,7 @@ namespace BL.Serives
 
                        "שיהיה בהצלחה! 💪";
             }
+
 
 
 

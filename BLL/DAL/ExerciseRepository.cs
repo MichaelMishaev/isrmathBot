@@ -1270,40 +1270,60 @@ WHERE streakBreak = 0;
     {
         try
         {
-
-
             using (MySqlConnection connection = GetConnection())
             {
                 await connection.OpenAsync();
 
-                // Validate the className
-                string validateQuery = @"
-            SELECT c.ClassId
-            FROM classes c
-            WHERE c.ClassName = @ClassName;";
+                // Step 1: Retrieve the teacher's assigned SchoolId
+                string getTeacherSchoolQuery = @"
+                SELECT SchoolId FROM teachers
+                WHERE TeacherId = @TeacherId;";
 
-                int? classId = null;
-                using (MySqlCommand validateCommand = new MySqlCommand(validateQuery, connection))
+                int? schoolId = null;
+                using (MySqlCommand getSchoolCommand = new MySqlCommand(getTeacherSchoolQuery, connection))
                 {
-                    validateCommand.Parameters.AddWithValue("@ClassName", className);
-                    var result = await validateCommand.ExecuteScalarAsync();
-                    if (result != null)
+                    getSchoolCommand.Parameters.AddWithValue("@TeacherId", teacherId);
+                    var schoolResult = await getSchoolCommand.ExecuteScalarAsync();
+                    if (schoolResult != null && schoolResult!= DBNull.Value )
                     {
-                        classId = Convert.ToInt32(result);
+                        schoolId = Convert.ToInt32(schoolResult);
                     }
                 }
 
-                // If className is invalid, return false
+                // Step 2: If the teacher has no assigned school, return false
+                if (schoolId == null)
+                {
+                    return false;
+                }
+
+                // Step 3: Find the ClassId in the same school as the teacher
+                string getClassQuery = @"
+                SELECT ClassId FROM classes
+                WHERE ClassName = @ClassName AND SchoolId = @SchoolId;";
+
+                int? classId = null;
+                using (MySqlCommand getClassCommand = new MySqlCommand(getClassQuery, connection))
+                {
+                    getClassCommand.Parameters.AddWithValue("@ClassName", className);
+                    getClassCommand.Parameters.AddWithValue("@SchoolId", schoolId);
+                    var classResult = await getClassCommand.ExecuteScalarAsync();
+                    if (classResult != null && classResult !=DBNull.Value)
+                    {
+                        classId = Convert.ToInt32(classResult);
+                    }
+                }
+
+                // Step 4: If the className does not exist in the teacher’s school, return false
                 if (classId == null)
                 {
                     return false;
                 }
 
-                // Update the teacher's ClassId
+                // Step 5: Update the teacher's ClassId
                 string updateQuery = @"
-            UPDATE teachers
-            SET ClassId = @ClassId
-            WHERE TeacherId = @TeacherId;";
+                UPDATE teachers
+                SET ClassId = @ClassId
+                WHERE TeacherId = @TeacherId;";
 
                 using (MySqlCommand updateCommand = new MySqlCommand(updateQuery, connection))
                 {
@@ -1317,7 +1337,65 @@ WHERE streakBreak = 0;
         }
         catch (Exception e)
         {
+            throw e;
+        }
+    }
 
+    public async Task<bool> UpdateTeacherSchool(int teacherId, int? schoolId)
+    {
+        try
+        {
+            using (MySqlConnection connection = GetConnection())
+            {
+                await connection.OpenAsync();
+
+                // Step 1: Check if the teacher exists
+                string checkTeacherQuery = "SELECT COUNT(*) FROM teachers WHERE TeacherId = @TeacherId;";
+                using (MySqlCommand checkTeacherCommand = new MySqlCommand(checkTeacherQuery, connection))
+                {
+                    checkTeacherCommand.Parameters.AddWithValue("@TeacherId", teacherId);
+                    var teacherExists = Convert.ToInt32(await checkTeacherCommand.ExecuteScalarAsync()) > 0;
+
+                    if (!teacherExists)
+                    {
+                        return false; // Teacher does not exist
+                    }
+                }
+
+                // Step 2: Allow setting SchoolId to NULL or validate SchoolId existence
+                if (schoolId.HasValue)
+                {
+                    string checkSchoolQuery = "SELECT COUNT(*) FROM schools WHERE SchoolId = @SchoolId;";
+                    using (MySqlCommand checkSchoolCommand = new MySqlCommand(checkSchoolQuery, connection))
+                    {
+                        checkSchoolCommand.Parameters.AddWithValue("@SchoolId", schoolId.Value);
+                        var schoolExists = Convert.ToInt32(await checkSchoolCommand.ExecuteScalarAsync()) > 0;
+
+                        if (!schoolExists)
+                        {
+                            return false; // School does not exist
+                        }
+                    }
+                }
+
+                // Step 3: Update the teacher’s SchoolId (NULL if schoolId is null)
+                string updateQuery = @"
+                UPDATE teachers
+                SET SchoolId = @SchoolId
+                WHERE TeacherId = @TeacherId;";
+
+                using (MySqlCommand updateCommand = new MySqlCommand(updateQuery, connection))
+                {
+                    updateCommand.Parameters.AddWithValue("@TeacherId", teacherId);
+                    updateCommand.Parameters.AddWithValue("@SchoolId", schoolId.HasValue ? (object)schoolId.Value : DBNull.Value); // Handle NULL
+
+                    int rowsAffected = await updateCommand.ExecuteNonQueryAsync();
+                    return rowsAffected > 0; // Return true if updated successfully
+                }
+            }
+        }
+        catch (Exception e)
+        {
             throw e;
         }
     }
@@ -2228,6 +2306,66 @@ WHERE streakBreak = 0;
         }
 
 
+    }
+
+    public async Task<TeacherDetails?> GetTeacherDetailsAsync(int teacherId)
+    {
+        try
+        {
+            using (MySqlConnection connection = GetConnection())
+            {
+                await connection.OpenAsync();
+
+                string query = @"
+                SELECT 
+                    t.TeacherId,
+                    u.FullName AS TeacherName,
+                    t.PhoneNumber,
+                    t.AdditionalTeacherAttribute,
+                    c.ClassId,
+                    c.ClassName,
+                    c.Grade,
+                    s.SchoolId,
+                    s.SchoolName,
+                    s.Address
+                FROM teachers t
+                LEFT JOIN users u ON t.UserId = u.UserId
+                LEFT JOIN classes c ON t.ClassId = c.ClassId
+                LEFT JOIN schools s ON t.SchoolId = s.SchoolId
+                WHERE t.TeacherId = @TeacherId;";
+
+                using (MySqlCommand command = new MySqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@TeacherId", teacherId);
+
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            return new TeacherDetails
+                            {
+                                TeacherId = reader.GetInt32("TeacherId"),
+                                TeacherName = reader.GetString("TeacherName"),
+                                PhoneNumber = reader["PhoneNumber"] as string,
+                                AdditionalTeacherAttribute = reader["AdditionalTeacherAttribute"] as string,
+                                ClassId = reader["ClassId"] as int?,
+                                ClassName = reader["ClassName"] as string,
+                                Grade = reader["Grade"] as int?,
+                                SchoolId = reader["SchoolId"] as int?,
+                                SchoolName = reader["SchoolName"] as string,
+                                Address = reader["Address"] as string
+                            };
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching teacher details: {ex.Message}");
+        }
+
+        return null;
     }
 
 
