@@ -322,7 +322,7 @@ namespace BL.Serives
             {
                 await SendImageToSender(phoneNumber, "noExerciseLeft_", "");
                 var NameAndClass = await _exerciseRepository.GetUserFullNameAndClassNameByStudentIdAsync(studentId);
-                await SendResponseToSender("972544345287", $"Exercises Done for {NameAndClass.Value.FullName} from class: {NameAndClass.Value.ClassName}");
+                await SendResponseToSender("972544345287", $"Exercises Done for {NameAndClass.Value.FullName} from class: {NameAndClass.Value.ClassName}, school: {NameAndClass.Value.SchoolName}");
                 return TextGeneratorFunctions.GetFinishedExercisesMessage();
 
             }
@@ -354,7 +354,7 @@ namespace BL.Serives
             {
                 await SendImageToSender(phoneNumber, "noExerciseLeft_", "");
                 var NameAndClass = await _exerciseRepository.GetUserFullNameAndClassNameByStudentIdAsync(studentId);
-                await SendResponseToSender("972544345287", $"Exercises Done for {NameAndClass.Value.FullName} from class: {NameAndClass.Value.ClassName}");
+                await SendResponseToSender("972544345287", $"Exercises Done for {NameAndClass.Value.FullName} from class: {NameAndClass.Value.ClassName}, school: {NameAndClass.Value.ClassName}");
                 return TextGeneratorFunctions.GetFinishedExercisesMessage();
 
             }

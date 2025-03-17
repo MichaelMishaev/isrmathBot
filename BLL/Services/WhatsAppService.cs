@@ -171,7 +171,7 @@ namespace BLL.Services
                 classInstruction = classInstruction.Replace(" ", "").Replace("\u00A0", "");
 
                 var gradeMatch = Regex.Match(classInstruction, @"GRADE=(\d+)", RegexOptions.IgnoreCase);
-                var isUseInstructionMatch = Regex.Match(classInstruction, @"instruc=(\d+)", RegexOptions.IgnoreCase);
+                var isUseInstructionMatch = Regex.Match(additionalInstruction, @"instruc=(\d+)", RegexOptions.IgnoreCase);
 
                 //##################################
                 int instructionId = -1;

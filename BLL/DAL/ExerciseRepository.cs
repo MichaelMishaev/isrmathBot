@@ -576,7 +576,7 @@ WHERE s.StudentId = @StudentId
     }
 
 
-    public async Task<(string FullName, string ClassName)?> GetUserFullNameAndClassNameByStudentIdAsync(int studentId)
+    public async Task<(string FullName, string ClassName, string SchoolName)?> GetUserFullNameAndClassNameByStudentIdAsync(int studentId)
     {
         try
         {
@@ -585,10 +585,11 @@ WHERE s.StudentId = @StudentId
                 await connection.OpenAsync();
 
                 string query = @"
-            SELECT u.fullName, cl.ClassName
+            SELECT u.fullName, cl.ClassName, sc.SchoolName
             FROM students AS s
                     INNER JOIN users AS u ON s.UserId = u.UserId
                     INNER JOIN classes as cl ON cl.classId = s.ClassId
+                    INNER JOIN SCHOOLS AS SC ON CL.SCHOOLID = SC.SCHOOLID
             WHERE s.StudentId = @StudentId AND u.Status = 1;";
 
                 using (MySqlCommand command = new MySqlCommand(query, connection))
@@ -601,7 +602,8 @@ WHERE s.StudentId = @StudentId
                         {
                             string fullName = reader["FullName"].ToString();
                             string className = reader["ClassName"].ToString();
-                            return (fullName, className);
+                            string SchoolName = reader["SchoolName"].ToString();
+                            return (fullName, className, SchoolName);
                         }
                     }
                 }
